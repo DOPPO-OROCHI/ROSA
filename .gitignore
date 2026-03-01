@@ -1,0 +1,15 @@
+# Go
+bin/
+*.exe
+*.log
+
+# Env
+.env
+.env.*
+
+# VS Code
+.vscode/
+
+# Frontend
+front/node_modules/
+front/dist/
