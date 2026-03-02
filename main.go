@@ -48,10 +48,10 @@ func main() {
 		CardsList:   handlers.NewCardsListHandler(dtoLikeDepsForCards(db.DB)),
 		HeroesList:  handlers.NewHeroesListHandler(handlers.HeroListHandler{DB: db.DB}),
 		SelectHero:  handlers.NewSelectedHeroHandler(db.DB),
-		StreamMatch: handlers.NewStreamMatchHandler(handlers.StreamMatchDeps{Hub: hub, Store: store}),
+		StreamMatch: handlers.NewStreamMatchHandler(handlers.StreamMatchDeps{Hub: hub}),
 	}
 	mux := adapters.NewMux(app)
-	httpHandler := middleware.AuthMiddleware(db.DB, store)(mux)
+	httpHandler := middleware.AuthMiddleware(store)(mux)
 
 	srv := &http.Server{
 		Addr:         ":1234",

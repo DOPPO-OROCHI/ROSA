@@ -20,8 +20,9 @@ type App struct {
 	HeroesList  http.HandlerFunc
 	MatchesList http.HandlerFunc
 
-	SelectHero  http.HandlerFunc
-	StreamMatch http.HandlerFunc
+	SelectHero   http.HandlerFunc
+	StreamMatch  http.HandlerFunc
+	AuthTelegram http.HandlerFunc
 }
 
 func NewMux(app App) *http.ServeMux {
@@ -98,6 +99,9 @@ func NewMux(app App) *http.ServeMux {
 			return
 		}
 		app.SelectHero(w, r)
+	})
+	mux.HandleFunc("/auth/telegram", func(w http.ResponseWriter, r *http.Request) {
+		app.AuthTelegram(w, r)
 	})
 	return mux
 }
