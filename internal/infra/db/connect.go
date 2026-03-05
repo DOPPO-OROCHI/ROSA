@@ -21,7 +21,7 @@ func init() {
 	if err != nil {
 		panic(err)
 	}
-	if err := DB.Exec("SELECT 1").Error; err != nil { //<-EXEC служит для проверки соединения
+	if err := DB.Exec("SELECT 1").Error; err != nil {
 		panic(err)
 	}
 }

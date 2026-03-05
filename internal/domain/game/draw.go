@@ -49,6 +49,13 @@ func ApplyAction(m *MatchState, a Action, r Resolvers) error {
 		return ErrStaleAction
 	}
 	m.Events = m.Events[:0]
+	if a.Type == ActionLeaveMatch {
+		if err := LeaveMatch(m, a.PlayerIndex); err != nil {
+			return err
+		}
+		m.Version++
+		return nil
+	}
 	if err := EnsureStartTurn(m); err != nil {
 		return err
 	}

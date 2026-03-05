@@ -10,6 +10,8 @@ import (
 	"gorm.io/gorm"
 )
 
+var ErrActiveMatchExists = errors.New("active match already exists")
+
 type Match struct {
 	gorm.Model
 	PlayerID1      uint           `gorm:"not null;index"`
@@ -51,6 +53,16 @@ func CreateMatchTX(db *gorm.DB,
 		}
 		if p1UserID == p2UserID {
 			return errors.New("cannot create match with yourself")
+		}
+		var activeCount int64
+		if err := tx.Model(&Match{}).
+			Where("finished = false").
+			Where("(player_id1 = ? OR player_id2 = ?) OR (player_id1 = ? OR player_id2 = ?)", p1UserID, p1UserID, p2UserID, p2UserID).
+			Count(&activeCount).Error; err != nil {
+			return err
+		}
+		if activeCount > 0 {
+			return ErrActiveMatchExists
 		}
 		battleMax, buffMax, err := LoadTemplateLimits(tx)
 		if err != nil {

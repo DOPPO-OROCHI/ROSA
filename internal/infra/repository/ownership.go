@@ -44,6 +44,7 @@ func LoadOwnedBattleCards(tx *gorm.DB, userID uint) (map[string]game.OwnedCardIn
 	}
 	return info, copies, nil
 }
+
 func LoadOwnedBuff(tx *gorm.DB, userID uint) (map[string]game.OwnedCardInfo, map[string]int, error) {
 	var rows []GamerBuffCards
 	if err := tx.Preload("CardTemplate").Where("gamer_id = ?", userID).Find(&rows).Error; err != nil {

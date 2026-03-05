@@ -9,6 +9,7 @@ var DefaultHeroTemplate = []CharacterTemplate{
 		AttackCooldown: 2,
 		Ability: AbilitySpec{
 			Code:     BUFF_ATK,
+			Target:   OWN_UNIT,
 			CoolDown: 3,
 			ManaCost: 2,
 			Value:    10,
@@ -24,6 +25,7 @@ var DefaultHeroTemplate = []CharacterTemplate{
 		AttackCooldown: 3,
 		Ability: AbilitySpec{
 			Code:     MAKE_TANK,
+			Target:   OWN_UNIT,
 			CoolDown: 5,
 			ManaCost: 5,
 			Value:    0,
@@ -38,7 +40,8 @@ var DefaultHeroTemplate = []CharacterTemplate{
 		HealthPoints:   650,
 		AttackCooldown: 1,
 		Ability: AbilitySpec{
-			Code:     ATTACK_ANY,
+			Code:     ATTACK_SPLASH,
+			Target:   ENEMY_UNIT,
 			CoolDown: 3,
 			ManaCost: 3,
 			Value:    4,

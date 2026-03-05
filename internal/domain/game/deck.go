@@ -2,14 +2,15 @@ package game
 
 import (
 	"errors"
+	"math/rand/v2"
 
 	"github.com/google/uuid"
 )
 
 type DeckEntry struct {
-	Kind       string //<-тип карты
-	TemplateID string //<-айди карты
-	Count      int    //<-количество, которое не может быть больше maxCopies
+	Kind       string `json:"kind"`
+	TemplateID string `json:"template_id"`
+	Count      int    `json:"count"`
 }
 
 type OwnedCardInfo struct {
@@ -97,6 +98,7 @@ func BuildDeck(
 	if len(deck) != 20 {
 		return nil, errors.New("internal: buit deck is not 20")
 	}
+	shuffleDeck(deck)
 	return deck, nil
 }
 
@@ -112,8 +114,17 @@ func BuildDeckInMatch(entries []DeckEntry) []CardsInMatch {
 			})
 		}
 	}
+	shuffleDeck(deck)
 	return deck
 }
+
+// перемешиваем карты
+func shuffleDeck(deck []CardsInMatch) {
+	rand.Shuffle(len(deck), func(i, j int) {
+		deck[i], deck[j] = deck[j], deck[i]
+	})
+}
+
 func NewInstanceID() string {
 	return uuid.NewString()
 }

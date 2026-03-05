@@ -28,8 +28,9 @@ func (SlavicPriestAbilitySpec) Spec() heroes.AbilitySpec {
 	return heroes.AbilitySpec{
 		Code:     heroes.HEAL_UNIT,
 		Target:   heroes.OWN_UNIT,
+		CoolDown: 2,
 		ManaCost: 3,
-		Value:    15,
+		Value:    10,
 		Duration: 0,
 	}
 }
@@ -87,6 +88,7 @@ func (KarnAbilitySpec) Spec() heroes.AbilitySpec {
 	return heroes.AbilitySpec{
 		Code:     heroes.MAKE_TANK,
 		Target:   heroes.OWN_UNIT,
+		ManaCost: 5,
 		CoolDown: 5,
 		Value:    0,
 		Duration: 3,
@@ -97,6 +99,7 @@ func (KarnAbilitySpec) Spec() heroes.AbilitySpec {
 func (ImperialCommanderAbilitySpec) Spec() heroes.AbilitySpec {
 	return heroes.AbilitySpec{
 		Code:     heroes.BUFF_ATK,
+		Target:   heroes.OWN_UNIT,
 		CoolDown: 3,
 		ManaCost: 2,
 		Value:    10,
@@ -118,7 +121,7 @@ func (ab ImperialCommanderAbilitySpec) Apply(st *MatchState, a Action) error {
 	e := UnitEffect{
 		EffectType: heroes.BUFF_ATK,
 		TurnsLeft:  spec.Duration,
-		Value:      10,
+		Value:      spec.Value,
 	}
 	ApplyEffect(u, e)
 	return nil
@@ -213,7 +216,7 @@ func (ab TheSystemAbilitySpec) Apply(st *MatchState, a Action) error {
 	if a.AttackHero {
 		return ErrHeroAbilityCannotAttackHero
 	}
-	if a.CardInstanceID == "" {
+	if a.TargetInstanceID == "" {
 		return ErrTargetNotFound
 	}
 	centerSlot, center := def.FindSlot(a.TargetInstanceID)

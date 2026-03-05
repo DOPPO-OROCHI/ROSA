@@ -13,3 +13,15 @@ bin/
 # Frontend
 front/node_modules/
 front/dist/
+
+# OS / misc
+.DS_Store
+Thumbs.db
+
+# Local runtime artifacts
+cookies*.txt
+*.local
+
+# Frontend caches
+front/.vite/
+front/.cache/

@@ -41,14 +41,19 @@ func main() {
 		CreateMatch: handlers.NewCreateMatchHandler(handlers.CreateMatchHandlerDeps{DB: db.DB}),
 		GetMatch:    handlers.NewGetMatchHandler(handlers.GetMatchHandlerDeps{DB: db.DB}),
 		MatchesList: handlers.NewMathesListHandler(handlers.MathesListHandlerDeps{DB: db.DB}),
-		ApplyAction: handlers.NewApplyActionHandler(handlers.ApplyActionHandlerDeps{DB: db.DB, Resolvers: mustBeResolvers(&rc)}),
+		ApplyAction: handlers.NewApplyActionHandler(handlers.ApplyActionHandlerDeps{DB: db.DB, Resolvers: mustBeResolvers(&rc), Hub: hub}),
 		GetMe:       handlers.NewGetMeHandler(handlers.GetMeHandler{DB: db.DB}),
 		GetDeck:     handlers.NewGetDeckHandler(handlers.DeckHandlerDeps{DB: db.DB}),
 		SaveDeck:    handlers.NewSaveDeckHandler(handlers.DeckHandlerDeps{DB: db.DB}),
 		CardsList:   handlers.NewCardsListHandler(dtoLikeDepsForCards(db.DB)),
 		HeroesList:  handlers.NewHeroesListHandler(handlers.HeroListHandler{DB: db.DB}),
 		SelectHero:  handlers.NewSelectedHeroHandler(db.DB),
-		StreamMatch: handlers.NewStreamMatchHandler(handlers.StreamMatchDeps{Hub: hub}),
+		StreamMatch: handlers.NewStreamMatchHandler(handlers.StreamMatchDeps{Hub: hub, Store: store}),
+		AuthTelegram: handlers.NewAuthTelegramHandler(handlers.AuthTelegramDeps{
+			DB:    db.DB,
+			Store: store,
+		}),
+		DevAuth: handlers.DevAuthRofl(store),
 	}
 	mux := adapters.NewMux(app)
 	httpHandler := middleware.AuthMiddleware(store)(mux)
@@ -85,6 +90,9 @@ func main() {
 		}
 	}()
 	go func() {
+		errCh <- srv.ListenAndServe()
+	}()
+	go func() {
 		if err := runTelegramBot(ctx); err != nil {
 			errCh <- err
 		}
@@ -92,7 +100,9 @@ func main() {
 	select {
 	case <-ctx.Done():
 	case err := <-errCh:
-		log.Printf("fatal error: %v", err)
+		if err != nil && !errors.Is(err, http.ErrServerClosed) {
+			log.Printf("fatal err : %v", err)
+		}
 		stop()
 	}
 	shutDownCtx, cansel := context.WithTimeout(context.Background(), 10*time.Second)

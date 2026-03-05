@@ -63,7 +63,7 @@ func (c *ResolverCache) Reload(db *gorm.DB) error {
 				return game.TheSystemAbilitySpec{}, true
 			case "imperial_commander":
 				return game.ImperialCommanderAbilitySpec{}, true
-			case "balck_cell":
+			case "black_cell":
 				return game.BlackCellAbilitySpec{}, true
 			case "slavic_priest":
 				return game.SlavicPriestAbilitySpec{}, true

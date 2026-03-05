@@ -14,7 +14,7 @@ import (
 func ApplyActionToMatchTx(db *gorm.DB,
 	matchID uint,
 	userID uint,
-	req dto.ApplyActionReplace,
+	req dto.ApplyActionRequest,
 	r game.Resolvers) (*game.MatchState, error) {
 	var out *game.MatchState
 	err := db.Transaction(func(tx *gorm.DB) error {

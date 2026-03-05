@@ -5,7 +5,7 @@ import (
 	"TheWar/internal/domain/heroes"
 	"errors"
 	"fmt"
-	"strconv"
+	"time"
 )
 
 func StartTurn(m *MatchState, nowUnix int64) {
@@ -76,7 +76,7 @@ func EndTurn(m *MatchState) {
 		return
 	}
 	m.ActivePlayer = 1 - m.ActivePlayer
-	m.Phase = PhaseStart
+	StartTurn(m, time.Now().Unix())
 }
 
 func PlayBattleCard(m *MatchState,
@@ -150,8 +150,8 @@ func PlayBattleCard(m *MatchState,
 		SourceKind:       string(SourceUnit),
 		SourceInstanceID: u.InstanceID,
 		SourceTemplateID: u.TemplateID,
-		VFXKey:           tpl.AssetBaseKey + "/vfx/summon",
-		SFXKey:           tpl.AssetBaseKey + "/sfx/summon",
+		VFXKey:           BuildVFXKey(tpl.AssetBaseKey, "summon"),
+		SFXKey:           BuildSFXKey(tpl.AssetBaseKey, "summon"),
 		TargetSlot:       targetSlot,
 	})
 	return nil
@@ -223,8 +223,8 @@ func PlayBuffCard(m *MatchState,
 		PlayerIndex:          playerIndex,
 		SourceKind:           string(SourceCard),
 		SourceCardTemplateID: buffCard.TemplateID,
-		VFXKey:               tpl.AssetBaseKey + "/vfx/cast",
-		SFXKey:               tpl.AssetBaseKey + "/sfx/cast",
+		VFXKey:               BuildVFXKey(tpl.AssetBaseKey, "cast"),
+		SFXKey:               BuildSFXKey(tpl.AssetBaseKey, "cast"),
 		Targets: []EventTarget{
 			{
 				InstanceID: target.InstanceID,
@@ -298,8 +298,8 @@ func CardAttack(m *MatchState,
 			SourceKind:       string(SourceUnit),
 			SourceInstanceID: a.InstanceID,
 			SourceTemplateID: a.TemplateID,
-			VFXKey:           tpl.AssetBaseKey + "/vfx/attack",
-			SFXKey:           tpl.AssetBaseKey + "/sfx/attack",
+			VFXKey:           BuildVFXKey(tpl.AssetBaseKey, "attack"), //бессмыслица, добавил чисто для красоты
+			SFXKey:           BuildSFXKey(tpl.AssetBaseKey, "attack"), //ок не бессмыслица, хил с точки зрения движка это атака по своим)))
 			Targets:          targets,
 		})
 		return nil
@@ -382,8 +382,8 @@ func CardAttack(m *MatchState,
 		SourceKind:       string(SourceUnit),
 		SourceInstanceID: a.InstanceID,
 		SourceTemplateID: a.TemplateID,
-		VFXKey:           "card/" + a.TemplateID + "/attack",
-		SFXKey:           "card/" + a.TemplateID + "/attack",
+		VFXKey:           BuildVFXKey(tpl.AssetBaseKey, "attack"),
+		SFXKey:           BuildSFXKey(tpl.AssetBaseKey, "attack"),
 		Targets:          targets,
 	})
 	if defPlayer.HeroHP <= 0 {
@@ -487,14 +487,14 @@ func HeroAttack(m *MatchState,
 		}
 	}
 	atkPlayer.HeroAttackCooldown = atkPlayer.HeroAttackBaseCooldown
-	heroBase := "/hero" + atkPlayer.HeroCode
+	heroBase := HeroBaseKey(atkPlayer.HeroCode)
 	m.Events = append(m.Events, Event{
 		Type:           string(EventHeroAttack),
 		PlayerIndex:    playerIndex,
 		SourceKind:     string(SourceHero),
 		SourceHeroCode: atkPlayer.HeroCode,
-		VFXKey:         heroBase + "/vfx/attack",
-		SFXKey:         heroBase + "/sfx/attack",
+		VFXKey:         BuildVFXKey(heroBase, "attack"),
+		SFXKey:         BuildSFXKey(heroBase, "attack"),
 		Targets:        targets,
 	})
 	if defPlayer.HeroHP <= 0 {
@@ -563,9 +563,6 @@ func PlayHeroSpell(m *MatchState, a Action, r Resolvers) error {
 		return ErrHeroAbilityBadTarget
 	}
 	targetSlot := findTargetSlotForHeroSpell(m, a, spec)
-	if err := ability.Apply(m, a); err != nil {
-		return err
-	}
 	snaps, err := buildHeroSpellShanpsBefore(m, a, spec)
 	if err != nil {
 		return err
@@ -576,25 +573,14 @@ func PlayHeroSpell(m *MatchState, a Action, r Resolvers) error {
 	p.Mana -= spec.ManaCost
 	p.HeroAbilityCooldown = spec.CoolDown // <-- фикс
 	targets := buildHeroSpellTargetsAfter(m, spec, snaps)
-	if a.AttackHero {
-		targets = append(targets, EventTarget{
-			InstanceID: "hero:p" + strconv.Itoa(1-a.PlayerIndex),
-			Amount:     spec.Value,
-		})
-	} else if a.TargetInstanceID != "" {
-		targets = append(targets, EventTarget{
-			InstanceID: a.TargetInstanceID,
-			Amount:     spec.Value,
-		})
-	}
-	heroBase := "/hero" + p.HeroCode
+	heroBase := HeroBaseKey(p.HeroCode)
 	m.Events = append(m.Events, Event{
 		Type:           string(EventHeroSpell),
 		PlayerIndex:    a.PlayerIndex,
 		SourceKind:     string(SourceHero),
 		SourceHeroCode: p.HeroCode,
-		VFXKey:         heroBase + "/vfx/spell",
-		SFXKey:         heroBase + "/sfx/spell",
+		VFXKey:         BuildVFXKey(heroBase, "spell"),
+		SFXKey:         BuildSFXKey(heroBase, "spell"),
 		TargetSlot:     targetSlot,
 		Targets:        targets,
 	})
@@ -678,7 +664,7 @@ func buildHeroSpellShanpsBefore(m *MatchState, a Action, spec heroes.AbilitySpec
 			hpBefore: center.HP,
 		})
 		left, right := centerSlot-1, centerSlot+1
-		if left > 0 && p.Table[left] != nil {
+		if left >= 0 && p.Table[left] != nil {
 			u := p.Table[left]
 			snaps = append(snaps, HeroSellSnap{
 				playerIndex: defPI, isHero: false, slot: left,

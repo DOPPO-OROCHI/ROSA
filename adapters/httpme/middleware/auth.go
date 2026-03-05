@@ -9,6 +9,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"errors"
+	"log"
 	"net/http"
 	"net/url"
 	"sort"
@@ -51,12 +52,13 @@ type AuthUser struct {
 func AuthMiddleware(store *TokenStore) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			if r.URL.Path == "/auth/telegram" {
+			if r.URL.Path == "/auth/telegram" || r.URL.Path == "/auth/dev" || r.URL.Path == "/healthz" { //<-исправить после тестов!
 				next.ServeHTTP(w, r)
 				return
 			}
 			c, err := r.Cookie("session")
 			if err != nil || c.Value == "" {
+				log.Printf("cookie err=%v value=%v", err, c)
 				WriteErr(w, http.StatusUnauthorized, "unauthorized")
 				return
 			}
@@ -69,6 +71,7 @@ func AuthMiddleware(store *TokenStore) func(http.Handler) http.Handler {
 				UserID: sess.UserID,
 				TGID:   sess.TGID,
 			})
+			log.Printf("auth ok user = %d, path = %s", sess.UserID, r.URL.Path)
 			next.ServeHTTP(w, r.WithContext(ctx))
 		})
 	}
@@ -76,7 +79,7 @@ func AuthMiddleware(store *TokenStore) func(http.Handler) http.Handler {
 
 func ValidateTelegramInitData(initDataRaw, botToken string, maxAge time.Duration) (int, error) {
 	if initDataRaw == "" {
-		return 0, ErrInitDataBadFormat
+		return 0, ErrInitDataMissing
 	}
 	values, err := url.ParseQuery(initDataRaw)
 	if err != nil {
@@ -119,7 +122,7 @@ func ValidateTelegramInitData(initDataRaw, botToken string, maxAge time.Duration
 		return 0, ErrInitDataBadFormat
 	}
 	if time.Since(time.Unix(authDate, 0)) > maxAge {
-		return 0, ErrInitDataBadUser
+		return 0, ErrInitDataExpired
 	}
 	userJSON := values.Get("user")
 	if userJSON == "" {
@@ -156,6 +159,7 @@ func (s *TokenStore) Issue(userID uint, tgID int) (token string, exp time.Time, 
 	token = base64.RawURLEncoding.EncodeToString(b)
 	exp = time.Now().Add(s.ttl)
 	s.mu.Lock()
+	defer s.mu.Unlock()
 	s.data[token] = session{UserID: userID, TGID: tgID, ExpiredAt: exp}
 	return token, exp, nil
 }
