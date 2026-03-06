@@ -42,13 +42,13 @@ func ApplyActionToMatchTx(db *gorm.DB,
 		default:
 			return ErrNotParticipant //<-говорим что тот, кто пытается обновить состояние не участник мачта
 		}
-		expectedDBVersion := row.Version //<-обязательно записываем версию, чтобы у нас был optimisticBlocking
-		var st game.MatchState           //<-а сюда будем десериализировать состояние матча
-		if err := json.Unmarshal(row.State, &st); err != nil {
+		expectedDBVersion := row.Version                       //<-обязательно записываем версию, чтобы у нас был optimistic locking
+		var st game.MatchState                                 //<-а сюда будем десериализировать состояние матча
+		if err := json.Unmarshal(row.State, &st); err != nil { //<-ищем в БД текущее состояние матча
 			return ErrCorruptedMatchState
 		}
-		st.Version = expectedDBVersion
-		act := game.Action{
+		st.Version = expectedDBVersion //<-синхронизирую доменную версию с БД
+		act := game.Action{            //<-а здесь описывает вообще что за действие. Над каким юнитом, кого атакуем, кем и так далее
 			PlayerIndex:      playerIndex,
 			Type:             req.Type,
 			CardInstanceID:   req.CardInstanceID,
@@ -57,22 +57,26 @@ func ApplyActionToMatchTx(db *gorm.DB,
 			ExpectedVersion:  req.ExpectedVersion,
 			TargetSlot:       req.TargetSlot,
 		}
-		if err := game.ApplyAction(&st, act, r); err != nil {
+		if err := game.ApplyAction(&st, act, r); err != nil { //<-применяем действие
 			return err
 		}
-		newJSON, err := json.Marshal(&st)
+		newJSON, err := json.Marshal(&st) //<-маршалим новое состояние обратно в JSON
 		if err != nil {
 			return err
 		}
 		if err := repository.SaveMatchState(tx, row.ID, expectedDBVersion, newJSON, st.Version, st.TurnDeadLineAt); err != nil {
 			return err
-		}
-		stCopy := st
-		out = &stCopy
+		} //<-обновляем строку конкретного матча атомарно
+		out = &st //<-назначаем аут
 		return nil
 	})
 	if err != nil {
 		return nil, err
 	}
-	return out, nil
+	return out, nil //<-возвращаем новое состояние
 }
+
+/*Таким образом производится изменение матча. Любые действия игрока отражаются здесь. Ключевой момент в этой функции
+-атомарное обновление БД. Естественно перед этим надо прочитать вводные, который юзер отправляет. Я читаю JSON и обновляю
+собственно состояние матча, описывая сначала само действие, потом вызывая ApplyAction, в котором уже и лежат все обработчики
+со ввсеми возможными в рамках игры сценариями*/
