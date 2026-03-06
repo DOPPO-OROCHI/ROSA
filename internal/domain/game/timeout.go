@@ -1,23 +1,21 @@
 package game
 
+//Функция, которая отвечает за проверку таймаута хода и если да, принудительно завершает ход
 func ForceTimeOut(m *MatchState, nowUnix int64) (bool, error) {
-	if m.Finished {
+	if m.Finished { //<-проверяем матч на завршение
 		return false, ErrMatchFinished
 	}
-	if m.Phase == PhaseStart {
-		StartTurn(m, nowUnix)
+	if m.Phase == PhaseStart { //<-проверяем фазу и если она на старте
+		StartTurn(m, nowUnix) //<-начинаем ход с переводом фазы на мэйн, со всеми вытекающими
 	}
-	if m.Phase != PhaseMain || m.TurnDeadLineAt <= 0 || nowUnix <= m.TurnDeadLineAt {
-		return false, nil
+	if m.Phase != PhaseMain || m.TurnDeadLineAt <= 0 || nowUnix <= m.TurnDeadLineAt { //<-если таймаут еще не наступил
+		return false, nil //<-возвращаем фолс, который в смысле функции означает -не делаем ничего
 	}
-	m.Events = m.Events[:0]
-	m.Events = append(m.Events, Event{
+	m.Events = m.Events[:0]            //<-чистим ивентный массив, чтобы не засирать пользователя лишними анимациями
+	m.Events = append(m.Events, Event{ //<-добавляем ивент завершения хода по истечению времени
 		Type:        "turn_timeout",
 		PlayerIndex: m.ActivePlayer,
 	})
-	EndTurn(m)
-	if !m.Finished {
-		StartTurn(m, nowUnix)
-	}
+	EndTurn(m) //<-заканчиваем ход
 	return true, nil
 }

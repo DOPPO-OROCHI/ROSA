@@ -2,14 +2,20 @@ package player
 
 import "gorm.io/gorm"
 
+/*Описание пользователя из ТГ. Так как вся игра завязана на вэб апп, то и основные данные о пользователе берутся из него.
+Здесь хранится вся необходимая информация для представления того, что такое пользователь. Важно уточнить, что в основном для
+операционки я использую айди, который присваивает ГОРМ. Почему ? Потому что использовать ТГ айди=риск того, то завязанные
+сущности проебутся из изменений внутри ТГ. Так вот...*/
+
 type TelegramUser struct {
 	gorm.Model
-	TGID                   int    `gorm:"not null;uniqueIndex"`
-	Username               string `gorm:"not null"`
-	FirstName              string `gorm:"not null"`
-	LastName               string `gorm:"not null"`
-	Language               string `gorm:"not null"`
-	Rating                 int    `gorm:"not null;default:1500"`
-	XP                     int    `gorm:"not null;default:0"`
-	SelectedHeroTemplateID *uint  `gorm:"index"`
+	TGID      int    `gorm:"not null;uniqueIndex"` //<-айди пользователя из ТГ
+	Username  string `gorm:"not null"`             //<-юзернейм игрока
+	FirstName string `gorm:"not null"`             //<-первое имя
+	LastName  string `gorm:"not null"`             //<-второе имя (кстати, несмотря на то, что у многих пользователей
+	//ТГ нет второго имени, БД от этого не ахуевает)
+	Language               string `gorm:"not null"`              //<-язык интерфейса ТГ
+	Rating                 int    `gorm:"not null;default:1500"` //<-базовый рейтинг игрока
+	XP                     int    `gorm:"not null;default:0"`    //<-единица измерения поднятия рейтинга
+	SelectedHeroTemplateID *uint  `gorm:"index"`                 //<-выбранный персонаж игрока, с которым он пойдет в матч
 }

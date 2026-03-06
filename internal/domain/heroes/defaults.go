@@ -1,23 +1,28 @@
 package heroes
 
+//По примеру с картами, это дефолтный темплейт всех персонажей, которые представлены в игре
+
+//здесь идет перечисление всех персов, их характеристики, имена, и абилки
 var DefaultHeroTemplate = []CharacterTemplate{
 	{
-		Name:           "Imperial Commander",
-		CharacterCode:  "imperial_commander",
-		AttackPower:    7,
-		HealthPoints:   450,
-		AttackCooldown: 2,
-		Ability: AbilitySpec{
-			Code:     BUFF_ATK,
-			Target:   OWN_UNIT,
-			CoolDown: 3,
-			ManaCost: 2,
-			Value:    10,
-			Duration: 3,
+		Name:           "Imperial Commander", //<-имя, которое отображается в UI
+		CharacterCode:  "imperial_commander", //<-уникальный код, который нужен для операционки
+		AttackPower:    7,                    //<-сила атаки
+		HealthPoints:   450,                  //<-хп
+		AttackCooldown: 2,                    //<-кд атаки (не спел)
+		Ability: AbilitySpec{ //<-а это спел
+			Code:     BUFF_ATK, //<-с его кодом, который отражает смысл абилки
+			Target:   OWN_UNIT, //<-цель спела
+			CoolDown: 3,        //<-кд
+			ManaCost: 2,        //<-стоимость в мане
+			Value:    10,       //<-значение абилки (в случае атаки -урон, в случае бафа -плюсы)
+			Duration: 3,        //<-длительность (если 0-баф вечный, далее по значению)
 		},
-		Description: "Раз в 3 хода повышает урон на 10 любой карты. Баф длится 3 хода",
+		Description: "Раз в 3 хода повышает урон на 10 любой карты. Баф длится 3 хода", //<-описание для UI. Пока криво, не нравится
+		//потому что описание должно быть о персонаже, а не его скиле. Ну потом пофикшу
 	},
 	{
+		//далее по образу и подобию
 		Name:           "Karn",
 		CharacterCode:  "karn",
 		AttackPower:    10,

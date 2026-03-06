@@ -1,19 +1,21 @@
 package heroes
 
-const (
-	BUFF_ATK          = "buff_atk"
-	BUFF_ATK_PERM     = "buff_atk_perm"
-	ATTACK_ANY        = "attack_any"
-	ATTACK_SPLASH     = "attack_splash"
-	MAKE_TANK         = "make_tank"
-	ADD_CARD_MECHANIC = "add_card_mechanic"
-	HEAL_UNIT         = "heal_unit"
-)
+/*А это чисто константы для абилок персов. Ничего интересного за исключением того, что они а) на мой взгляд кривые
+б) здесь будет происходить движуха по добавлению новых типов абилок в том числе. Так и вот...*/
 
 const (
-	OWN_UNIT    = "own_unit"
-	ENEMY_UNIT  = "enemy_unit"
-	SELF_TABLE  = "self_table"
-	ENEMY_TABLE = "enemy_table"
-	ENEMY_ANY   = "enemy_any"
+	BUFF_ATK      = "buff_atk"      //<-перс умеет бафать атаку
+	BUFF_ATK_PERM = "buff_atk_perm" //<-перс умееть бафать атаку навсегда
+	ATTACK_ANY    = "attack_any"    //<-атаковать любую цель
+	ATTACK_SPLASH = "attack_splash" //<-атаковать со сплешем (но не героя)
+	MAKE_TANK     = "make_tank"     //<-умееть делать из любого чела танка
+	HEAL_UNIT     = "heal_unit"     //<-умееть хилить чувака
+)
+
+//а это цели, к которым так или иначе могут применить способности герои
+const (
+	OWN_UNIT    = "own_unit"    //<-на своего юнита
+	ENEMY_UNIT  = "enemy_unit"  //<-на юнита противника
+	ENEMY_TABLE = "enemy_table" //<-чужой стол (например атака сплешем)
+	ENEMY_ANY   = "enemy_any"   //<-любая цель
 )

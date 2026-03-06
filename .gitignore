@@ -25,3 +25,4 @@ cookies*.txt
 # Frontend caches
 front/.vite/
 front/.cache/
+/.gocache/

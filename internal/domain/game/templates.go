@@ -1,26 +1,34 @@
 package game
 
+/*Файл с содержанием карточных чертежей. Первый для боевых карт (Battle), второй для баф карт (Buff).
+Особенностью данных структур является то, что они нужны непосредственно домену. Почему ? Смотрите в чем
+прикол дорогие мои... У нас уже есть модели карт, да (cards/models). Даааа, но как бы то слой БД шаришь ?
+А вот эти две структуры нужны для того, чтобы мапить в них те структуры, которые живут в БД. Живите с этим.
+Подробнее об этом будем тереть в резолверах, а пока закрепим то, что данные структуры онли рантайм
+компонент из DTO, в который мы мапим нужные для двигла поля, чтобы доменная часть оставалась чистой.*/
+
 type BattleTemplate struct {
-	TemplateID    string
-	HealthPoints  int
-	Attack        int
-	SplashRadius  int
-	Cooldown      int
-	Manacost      int
-	IsTank        bool
-	CardType      string
-	CanBeUpgraded bool
-	ImageKey      string
-	AssetBaseKey  string
+	TemplateID    string //<-айдишник чертежа
+	HealthPoints  int    //<-хп карты
+	Attack        int    //<-сила атаки карты
+	SplashRadius  int    //<-радиус сплеша (если 0-сплеша нет, если 1-бьет по одной цели справа и слева)
+	Cooldown      int    //<-кд карты
+	Manacost      int    //<-стоимость в мане
+	IsTank        bool   //<-является ли танком
+	CardType      string //<-тип карты
+	CanBeUpgraded bool   //<-может ли быть улучшенной
+	ImageKey      string //<-картинка
+	AssetBaseKey  string //<-набор ассетов
 }
 
+//та же тема только с бафами
 type BuffTemplate struct {
-	TemplateID   string
-	ManaCost     int
-	BuffType     string
-	BuffValue    int
-	OnlyFor      string
-	Duration     int
-	ImageKey     string
-	AssetBaseKey string
+	TemplateID   string //<-понятно
+	ManaCost     int    //<-тоже понятно
+	BuffType     string //<-тип бафа (хп,атака,танк)
+	BuffValue    int    //<-значение бафа
+	OnlyFor      string //<-только для...
+	Duration     int    //<-длительность бафа
+	ImageKey     string //<-понятно
+	AssetBaseKey string //<-заебись понятно
 }
