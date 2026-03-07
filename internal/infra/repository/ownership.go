@@ -11,7 +11,7 @@ import (
 type GamerBattleCards struct {
 	gorm.Model
 	GamerID        uint                     `gorm:"not null;index;uniqueIndex:ux_gamer_battle_card"`
-	Gamer          player.TelegramUser      `gorm:"foreignKey:GamerID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE"` //ключевая вещь, связывающая юзера и карты
+	Gamer          player.TelegramUser      `gorm:"foreignKey:GamerID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
 	CardTemplateID uint                     `gorm:"not null;index;uniqueIndex:ux_gamer_battle_card"`
 	CardTemplate   cards.BattleCardTemplate `gorm:"foreignKey:CardTemplateID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:RESTRICT"`
 	Copies         int                      `gorm:"not null;default:0"`
@@ -22,7 +22,7 @@ type GamerBattleCards struct {
 type GamerBuffCards struct {
 	gorm.Model
 	GamerID        uint                    `gorm:"not null;index;uniqueIndex:ux_gamer_buff_card"`
-	Gamer          player.TelegramUser     `gorm:"foreignKey:GamerID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE"` //ключевая вещь, связывающая юзера и карты
+	Gamer          player.TelegramUser     `gorm:"foreignKey:GamerID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
 	CardTemplateID uint                    `gorm:"not null;index;uniqueIndex:ux_gamer_buff_card"`
 	CardTemplate   cards.BuffCardsTemplate `gorm:"foreignKey:CardTemplateID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:RESTRICT"`
 	Copies         int                     `gorm:"not null;default:0"`
