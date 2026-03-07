@@ -7,6 +7,8 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
+/*Леха, спасибо что ты есть*/
+
 var keymap = map[string]string{}
 
 func GoDotEnvVariable(key string) string {
