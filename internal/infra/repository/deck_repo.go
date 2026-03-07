@@ -6,37 +6,55 @@ import (
 	"gorm.io/gorm"
 )
 
+/*Данный файл целиком и полностью посвящен операциям над деками внутри БД. Для чего нам это нужно ?
+Когда игрок загружает свою деку перед игрой, она записывается в БД, с другой стороны, чтобы превратить
+его деку в рантайм мем, мы должны выгрузить всю эту деку (ок, не только рантайм, так же мы должны как
+то вернуть его деку по запросу). Данный файл решает эти проблемы.*/
+
+/*
+Данная функция занята выгрузкой деки игрока. Отдает эта функция так же
+эту деку, участвуя в формировании состояния игрока перед матчем непосредственно. Во входящих аргументах
+принимаем переменную БД и айди юзера, тем самым устанавливая вводные. Хоть это и звучит до пизды банально,
+но такие вещи я объясняю и себе тоже. манифестирую...
+*/
 func LoadDeckTx(tx *gorm.DB, userID uint) ([]game.DeckEntry, error) {
-	var rows []GamerDeckEntry
-	if err := tx.Where("gamer_id = ?", userID).Find(&rows).Error; err != nil {
+	var rows []GamerDeckEntry                                                  //<-вводим переменную, куда будем грузить данные
+	if err := tx.Where("gamer_id = ?", userID).Find(&rows).Error; err != nil { //<-ищем gamer_id по userID,
+		//откуда выгружаем все данные в нашу переменную
 		return nil, err
 	}
-	out := make([]game.DeckEntry, 0, len(rows))
-	for _, r := range rows {
+	out := make([]game.DeckEntry, 0, len(rows)) //<-формируем массив типа внутриматчевой деки с длиной выгруженных карт
+	for _, r := range rows {                    //<-заполняем наш массив
 		out = append(out, game.DeckEntry{
-			Kind:       r.Kind,
-			TemplateID: r.TemplateID,
-			Count:      r.Count,
+			Kind:       r.Kind,       //<-перечисляя тип карт
+			TemplateID: r.TemplateID, //<-вместе с их темплейтами
+			Count:      r.Count,      //<-и количеством
 		})
 	}
-	return out, nil
+	return out, nil //<-возвращаем этот массив
 }
 
+/*
+А эта функция занята тем, что заменяет деку игрока внутри БД. Принципиально тут то, что тут помимо прочего
+принимаем деку, которую мы собирали ранее в функции LoadDeck.
+*/
 func SaveDeckTx(tx *gorm.DB, userID uint, entries []game.DeckEntry) error {
-	if err := tx.Where("gamer_id = ?", userID).Delete(&GamerDeckEntry{}).Error; err != nil {
+	if err := tx.Where("gamer_id = ?", userID).Delete(&GamerDeckEntry{}).Error; err != nil { //<-удаляем предыдущую деку из БД
 		return err
 	}
-	rows := make([]GamerDeckEntry, 0, len(entries))
-	for _, e := range entries {
+	rows := make([]GamerDeckEntry, 0, len(entries)) //<-формируем новую переменную типа внутриигровой деки
+	for _, e := range entries {                     //<-заполняем
 		rows = append(rows, GamerDeckEntry{
-			GamerID:    userID,
-			Kind:       e.Kind,
-			TemplateID: e.TemplateID,
-			Count:      e.Count,
+			GamerID:    userID,       //<-включая айди игрока
+			Kind:       e.Kind,       //<-типа карты
+			TemplateID: e.TemplateID, //<-айди чертежа карты
+			Count:      e.Count,      //<-и число конкретных карт
 		})
 	}
-	if len(rows) == 0 {
+	if len(rows) == 0 { //<-если длина массива 0, это не значит что это ошибка, потому что специфика функции не заключается
+		//в валидации. Для этого есть отдельные функции типа ValidateDeck
 		return nil
 	}
-	return tx.CreateInBatches(&rows, 200).Error
+	return tx.CreateInBatches(&rows, 200).Error //<-вызываем по аналогии с сидингом заполнение деки.
+	//хотя тут можно было бы этого не делать, поскольку длина деки должна быть 20
 }

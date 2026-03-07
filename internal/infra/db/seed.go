@@ -20,12 +20,16 @@ import (
 */
 func SeedBattleCardTemplate(db *gorm.DB) error {
 	if len(cards.DefaultBattleCards) == 0 { //<-просто проверка
-		return nil
+		return nil //<-к слову. То, что в дефолтах нет данных не является ошибкой именно этой функции
+		//почему ? Потому что единственная задача сида - выгрузить данные в БД. Она не обязана валидировать темплейты
 	}
-	FillBattleKeys(cards.DefaultBattleCards)
-	return db.Clauses(clause.OnConflict{
-		Columns: []clause.Column{{Name: "code_string"}},
-		DoUpdates: clause.AssignmentColumns([]string{
+	FillBattleKeys(cards.DefaultBattleCards) //<-вызываем функцию заполнения ключей
+	return db.Clauses(clause.OnConflict{     //<-вызываем безопасное добавление записей
+		//к слову, раньше я не понимал почему мы это можем вызвать через ретерн. Но как по мне все супер понятно,
+		//даже с языковой точки зрения. По сути, по-русски это звучало бы так -верни по выполнению функции ошибку,
+		//если она имело место быть. Прикольный синтаксис. Это такой же прикол как if err := ... ; err != nil {...}
+		Columns: []clause.Column{{Name: "code_string"}}, //<-но тем не менее, указываем по какому ключу мы если что будем апдейтить карты
+		DoUpdates: clause.AssignmentColumns([]string{ //<-и если произошел конфликт с code_string, то мы просто обновляем следующие поля:
 			"name",
 			"health_points",
 			"attack",
@@ -40,14 +44,21 @@ func SeedBattleCardTemplate(db *gorm.DB) error {
 			"image_key",
 			"asset_base_key",
 		}),
-	}).CreateInBatches(&cards.DefaultBattleCards, 200).Error
+	}).CreateInBatches(&cards.DefaultBattleCards, 200).Error //<-вот это тоже интересно, до сих пор не виданно
+	/*Здесь стоит представить, что такое массовый сидинг данных внутрь БД. По сути, отдельный сид = отдельный SQL
+	запрос, из чего становится ясно, что в рамках больших массивов данных, это очень быстро станет неподъемным для
+	стабильной работы (хоть и вряд ли это когда нибудь будет актуальным в рамках моей игры). CreateInBatches решает
+	этот вопрос. Что здесь происходит ? Мы передаем массив с нашими картами, а вторым аргументом целое число, которое
+	отражает то, сколько данных мы будем сидить в рамках одного SQL запроса. Таким образом за раз я буду сгружать
+	200 сущностей, что решает проблему с нагрузкой на БД*/
 }
 
+/*Аналогичная ситуация и в случае бафф карт. Идентичная схема, идентичный сидинг*/
 func SeedBuffCardTemplate(db *gorm.DB) error {
 	if len(cards.DefaultBuffCards) == 0 {
 		return nil
 	}
-	FillBuffKeys(cards.DefaultBuffCards)
+	FillBuffKeys(cards.DefaultBuffCards) //<-так же вызываем автозаполнение ключей
 	return db.Clauses(clause.OnConflict{
 		Columns: []clause.Column{{Name: "code_string"}},
 		DoUpdates: clause.AssignmentColumns([]string{
@@ -65,13 +76,13 @@ func SeedBuffCardTemplate(db *gorm.DB) error {
 	}).CreateInBatches(&cards.DefaultBuffCards, 200).Error
 }
 
-func SeedCharacterTemplate(db *gorm.DB) error { //<-принимаем ДБ как аргумент
-	if len(heroes.DefaultHeroTemplate) == 0 { //<-если у нас никого нет в темлейте, ниче не возвращаем, это не ошибка
+func SeedCharacterTemplate(db *gorm.DB) error {
+	if len(heroes.DefaultHeroTemplate) == 0 {
 		return nil
 	}
 	FillHeroKeys(heroes.DefaultHeroTemplate)
-	return db.Clauses(clause.OnConflict{ //<-начинаем вечеринку
-		Columns: []clause.Column{{Name: "character_code"}}, //<-проверяем, если код персонажа уже есть, ничего не делаем (херово под балансные правки)
+	return db.Clauses(clause.OnConflict{
+		Columns: []clause.Column{{Name: "character_code"}},
 		DoUpdates: clause.AssignmentColumns([]string{
 			"name",
 			"attack_power",
@@ -91,6 +102,11 @@ func SeedCharacterTemplate(db *gorm.DB) error { //<-принимаем ДБ ка
 	}).CreateInBatches(&heroes.DefaultHeroTemplate, 200).Error
 }
 
+/*
+Для того, чтобы отдельно не вызывать каждую из сущностей, нужно как то загрузить все это добно в одно.
+Этим и занимается SeedEverything, последовательно вызывая каждую из вышенаписанных функций. В случае провала
+хоть одной, вовзращаем ошибку
+*/
 func SeedEverything(db *gorm.DB) error {
 	if err := SeedCharacterTemplate(db); err != nil {
 		return err
@@ -103,3 +119,6 @@ func SeedEverything(db *gorm.DB) error {
 	}
 	return nil
 }
+
+/*Таким образом реализована система сидинга данных, со всеми вытекающими. Вызывается штука на самом старте
+приложения (как кэш резолверов), чтобы обеспечить данными БД, что в последствии обеспечит рантайм компонент.*/
