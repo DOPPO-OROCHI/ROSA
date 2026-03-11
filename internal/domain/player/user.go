@@ -9,7 +9,7 @@ import "gorm.io/gorm"
 
 type TelegramUser struct {
 	gorm.Model
-	TGID      int    `gorm:"not null;uniqueIndex"` //<-айди пользователя из ТГ
+	TGID      int64  `gorm:"not null;uniqueIndex"` //<-айди пользователя из ТГ
 	Username  string `gorm:"not null"`             //<-юзернейм игрока
 	FirstName string `gorm:"not null"`             //<-первое имя
 	LastName  string `gorm:"not null"`             //<-второе имя (кстати, несмотря на то, что у многих пользователей

@@ -303,6 +303,21 @@ pre {
   flex-shrink: 0;
 }
 
+.hero-glyph-media,
+.asset-frame-media,
+.slot-media {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.asset-frame-media,
+.slot-media {
+  position: absolute;
+  inset: 0;
+}
+
 .hero-glyph.small {
   width: 56px;
   height: 56px;
@@ -336,6 +351,13 @@ pre {
   letter-spacing: 0.08em;
   text-align: center;
   padding: 0.35rem;
+  text-shadow: 0 2px 6px rgba(0, 0, 0, 0.72);
+}
+
+.hero-glyph .hero-glyph-media {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
 }
 
 .tone-crimson {
@@ -386,10 +408,17 @@ pre {
 .asset-frame {
   width: 100%;
   min-height: 92px;
+  position: relative;
+  overflow: hidden;
   border-radius: 14px;
   display: grid;
   place-items: center;
   border: 1px solid rgba(231, 219, 192, 0.08);
+}
+
+.asset-frame > * {
+  position: relative;
+  z-index: 1;
 }
 
 .asset-frame.compact {
@@ -442,6 +471,8 @@ pre {
 }
 
 .battle-board {
+  position: relative;
+  overflow: hidden;
   order: 1;
   min-height: calc(100vh - 230px - env(safe-area-inset-top) - env(safe-area-inset-bottom));
   display: grid;
@@ -450,6 +481,22 @@ pre {
   background:
     radial-gradient(circle at center, rgba(99, 43, 25, 0.14), transparent 36%),
     linear-gradient(180deg, rgba(19, 20, 26, 0.96), rgba(10, 12, 16, 0.96));
+}
+
+.battle-board > * {
+  position: relative;
+  z-index: 1;
+}
+
+.battle-board-background {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  opacity: 0.18;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: cover;
+  filter: saturate(0.7) contrast(1.05);
 }
 
 .enemy-zone,
@@ -575,6 +622,17 @@ pre {
   justify-content: center;
   flex: 0 0 auto;
   font-size: 0.66rem;
+  position: relative;
+  overflow: hidden;
+}
+
+.slot > * {
+  position: relative;
+  z-index: 1;
+}
+
+.slot-media {
+  opacity: 0.28;
 }
 
 .slot.empty {

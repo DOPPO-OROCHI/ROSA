@@ -7,7 +7,7 @@ package dto
 
 type MeResponse struct {
 	UserID               uint   `json:"user_id"`
-	TGID                 int    `json:"tg_id"`
+	TGID                 int64  `json:"tg_id"`
 	Username             string `json:"username"`
 	FirstName            string `json:"first_name"`
 	Rating               int    `json:"rating"`

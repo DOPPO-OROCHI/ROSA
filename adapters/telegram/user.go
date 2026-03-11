@@ -6,7 +6,7 @@ import (
 	"TheWar/internal/domain/player"
 	"TheWar/internal/infra/repository"
 
-	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
+	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 )

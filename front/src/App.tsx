@@ -1,5 +1,17 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { getAssetTone, resolveAssetLabel } from "./assets";
+import {
+  getAssetTone,
+  resolveAssetLabel,
+  resolveBattleCardImageKey,
+  resolveBoardBackgroundSrc,
+  resolveBuffCardImageKey,
+  resolveCardFallbackSrc,
+  resolveHeroFallbackSrc,
+  resolveHeroImageKey,
+  resolveImageSrc,
+} from "./assets";
+import { apiUrl } from "./config";
+import { bootstrapTelegramWebApp } from "./telegram";
 
 type TabId = "home" | "inventory" | "battle";
 
@@ -156,17 +168,6 @@ type MatchState = {
   events?: MatchEvent[];
 };
 
-declare global {
-  interface Window {
-    Telegram?: {
-      WebApp?: {
-        ready: () => void;
-        expand: () => void;
-      };
-    };
-  }
-}
-
 const defaultDeck: DeckEntry[] = [
   { kind: "battle", template_id: "imperial_guardian", count: 5 },
   { kind: "battle", template_id: "mechanical_knight", count: 3 },
@@ -177,7 +178,7 @@ const defaultDeck: DeckEntry[] = [
 ];
 
 async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> {
-  const response = await fetch(path, {
+  const response = await fetch(apiUrl(path), {
     credentials: "include",
     headers: {
       "Content-Type": "application/json",
@@ -204,6 +205,30 @@ async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> {
   }
 
   return (await response.json()) as T;
+}
+
+function AssetImage(props: {
+  imageKey?: string;
+  alt: string;
+  fallbackSrc: string;
+  className: string;
+}) {
+  return (
+    <img
+      className={props.className}
+      src={resolveImageSrc(props.imageKey)}
+      alt={props.alt}
+      loading="lazy"
+      onError={(event) => {
+        const target = event.currentTarget;
+        if (target.dataset.fallbackApplied === "1") {
+          return;
+        }
+        target.dataset.fallbackApplied = "1";
+        target.src = props.fallbackSrc;
+      }}
+    />
+  );
 }
 
 function totalDeck(entries: DeckEntry[]): number {
@@ -323,12 +348,7 @@ export default function App() {
   const streamRef = useRef<EventSource | null>(null);
 
   useEffect(() => {
-    const app = window.Telegram?.WebApp;
-    if (!app) {
-      return;
-    }
-    app.ready();
-    app.expand();
+    bootstrapTelegramWebApp();
   }, []);
 
   useEffect(() => {
@@ -338,7 +358,7 @@ export default function App() {
       return;
     }
 
-    const stream = new EventSource(`/matches/${selectedMatchId}/stream`, {
+    const stream = new EventSource(apiUrl(`/matches/${selectedMatchId}/stream`), {
       withCredentials: true,
     });
     stream.addEventListener("state", (event) => {
@@ -625,6 +645,12 @@ export default function App() {
     const label = resolveAssetLabel(imageKey || heroCode || "hero");
     return (
       <div className={`hero-glyph ${size} tone-${tone}`}>
+        <AssetImage
+          imageKey={imageKey || resolveHeroImageKey(heroCode)}
+          alt={label}
+          fallbackSrc={resolveHeroFallbackSrc()}
+          className="hero-glyph-media"
+        />
         <span>{label}</span>
       </div>
     );
@@ -645,6 +671,12 @@ export default function App() {
           void (side === "own" ? handleOwnUnitClick(unit) : handleEnemyUnitClick(unit))
         }
       >
+        <AssetImage
+          imageKey={resolveBattleCardImageKey(unitTemplateId(unit))}
+          alt={resolveAssetLabel(unitTemplateId(unit))}
+          fallbackSrc={resolveCardFallbackSrc()}
+          className="slot-media"
+        />
         <strong>{resolveAssetLabel(unitTemplateId(unit))}</strong>
         <span>HP {unitHP(unit)}/{unitMaxHP(unit)}</span>
         <span>ATK {unitAttack(unit)}</span>
@@ -799,7 +831,13 @@ export default function App() {
                 {cards?.battle.map((card) => (
                   <article key={card.template_id} className={`asset-card tone-${getAssetTone(card.asset_base_key)}`}>
                     <div className="asset-frame">
-                      <span>{resolveAssetLabel(card.image_key)}</span>
+                      <AssetImage
+                        imageKey={card.image_key || resolveBattleCardImageKey(card.template_id)}
+                        alt={card.name}
+                        fallbackSrc={resolveCardFallbackSrc()}
+                        className="asset-frame-media"
+                      />
+                      <span>{resolveAssetLabel(card.image_key || card.template_id)}</span>
                     </div>
                     <strong>{card.name}</strong>
                     <span>{card.template_id}</span>
@@ -816,7 +854,13 @@ export default function App() {
                 {cards?.buff.map((card) => (
                   <article key={card.template_id} className={`asset-card tone-${getAssetTone(card.asset_base_key)}`}>
                     <div className="asset-frame">
-                      <span>{resolveAssetLabel(card.image_key)}</span>
+                      <AssetImage
+                        imageKey={card.image_key || resolveBuffCardImageKey(card.template_id)}
+                        alt={card.name}
+                        fallbackSrc={resolveCardFallbackSrc()}
+                        className="asset-frame-media"
+                      />
+                      <span>{resolveAssetLabel(card.image_key || card.template_id)}</span>
                     </div>
                     <strong>{card.name}</strong>
                     <span>{card.template_id}</span>
@@ -849,6 +893,10 @@ export default function App() {
             </aside>
 
             <section className="battle-board panel">
+              <div
+                className="battle-board-background"
+                style={{ backgroundImage: `url(${resolveBoardBackgroundSrc()})` }}
+              />
               {!selectedMatch || !myPlayer || !enemyPlayer ? (
                 <div className="empty-battle">
                   <h2>No active battle selected</h2>
@@ -930,6 +978,16 @@ export default function App() {
                             onClick={() => setSelectedHandCardId(cardInstanceId(card))}
                           >
                             <div className="asset-frame compact">
+                              <AssetImage
+                                imageKey={
+                                  cardKind(card) === "buff"
+                                    ? resolveBuffCardImageKey(templateId)
+                                    : resolveBattleCardImageKey(templateId)
+                                }
+                                alt={templateId}
+                                fallbackSrc={resolveCardFallbackSrc()}
+                                className="asset-frame-media"
+                              />
                               <span>{resolveAssetLabel(templateId)}</span>
                             </div>
                             <strong>{templateId}</strong>

@@ -21,9 +21,24 @@ import (
 	"syscall"
 	"time"
 
-	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
+	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	"gorm.io/gorm"
 )
+
+type telegramWebAppInfo struct {
+	URL string `json:"url"`
+}
+
+type telegramWebAppButton struct {
+	Text   string              `json:"text"`
+	WebApp *telegramWebAppInfo `json:"web_app,omitempty"`
+}
+
+type telegramReplyKeyboardMarkup struct {
+	Keyboard        [][]telegramWebAppButton `json:"keyboard"`
+	ResizeKeyboard  bool                     `json:"resize_keyboard,omitempty"`
+	OneTimeKeyboard bool                     `json:"one_time_keyboard,omitempty"`
+}
 
 func main() {
 	if err := bootstrap.Init(); err != nil {
@@ -113,18 +128,16 @@ func main() {
 
 func runTelegramBot(ctx context.Context) error {
 	api := db.GoDotEnvVariable("BOT_API")
+	webAppURL := db.GoDotEnvVariable("WEBAPP_URL")
 	bot, err := tgbotapi.NewBotAPI(api)
 	if err != nil {
 		return err
 	}
 	bot.Debug = true
-	log.Printf("ура подключились к боту: %v", &bot.Self.UserName)
+	log.Printf("telegram bot connected: %v", &bot.Self.UserName)
 	u := tgbotapi.NewUpdate(0)
 	u.Timeout = 60
-	updates, err := bot.GetUpdatesChan(u)
-	if err != nil {
-		return err
-	}
+	updates := bot.GetUpdatesChan(u)
 	for {
 		select {
 		case <-ctx.Done():
@@ -140,7 +153,24 @@ func runTelegramBot(ctx context.Context) error {
 			if err := telegram.AddNewUser(db.DB, update); err != nil {
 				log.Printf("add user error: %v", err)
 			}
-			msg := tgbotapi.NewMessage(update.Message.Chat.ID, "ДОБРО ПОЖАЛОВАТЬ В ЛУЧШУЮ КАРТОЧНУЮ ИГРУ")
+			msg := tgbotapi.NewMessage(update.Message.Chat.ID, "THEWAR command bridge ready.")
+			if webAppURL == "" {
+				msg.Text = "THEWAR bot is online, but WEBAPP_URL is not configured yet."
+			} else {
+				msg.ReplyMarkup = telegramReplyKeyboardMarkup{
+					ResizeKeyboard: true,
+					Keyboard: [][]telegramWebAppButton{
+						{
+							{
+								Text: "Play",
+								WebApp: &telegramWebAppInfo{
+									URL: webAppURL,
+								},
+							},
+						},
+					},
+				}
+			}
 			_, _ = bot.Send(msg)
 		}
 	}
