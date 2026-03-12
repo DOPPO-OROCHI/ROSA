@@ -1,12 +1,9 @@
 :root {
   color-scheme: dark;
-  font-family: "Trebuchet MS", "Segoe UI", sans-serif;
+  font-family: "Bahnschrift", "Segoe UI Semibold", "Arial Narrow", "Trebuchet MS", sans-serif;
   line-height: 1.45;
-  font-weight: 400;
-  background:
-    radial-gradient(circle at 15% 12%, rgba(174, 61, 33, 0.24), transparent 24%),
-    radial-gradient(circle at 84% 18%, rgba(127, 111, 53, 0.16), transparent 18%),
-    linear-gradient(180deg, #0c0d10 0%, #12151b 44%, #17110d 100%);
+  font-weight: 500;
+  background: #000000;
   color: #e7dbc0;
 }
 
@@ -18,6 +15,8 @@ body {
   margin: 0;
   min-width: 320px;
   min-height: 100vh;
+  background: #000000;
+  text-align: center;
 }
 
 button,
@@ -37,6 +36,7 @@ input {
   border: 1px solid rgba(231, 219, 192, 0.12);
   background: rgba(7, 10, 13, 0.7);
   color: #e7dbc0;
+  text-align: center;
 }
 
 pre {
@@ -53,7 +53,7 @@ pre {
 }
 
 .war-shell {
-  width: min(100%, 520px);
+  width: min(100%, 460px);
   margin: 0 auto;
   padding:
     calc(12px + env(safe-area-inset-top))
@@ -77,8 +77,8 @@ pre {
   display: grid;
   grid-template-columns: 56px 1fr;
   gap: 0.85rem;
-  align-items: start;
-  padding: 0.9rem;
+  align-items: center;
+  padding: 0.85rem;
   border-radius: 22px;
   background:
     linear-gradient(135deg, rgba(93, 21, 15, 0.28), rgba(12, 16, 21, 0.92)),
@@ -102,7 +102,7 @@ pre {
   border-radius: 50%;
   display: grid;
   place-items: center;
-  font-family: Georgia, "Times New Roman", serif;
+  font-family: "Bahnschrift", "Segoe UI Semibold", "Arial Narrow", sans-serif;
   font-weight: 700;
   color: #f7ebca;
   background:
@@ -121,7 +121,6 @@ pre {
   font-size: 1.45rem;
 }
 
-.command-title h1,
 .panel h2,
 .panel h3,
 .hero-card strong,
@@ -129,20 +128,9 @@ pre {
 .slot strong,
 .hand-card strong {
   margin: 0;
-  font-family: Georgia, "Times New Roman", serif;
-  letter-spacing: 0.02em;
-}
-
-.command-title h1 {
-  font-size: 1.35rem;
-}
-
-.eyebrow {
-  margin: 0 0 0.2rem;
+  font-family: "Bahnschrift", "Segoe UI Semibold", "Arial Narrow", sans-serif;
+  letter-spacing: 0.05em;
   text-transform: uppercase;
-  letter-spacing: 0.15em;
-  font-size: 0.68rem;
-  color: #b99a5a;
 }
 
 .muted {
@@ -150,7 +138,6 @@ pre {
 }
 
 .status-rack {
-  grid-column: span 2;
   display: flex;
   flex-direction: column;
   gap: 0.45rem;
@@ -198,6 +185,10 @@ pre {
   backdrop-filter: blur(10px);
 }
 
+.battle-nav.two-up {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
 .nav-pill,
 .match-pill,
 .ghost-button,
@@ -214,12 +205,12 @@ pre {
 .nav-pill.active,
 .match-pill.active,
 .command-button {
-  background: linear-gradient(135deg, #7b2f1d, #b26e2e);
-  color: #f8eaca;
+  background: linear-gradient(135deg, #19455f, #2f7a8e);
+  color: #edf9ff;
 }
 
 .command-button.danger {
-  background: linear-gradient(135deg, #6f1111, #b43b24);
+  background: linear-gradient(135deg, #6d1820, #ab3142);
 }
 
 .view-frame {
@@ -283,8 +274,8 @@ pre {
 
 .quick-login button,
 .command-panel button {
-  background: linear-gradient(135deg, #6e2819, #9e652b);
-  color: #f4e5c0;
+  background: linear-gradient(135deg, #16394c, #2a6579);
+  color: #eaf6fb;
 }
 
 .hero-banner {
@@ -292,6 +283,16 @@ pre {
   padding: 0.9rem;
   border-radius: 18px;
   background: rgba(7, 10, 13, 0.44);
+}
+
+.hero-banner-top {
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.hero-banner-top h3 {
+  margin-bottom: 0.35rem;
 }
 
 .hero-glyph {
@@ -446,6 +447,7 @@ pre {
   display: grid;
   grid-template-columns: 1fr;
   gap: 12px;
+  min-height: calc(100vh - 164px - env(safe-area-inset-top) - env(safe-area-inset-bottom));
 }
 
 .battle-side {
@@ -474,10 +476,13 @@ pre {
   position: relative;
   overflow: hidden;
   order: 1;
-  min-height: calc(100vh - 230px - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+  height: calc(100vh - 172px - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+  min-height: 560px;
+  max-height: 820px;
   display: grid;
-  grid-template-rows: auto auto auto;
-  gap: 0.85rem;
+  grid-template-rows: minmax(0, 1fr) auto minmax(0, 1fr);
+  gap: 0.55rem;
+  padding: 0.8rem;
   background:
     radial-gradient(circle at center, rgba(99, 43, 25, 0.14), transparent 36%),
     linear-gradient(180deg, rgba(19, 20, 26, 0.96), rgba(10, 12, 16, 0.96));
@@ -503,7 +508,8 @@ pre {
 .ally-zone {
   display: flex;
   flex-direction: column;
-  gap: 0.7rem;
+  gap: 0.45rem;
+  min-height: 0;
 }
 
 .enemy-stats,
@@ -515,21 +521,37 @@ pre {
 .enemy-hand,
 .hand-row,
 .table-line {
-  display: flex;
-  gap: 0.45rem;
-  justify-content: center;
-  flex-wrap: nowrap;
+  width: 100%;
 }
 
-.enemy-hand,
+.table-line {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 0.32rem;
+  align-items: stretch;
+}
+
+.enemy-hand {
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
+  min-height: 54px;
+  overflow: hidden;
+  padding: 0 0.45rem;
+}
+
 .hand-row {
-  overflow-x: auto;
-  padding-bottom: 0.2rem;
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
+  min-height: 120px;
+  padding: 0 0.25rem 0.1rem;
+  overflow: visible;
 }
 
 .card-back {
-  width: 42px;
-  height: 64px;
+  width: 34px;
+  height: 52px;
   flex: 0 0 auto;
   border-radius: 10px;
   border: 1px solid rgba(231, 219, 192, 0.08);
@@ -542,6 +564,15 @@ pre {
       transparent 6px,
       transparent 12px
     );
+  margin-left: -10px;
+  transform:
+    translateY(var(--fan-depth, 0px))
+    rotate(calc(var(--fan-offset, 0) * 4deg));
+  transform-origin: center bottom;
+}
+
+.card-back:first-child {
+  margin-left: 0;
 }
 
 .hero-anchor {
@@ -566,7 +597,7 @@ pre {
 .battle-midline {
   display: grid;
   grid-template-columns: 1fr;
-  gap: 0.7rem;
+  gap: 0.45rem;
   align-items: start;
 }
 
@@ -605,7 +636,7 @@ pre {
 .slot,
 .hand-card {
   border-radius: 16px;
-  padding: 0.65rem;
+  padding: 0.45rem;
   text-align: left;
   color: #e7dbc0;
   background:
@@ -613,17 +644,18 @@ pre {
 }
 
 .slot {
-  width: calc(20% - 0.36rem);
-  min-width: 66px;
-  min-height: 90px;
+  width: 100%;
+  min-width: 0;
+  height: 122px;
   display: flex;
   flex-direction: column;
-  gap: 0.2rem;
-  justify-content: center;
+  gap: 0;
+  justify-content: space-between;
   flex: 0 0 auto;
-  font-size: 0.66rem;
+  font-size: 0.56rem;
   position: relative;
   overflow: hidden;
+  padding: 0.22rem;
 }
 
 .slot > * {
@@ -645,17 +677,166 @@ pre {
 .slot.selected,
 .hand-card.selected {
   outline: 2px solid rgba(214, 169, 77, 0.8);
+}
+
+.slot.selected {
   transform: translateY(-2px);
 }
 
 .hand-card {
-  width: 108px;
-  min-width: 108px;
+  width: 78px;
+  min-width: 78px;
   flex: 0 0 auto;
   display: flex;
   flex-direction: column;
-  gap: 0.3rem;
-  font-size: 0.76rem;
+  gap: 0.12rem;
+  font-size: 0.62rem;
+  min-height: 102px;
+  justify-content: space-between;
+  border-radius: 14px 14px 20px 20px;
+  margin-left: -14px;
+  transform:
+    translateY(var(--fan-depth, 0px))
+    rotate(calc(var(--fan-offset, 0) * 5deg));
+  transform-origin: center bottom;
+  padding: 0.35rem;
+}
+
+.hand-card:first-child {
+  margin-left: 0;
+}
+
+.hand-card.selected {
+  transform:
+    translateY(calc(var(--fan-depth, 0px) - 6px))
+    rotate(calc(var(--fan-offset, 0) * 5deg));
+}
+
+.slot-topline,
+.hand-card-topline,
+.slot-stats,
+.hand-card-stats {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.25rem;
+}
+
+.card-chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 22px;
+  padding: 0.08rem 0.28rem;
+  border-radius: 999px;
+  background: rgba(7, 10, 13, 0.72);
+  border: 1px solid rgba(231, 219, 192, 0.08);
+  font-size: 0.5rem;
+  font-weight: 700;
+}
+
+.slot-stats {
+  position: absolute;
+  left: 4px;
+  right: 4px;
+  bottom: 4px;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.16rem;
+  align-items: stretch;
+  z-index: 2;
+}
+
+.hand-card-topline {
+  position: relative;
+  z-index: 2;
+}
+
+.hand-card .asset-frame.compact {
+  min-height: 48px;
+  height: 48px;
+  flex: 0 0 48px;
+}
+
+.hand-card-stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.12rem;
+  position: relative;
+  z-index: 2;
+}
+
+.hand-card-stats span {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 16px;
+  padding: 0.04rem 0.08rem;
+  border-radius: 6px;
+  background: rgba(6, 9, 12, 0.92);
+  border: 1px solid rgba(231, 219, 192, 0.08);
+  color: #fff2d3;
+  font-size: 0.44rem;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.slot-stat {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 22px;
+  padding: 0.08rem 0.14rem;
+  border-radius: 8px;
+  background: rgba(6, 9, 12, 0.96);
+  border: 1px solid rgba(231, 219, 192, 0.12);
+  color: #fff6de;
+  font-size: 0.6rem;
+  font-weight: 800;
+  line-height: 1;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.34);
+}
+
+.slot-topline .card-chip,
+.slot .card-chip {
+  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.25);
+}
+
+.slot-topline {
+  position: absolute;
+  top: 4px;
+  left: 4px;
+  right: 4px;
+  z-index: 2;
+}
+
+.slot-topline .card-chip {
+  min-width: 24px;
+  min-height: 20px;
+  font-size: 0.52rem;
+  padding: 0.08rem 0.24rem;
+}
+
+.slot-stat.hp {
+  border-color: rgba(91, 176, 114, 0.35);
+}
+
+.slot-stat.atk {
+  border-color: rgba(199, 124, 63, 0.35);
+}
+
+.slot-stat.cd {
+  border-color: rgba(106, 143, 204, 0.35);
+}
+
+.card-chip.mana {
+  background: linear-gradient(135deg, rgba(197, 151, 73, 0.34), rgba(66, 37, 10, 0.82));
+  color: #ffedc6;
+}
+
+.card-chip.kind,
+.card-chip.side {
+  color: #cbbda2;
 }
 
 .empty-battle {
@@ -691,6 +872,21 @@ pre {
 
 .ghost-button {
   align-self: flex-end;
+}
+
+.match-pill {
+  background: linear-gradient(135deg, rgba(18, 39, 52, 0.95), rgba(11, 18, 24, 0.95));
+  color: #dcebf1;
+}
+
+.match-pill.active {
+  box-shadow: 0 0 0 1px rgba(121, 194, 214, 0.24) inset;
+}
+
+.nav-pill,
+.ghost-button {
+  background: rgba(8, 14, 19, 0.86);
+  color: #dcebf1;
 }
 
 .profile-panel h2,
@@ -729,11 +925,11 @@ pre {
 
 @media (min-width: 700px) {
   .war-shell {
-    width: min(100%, 860px);
+    width: min(100%, 460px);
   }
 
   .top-frame {
-    grid-template-columns: 64px 1fr auto;
+    grid-template-columns: 56px 1fr;
     align-items: center;
   }
 
@@ -742,65 +938,62 @@ pre {
   }
 
   .screen-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: 1fr;
   }
 
   .span-all {
-    grid-column: span 2;
+    grid-column: span 1;
   }
 
   .hero-grid,
   .asset-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: 1fr;
   }
 
   .battle-screen {
-    grid-template-columns: 180px 1fr;
+    grid-template-columns: 1fr;
   }
 
   .battle-side {
-    order: 1;
-    display: flex;
-    flex-direction: column;
+    order: 2;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .battle-board {
-    order: 2;
-    min-height: 74vh;
+    order: 1;
   }
 
   .battle-midline {
-    grid-template-columns: 220px 1fr;
+    grid-template-columns: 1fr;
   }
 
   .slot {
-    min-width: 110px;
-    font-size: 0.76rem;
+    height: 108px;
+    font-size: 0.62rem;
   }
 
   .hand-card {
-    width: 132px;
-    min-width: 132px;
+    width: 78px;
+    min-width: 78px;
+    min-height: 118px;
   }
 
   .battle-nav {
-    left: max(12px, calc((100vw - 860px) / 2 + 12px));
-    right: max(12px, calc((100vw - 860px) / 2 + 12px));
+    left: 12px;
+    right: 12px;
+    max-width: 436px;
+    margin: 0 auto;
   }
 }
 
 @media (min-width: 1100px) {
   .war-shell {
-    width: min(100%, 1180px);
+    width: min(100%, 460px);
   }
 
   .hero-grid,
   .asset-grid {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
-
-  .battle-nav {
-    left: max(12px, calc((100vw - 1180px) / 2 + 12px));
-    right: max(12px, calc((100vw - 1180px) / 2 + 12px));
+    grid-template-columns: 1fr;
   }
 }

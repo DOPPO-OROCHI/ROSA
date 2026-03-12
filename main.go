@@ -77,7 +77,7 @@ func main() {
 		Addr:         ":1234",
 		Handler:      httpHandler,
 		ReadTimeout:  10 * time.Second,
-		WriteTimeout: 15 * time.Second,
+		WriteTimeout: 0,
 		IdleTimeout:  60 * time.Second,
 	}
 	errCh := make(chan error, 2)

@@ -35,7 +35,7 @@ func StartTurn(m *MatchState, nowUnix int64) {
 		}
 	}
 	TickerEffects(p)
-	draw := 2
+	draw := 1
 	if len(p.Deck) < draw {
 		draw = len(p.Deck)
 	}

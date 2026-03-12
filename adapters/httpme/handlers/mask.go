@@ -53,6 +53,8 @@ func maskMatchStateForUser(st *game.MatchState, viewerUserID uint) *dto.MaskedMa
 		//а здесь мы просто отдаем все необходимое с точки зрения противника (здесь нет деки, руки, дискарда)
 		mp := &dto.MaskedPlayerState{
 			PlayerID:               p.PlayerID,
+			UserID:                 p.UserID,
+			HeroID:                 p.HeroID,
 			HeroCode:               p.HeroCode,
 			HeroHP:                 p.HeroHP,
 			HeroLevel:              p.HeroLevel,

@@ -43,7 +43,7 @@ func ApplyTimeOutToMatchTX(db *gorm.DB, matchID uint) (st *game.MatchState, chan
 		if err != nil {
 			return ErrCorruptedMatchState
 		}
-		if err := repository.SaveMatchState(tx, row.ID, expected, newJSON, state.Version, state.TurnDeadLineAt); err != nil {
+		if err := repository.SaveMatchState(tx, row.ID, expected, newJSON, state.Version, state.Finished, state.TurnDeadLineAt); err != nil {
 			return err
 		}
 		st = &state

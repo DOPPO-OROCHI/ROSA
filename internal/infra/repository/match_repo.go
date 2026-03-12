@@ -44,6 +44,7 @@ func SaveMatchState(tx *gorm.DB,
 	expectedDBVersion int64,
 	newStateJSON []byte,
 	newVersion int64,
+	finished bool,
 	turnDeadlineAt int64) error {
 	//читаем все из соответствующего матча с актуальной версией
 	res := tx.Model(&Match{}).Where("id = ? AND version = ?", matchID, expectedDBVersion).
@@ -51,6 +52,7 @@ func SaveMatchState(tx *gorm.DB,
 		Updates(map[string]any{
 			"state":            datatypes.JSON(newStateJSON),
 			"version":          newVersion,
+			"finished":         finished,
 			"turn_deadline_at": turnDeadlineAt,
 		})
 		//и занимаемся вполне рутинной обработкой ошибок

@@ -30,6 +30,7 @@ type OwnedBattleCardsDTO struct {
 	Kind         CardKind `json:"kind"`
 	TemplateID   string   `json:"template_id"`
 	Name         string   `json:"name"`
+	Description  string   `json:"description"`
 	CardType     string   `json:"card_type"`
 	ManaCost     int      `json:"mana_cost"`
 	HealthPoints int      `json:"health_points"`
@@ -57,6 +58,7 @@ type OwnedBuffCardsDTO struct {
 	Kind       CardKind `json:"kind"`
 	TemplateID string   `json:"template_id"`
 	Name       string   `json:"name"`
+	Description string  `json:"description"`
 	ManaCost   int      `json:"mana_cost"`
 	BuffType   string   `json:"buff_type"`
 	BuffValue  int      `json:"buff_value"`

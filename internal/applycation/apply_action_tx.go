@@ -64,7 +64,7 @@ func ApplyActionToMatchTx(db *gorm.DB,
 		if err != nil {
 			return err
 		}
-		if err := repository.SaveMatchState(tx, row.ID, expectedDBVersion, newJSON, st.Version, st.TurnDeadLineAt); err != nil {
+		if err := repository.SaveMatchState(tx, row.ID, expectedDBVersion, newJSON, st.Version, st.Finished, st.TurnDeadLineAt); err != nil {
 			return err
 		} //<-обновляем строку конкретного матча атомарно
 		out = &st //<-назначаем аут

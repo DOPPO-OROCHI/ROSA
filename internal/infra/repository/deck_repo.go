@@ -39,7 +39,7 @@ func LoadDeckTx(tx *gorm.DB, userID uint) ([]game.DeckEntry, error) {
 принимаем деку, которую мы собирали ранее в функции LoadDeck.
 */
 func SaveDeckTx(tx *gorm.DB, userID uint, entries []game.DeckEntry) error {
-	if err := tx.Where("gamer_id = ?", userID).Delete(&GamerDeckEntry{}).Error; err != nil { //<-удаляем предыдущую деку из БД
+	if err := tx.Unscoped().Where("gamer_id = ?", userID).Delete(&GamerDeckEntry{}).Error; err != nil { //<-удаляем предыдущую деку из БД
 		return err
 	}
 	rows := make([]GamerDeckEntry, 0, len(entries)) //<-формируем новую переменную типа внутриигровой деки

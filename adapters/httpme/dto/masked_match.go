@@ -14,6 +14,8 @@ import "TheWar/internal/domain/game"
 
 type MaskedPlayerState struct {
 	PlayerID               int    `json:"player_id"`                 //<-индекс игрока в матче, 0 или 1
+	UserID                 uint   `json:"user_id"`                   //<-айди пользователя, нужен клиенту чтобы понять кто из players является текущим игроком
+	HeroID                 uint   `json:"hero_id"`                   //<-айди шаблона героя
 	HeroCode               string `json:"hero_code"`                 //<-код героя, который выбрал игрок
 	HeroHP                 int    `json:"hero_hp"`                   //<-текущее здоровье героя игрока
 	HeroLevel              int    `json:"hero_level"`                //<-уровень героя игрока

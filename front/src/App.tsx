@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { type CSSProperties, useEffect, useMemo, useRef, useState } from "react";
 import {
   getAssetTone,
   resolveAssetLabel,
@@ -13,7 +13,7 @@ import {
 import { apiUrl } from "./config";
 import { bootstrapTelegramWebApp } from "./telegram";
 
-type TabId = "home" | "inventory" | "battle";
+type TabId = "home" | "inventory";
 
 type ApiError = { error?: string };
 
@@ -46,6 +46,7 @@ type BattleCard = {
   kind: "battle";
   template_id: string;
   name: string;
+  description: string;
   card_type: string;
   mana_cost: number;
   health_points: number;
@@ -67,6 +68,7 @@ type BuffCard = {
   kind: "buff";
   template_id: string;
   name: string;
+  description: string;
   mana_cost: number;
   buff_type: string;
   buff_value: number;
@@ -84,6 +86,20 @@ type BuffCard = {
 type CardsResponse = {
   battle: BattleCard[];
   buff: BuffCard[];
+};
+
+type CardCatalogEntry = {
+  kind: "battle" | "buff";
+  template_id: string;
+  name: string;
+  description: string;
+  mana_cost: number;
+  image_key: string;
+  attack?: number;
+  health_points?: number;
+  cooldown?: number;
+  buff_value?: number;
+  buff_type?: string;
 };
 
 type DeckEntry = {
@@ -384,6 +400,17 @@ export default function App() {
     () => selectedMatch?.players.find((player) => player?.user_id !== me?.user_id) ?? null,
     [selectedMatch, me],
   );
+  const activeBattle = Boolean(selectedMatch && !selectedMatch.finished);
+  const cardCatalog = useMemo(() => {
+    const next = new Map<string, CardCatalogEntry>();
+    for (const card of cards?.battle ?? []) {
+      next.set(card.template_id, card);
+    }
+    for (const card of cards?.buff ?? []) {
+      next.set(card.template_id, card);
+    }
+    return next;
+  }, [cards]);
 
   async function runTask(task: () => Promise<void>) {
     setLoading(true);
@@ -417,17 +444,32 @@ export default function App() {
   async function refreshMatches() {
     const data = await apiFetch<MatchState[]>("/matches");
     setMatches(data);
+    const active = data.find((match) => !match.finished) ?? null;
     if (selectedMatchId) {
       const current = data.find((match) => match.match_id === selectedMatchId) ?? null;
       setSelectedMatch(current);
+      if (!current || current.finished) {
+        setSelectedMatchId(null);
+      }
+      return;
+    }
+    if (active) {
+      setSelectedMatchId(active.match_id);
+      setSelectedMatch(active);
+      setStatus(`Battle #${active.match_id} ready`);
     }
   }
 
   async function refreshMatch(matchId: number) {
     const data = await apiFetch<MatchState>(`/matches/${matchId}`);
+    if (data.finished) {
+      setSelectedMatchId(null);
+      setSelectedMatch(null);
+      setStatus(`Battle #${matchId} already finished`);
+      return;
+    }
     setSelectedMatchId(matchId);
     setSelectedMatch(data);
-    setTab("battle");
   }
 
   async function refreshAll() {
@@ -439,6 +481,16 @@ export default function App() {
       refreshMatches(),
     ]);
   }
+
+  useEffect(() => {
+    if (!me || activeBattle) {
+      return;
+    }
+    const pollId = window.setInterval(() => {
+      void refreshMatches();
+    }, 3000);
+    return () => window.clearInterval(pollId);
+  }, [me, activeBattle]);
 
   async function login(userId: string) {
     await apiFetch<void>(`/auth/dev?user_id=${encodeURIComponent(userId)}`, {
@@ -475,7 +527,6 @@ export default function App() {
     await refreshMatches();
     setSelectedMatchId(match.match_id);
     setSelectedMatch(match);
-    setTab("battle");
     setStatus(`Battle #${match.match_id} deployed`);
   }
 
@@ -505,11 +556,33 @@ export default function App() {
     await refreshMatches();
     setActionStatus(successText);
     clearSelections();
+    if (next.finished) {
+      streamRef.current?.close();
+      streamRef.current = null;
+      setSelectedMatchId(null);
+      setStatus(`Battle finished: ${next.result}`);
+    }
   }
 
   const selectedCard = myPlayer?.hand?.find(
     (card) => cardInstanceId(card) === selectedHandCardId,
   );
+  const myHand = myPlayer?.hand ?? [];
+
+  function cardCatalogEntry(templateId: string): CardCatalogEntry | undefined {
+    return cardCatalog.get(templateId);
+  }
+
+  function cardImageKeyForTemplate(templateId: string): string {
+    const meta = cardCatalogEntry(templateId);
+    if (meta?.image_key) {
+      return meta.image_key;
+    }
+    if (meta?.kind === "buff") {
+      return resolveBuffCardImageKey(templateId);
+    }
+    return resolveBattleCardImageKey(templateId);
+  }
 
   async function handlePlaySelectedCard(slot: number) {
     if (!selectedCard) {
@@ -663,6 +736,7 @@ export default function App() {
 
     const selected = side === "own" ? selectedOwnUnitId === unitInstanceId(unit) : selectedEnemyUnitId === unitInstanceId(unit);
     const tone = getAssetTone(unitTemplateId(unit));
+    const meta = cardCatalogEntry(unitTemplateId(unit));
 
     return (
       <button
@@ -672,15 +746,20 @@ export default function App() {
         }
       >
         <AssetImage
-          imageKey={resolveBattleCardImageKey(unitTemplateId(unit))}
+          imageKey={cardImageKeyForTemplate(unitTemplateId(unit))}
           alt={resolveAssetLabel(unitTemplateId(unit))}
           fallbackSrc={resolveCardFallbackSrc()}
           className="slot-media"
         />
-        <strong>{resolveAssetLabel(unitTemplateId(unit))}</strong>
-        <span>HP {unitHP(unit)}/{unitMaxHP(unit)}</span>
-        <span>ATK {unitAttack(unit)}</span>
-        <span>CD {unitCooldown(unit)}</span>
+        <div className="slot-topline">
+          <span className="card-chip mana">{meta?.mana_cost ?? 0}</span>
+          <span className="card-chip side">{side === "own" ? "ALLY" : "HOSTILE"}</span>
+        </div>
+        <div className="slot-stats">
+          <span className="slot-stat hp">{unitHP(unit)}</span>
+          <span className="slot-stat atk">{unitAttack(unit)}</span>
+          <span className="slot-stat cd">{unitCooldown(unit)}</span>
+        </div>
       </button>
     );
   }
@@ -693,13 +772,6 @@ export default function App() {
             {(me?.first_name?.[0] || me?.username?.[0] || "?").toUpperCase()}
           </span>
         </button>
-        <div className="command-title">
-          <p className="eyebrow">TheWar / command bridge</p>
-          <h1>Alpha Theatre</h1>
-          <p className="muted">
-            Dark war-console shell for Telegram Mini App flow.
-          </p>
-        </div>
         <div className="status-rack">
           <span className={`status-pill ${loading ? "hot" : "cold"}`}>
             {loading ? "Operational" : "Standby"}
@@ -708,23 +780,36 @@ export default function App() {
         </div>
       </header>
 
-      <nav className="battle-nav">
-        <button className={tab === "home" ? "nav-pill active" : "nav-pill"} onClick={() => setTab("home")}>
-          Start Game
-        </button>
-        <button className={tab === "inventory" ? "nav-pill active" : "nav-pill"} onClick={() => setTab("inventory")}>
-          Inventory
-        </button>
-        <button className={tab === "battle" ? "nav-pill active" : "nav-pill"} onClick={() => setTab("battle")}>
-          Battle
-        </button>
-      </nav>
+      {!activeBattle && (
+        <nav className="battle-nav two-up">
+          <button className={tab === "home" ? "nav-pill active" : "nav-pill"} onClick={() => setTab("home")}>
+            Start Game
+          </button>
+          <button className={tab === "inventory" ? "nav-pill active" : "nav-pill"} onClick={() => setTab("inventory")}>
+            Inventory
+          </button>
+        </nav>
+      )}
 
       <main className="view-frame">
-        {tab === "home" && (
+        {!activeBattle && tab === "home" && (
           <section className="screen-grid">
             <div className="panel command-panel">
               <h2>Command Link</h2>
+              <div className="hero-banner hero-banner-top">
+                {renderHeroGlyph(
+                  me?.selected_hero_code || "unassigned",
+                  heroes.find((hero) => hero.hero_code === me?.selected_hero_code)?.image_key,
+                  "large",
+                )}
+                <div>
+                  <h3>{me?.selected_hero_name || "No Hero Assigned"}</h3>
+                  <p className="muted">
+                    {me?.first_name || me?.username || "No profile loaded"}
+                  </p>
+                  <p className="muted">Rating {me?.rating ?? "-"} / XP {me?.xp ?? "-"}</p>
+                </div>
+              </div>
               <div className="login-row">
                 <label>
                   Active user
@@ -738,20 +823,6 @@ export default function App() {
               <div className="quick-login">
                 <button onClick={() => void runTask(() => login("1"))}>Quick Login</button>
                 <button onClick={() => void runTask(refreshAll)}>Refresh Intel</button>
-              </div>
-              <div className="hero-banner">
-                {renderHeroGlyph(
-                  me?.selected_hero_code || "unassigned",
-                  heroes.find((hero) => hero.hero_code === me?.selected_hero_code)?.image_key,
-                  "large",
-                )}
-                <div>
-                  <h3>{me?.selected_hero_name || "No Hero Assigned"}</h3>
-                  <p className="muted">
-                    {me?.first_name || me?.username || "No profile loaded"}
-                  </p>
-                  <p className="muted">Rating {me?.rating ?? "-"} / XP {me?.xp ?? "-"}</p>
-                </div>
               </div>
             </div>
 
@@ -776,7 +847,7 @@ export default function App() {
                     <button
                       key={match.match_id}
                       className={selectedMatchId === match.match_id ? "match-pill active" : "match-pill"}
-                      onClick={() => void runTask(() => refreshMatch(match.match_id))}
+                    onClick={() => void runTask(() => refreshMatch(match.match_id))}
                     >
                       <span>Battle #{match.match_id}</span>
                       <span>{match.result}</span>
@@ -808,7 +879,7 @@ export default function App() {
           </section>
         )}
 
-        {tab === "inventory" && (
+        {!activeBattle && tab === "inventory" && (
           <section className="screen-grid">
             <div className="panel inventory-panel">
               <div className="section-head">
@@ -874,7 +945,7 @@ export default function App() {
           </section>
         )}
 
-        {tab === "battle" && (
+        {activeBattle && (
           <section className="battle-screen">
             <aside className="battle-side left">
               <button className="command-button" onClick={() => void runTask(handleEndTurn)}>
@@ -911,9 +982,17 @@ export default function App() {
                       <span>Phase {selectedMatch.phase}</span>
                     </div>
                     <div className="enemy-hand">
-                      {Array.from({ length: enemyPlayer.hand_count ?? 0 }).map((_, index) => (
-                        <div key={`back-${index}`} className="card-back" />
-                      ))}
+                      {Array.from({ length: enemyPlayer.hand_count ?? 0 }).map((_, index, array) => {
+                        const offset = index - (array.length - 1) / 2;
+                        const fanStyle = {
+                          "--fan-offset": `${offset}`,
+                          "--fan-depth": `${Math.abs(offset) * 2}px`,
+                          zIndex: array.length - index,
+                        } as CSSProperties;
+                        return (
+                          <div key={`back-${index}`} className="card-back" style={fanStyle} />
+                        );
+                      })}
                     </div>
                     <div className="hero-anchor top">
                       <button className="hero-anchor-button" onClick={() => void runTask(handleEnemyHeroClick)}>
@@ -967,34 +1046,45 @@ export default function App() {
                       <span>Deck {myPlayer.deck?.length ?? myPlayer.deck_count ?? 0}</span>
                     </div>
                     <div className="hand-row">
-                      {(myPlayer.hand ?? []).map((card) => {
+                      {myHand.map((card, index) => {
                         const selected = selectedHandCardId === cardInstanceId(card);
                         const templateId = cardTemplateId(card);
                         const tone = getAssetTone(templateId);
+                        const meta = cardCatalogEntry(templateId);
+                        const offset = index - (myHand.length - 1) / 2;
+                        const fanStyle = {
+                          "--fan-offset": `${offset}`,
+                          "--fan-depth": `${Math.abs(offset) * 3}px`,
+                          zIndex: selected ? 30 : myHand.length - index,
+                        } as CSSProperties;
                         return (
                           <button
                             key={cardInstanceId(card)}
                             className={`hand-card tone-${tone} ${selected ? "selected" : ""}`}
+                            style={fanStyle}
                             onClick={() => setSelectedHandCardId(cardInstanceId(card))}
                           >
-                            <div className="asset-frame compact">
-                              <AssetImage
-                                imageKey={
-                                  cardKind(card) === "buff"
-                                    ? resolveBuffCardImageKey(templateId)
-                                    : resolveBattleCardImageKey(templateId)
-                                }
-                                alt={templateId}
-                                fallbackSrc={resolveCardFallbackSrc()}
-                                className="asset-frame-media"
-                              />
-                              <span>{resolveAssetLabel(templateId)}</span>
-                            </div>
-                            <strong>{templateId}</strong>
-                            <span>{cardKind(card)}</span>
-                          </button>
-                        );
-                      })}
+                              <div className="hand-card-topline">
+                                <span className="card-chip mana">{meta?.mana_cost ?? "?"}</span>
+                                <span className="card-chip kind">{cardKind(card)}</span>
+                              </div>
+                              <div className="asset-frame compact">
+                                <AssetImage
+                                  imageKey={cardImageKeyForTemplate(templateId)}
+                                  alt={templateId}
+                                  fallbackSrc={resolveCardFallbackSrc()}
+                                  className="asset-frame-media"
+                                />
+                                <span>{resolveAssetLabel(templateId)}</span>
+                              </div>
+                              <div className="hand-card-stats">
+                                {"attack" in (meta ?? {}) && meta?.attack !== undefined ? <span>ATK {meta.attack}</span> : <span>{meta?.buff_type || cardKind(card)}</span>}
+                                {"health_points" in (meta ?? {}) && meta?.health_points !== undefined ? <span>HP {meta.health_points}</span> : <span>VAL {meta?.buff_value ?? "-"}</span>}
+                                {"cooldown" in (meta ?? {}) && meta?.cooldown !== undefined ? <span>CD {meta.cooldown}</span> : <span>LVL {card.card_level ?? card.CardLevel ?? 1}</span>}
+                              </div>
+                            </button>
+                          );
+                        })}
                     </div>
                   </div>
                 </>
