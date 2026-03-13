@@ -87,7 +87,7 @@ var DefaultHeroTemplate = []CharacterTemplate{
 		Description: "Каждые 2 хода лечит одну карту на 10",
 	},
 	{
-		Name:           "Supreme Lider",
+		Name:           "Citadele",
 		CharacterCode:  "suprime_lider",
 		AttackPower:    8,
 		HealthPoints:   690,

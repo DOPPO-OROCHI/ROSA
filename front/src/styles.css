@@ -504,6 +504,21 @@ pre {
   filter: saturate(0.7) contrast(1.05);
 }
 
+.attack-drag-layer {
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  pointer-events: none;
+  overflow: visible;
+}
+
+.attack-drag-line {
+  stroke: #79c2d6;
+  stroke-width: 0.7;
+  stroke-linecap: round;
+  filter: drop-shadow(0 0 6px rgba(121, 194, 214, 0.55));
+}
+
 .enemy-zone,
 .ally-zone {
   display: flex;
