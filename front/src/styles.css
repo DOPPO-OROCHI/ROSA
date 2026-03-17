@@ -531,11 +531,11 @@ pre {
   position: absolute;
   inset: 0;
   z-index: 0;
-  object-position: center 34%;
+  object-position: center 48%;
 }
 
 .hero-glyph.large .hero-glyph-media {
-  object-position: center 30%;
+  object-position: center 42%;
   transform: scale(1.08);
 }
 
