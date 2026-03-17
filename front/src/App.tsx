@@ -263,10 +263,6 @@ function totalDeck(entries: DeckEntry[]): number {
   return entries.reduce((sum, entry) => sum + entry.count, 0);
 }
 
-function pretty(value: unknown): string {
-  return JSON.stringify(value, null, 2);
-}
-
 function cardInstanceId(card: CardsInMatch): string {
   return card.instance_id ?? card.InstanceID ?? "";
 }
@@ -890,6 +886,38 @@ export default function App() {
   const selectedHeroImageKey =
     heroes.find((hero) => hero.hero_code === me?.selected_hero_code)?.image_key ||
     resolveHeroImageKey(me?.selected_hero_code || "unassigned");
+  const deckTotal = totalDeck(deckEntries);
+  const deckReady = deckTotal === 20;
+  const deckSlots = useMemo(() => {
+    const expanded: Array<{
+      id: string;
+      templateId: string;
+      name: string;
+      imageKey: string;
+      mana: number;
+    }> = [];
+
+    for (const entry of deckEntries) {
+      const meta = cardCatalog.get(entry.template_id);
+      const imageKey = meta?.image_key
+        ? meta.image_key
+        : entry.kind === "buff"
+          ? resolveBuffCardImageKey(entry.template_id)
+          : resolveBattleCardImageKey(entry.template_id);
+
+      for (let copy = 0; copy < entry.count; copy += 1) {
+        expanded.push({
+          id: `${entry.kind}:${entry.template_id}:${copy}`,
+          templateId: entry.template_id,
+          name: meta?.name || resolveAssetLabel(entry.template_id),
+          imageKey,
+          mana: meta?.mana_cost ?? 0,
+        });
+      }
+    }
+
+    return Array.from({ length: 20 }, (_, index) => expanded[index] ?? null);
+  }, [cardCatalog, deckEntries]);
 
   return (
     <div className="war-shell">
@@ -1015,9 +1043,31 @@ export default function App() {
               </div>
               <div className="deck-summary">
                 <span>Total cards</span>
-                <strong>{totalDeck(deckEntries)}</strong>
+                <strong>{deckTotal}</strong>
               </div>
-              <pre>{pretty(deckEntries)}</pre>
+              {!deckReady && <p className="deck-warning">Дека не собрана (нужно 20 карт)</p>}
+              <div className="deck-grid">
+                {deckSlots.map((card, index) =>
+                  card ? (
+                    <article key={card.id} className="deck-slot filled">
+                      <AssetImage
+                        imageKey={card.imageKey}
+                        alt={card.name}
+                        fallbackSrc={resolveCardFallbackSrc()}
+                        className="deck-slot-media"
+                      />
+                      <div className="deck-slot-meta">
+                        <span className="deck-slot-mana">{card.mana}</span>
+                        <strong>{card.name}</strong>
+                      </div>
+                    </article>
+                  ) : (
+                    <article key={`empty-${index}`} className="deck-slot empty">
+                      <span>Empty</span>
+                    </article>
+                  ),
+                )}
+              </div>
             </div>
 
             <div className="panel inventory-panel">
