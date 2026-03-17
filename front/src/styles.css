@@ -273,14 +273,6 @@ pre {
   margin-bottom: 0.2rem;
 }
 
-.command-panel .hero-banner-top {
-  order: 1;
-}
-
-.command-panel .panel-heading {
-  order: 2;
-}
-
 .panel-heading h2 {
   margin: 0;
   font-size: 1.55rem;
