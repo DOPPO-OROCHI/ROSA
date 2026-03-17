@@ -3,6 +3,7 @@ const tones = ["crimson", "iron", "ash", "bone", "toxic"] as const;
 export type AssetTone = (typeof tones)[number];
 
 const assetBaseUrl = (import.meta.env.VITE_ASSET_BASE_URL || "/assets").replace(/\/+$/, "");
+const assetVersion = (import.meta.env.VITE_ASSET_VERSION || "1").trim();
 
 function hash(input: string): number {
   let value = 0;
@@ -17,7 +18,8 @@ function normalizeKey(key: string): string {
 }
 
 function buildAssetUrl(key: string, extension: string): string {
-  return `${assetBaseUrl}/${normalizeKey(key)}.${extension}`;
+  const base = `${assetBaseUrl}/${normalizeKey(key)}.${extension}`;
+  return assetVersion ? `${base}?v=${encodeURIComponent(assetVersion)}` : base;
 }
 
 export function getAssetTone(key: string): AssetTone {
@@ -51,19 +53,19 @@ export function resolveBuffCardImageKey(templateId: string): string {
 
 export function resolveImageSrc(key?: string): string {
   if (!key) {
-    return `${assetBaseUrl}/placeholders/card_image.svg`;
+    return buildAssetUrl("placeholders/card_image", "svg");
   }
   return buildAssetUrl(key, "png");
 }
 
 export function resolveCardFallbackSrc(): string {
-  return `${assetBaseUrl}/placeholders/card_image.svg`;
+  return buildAssetUrl("placeholders/card_image", "svg");
 }
 
 export function resolveHeroFallbackSrc(): string {
-  return `${assetBaseUrl}/placeholders/hero_image.svg`;
+  return buildAssetUrl("placeholders/hero_image", "svg");
 }
 
 export function resolveBoardBackgroundSrc(): string {
-  return `${assetBaseUrl}/placeholders/board_bg.svg`;
+  return buildAssetUrl("placeholders/board_bg", "svg");
 }
