@@ -597,11 +597,14 @@ export default function App() {
 
   async function persistDeck(entries: DeckEntry[]) {
     const cleaned = entries.filter((entry) => entry.count > 0);
+    setDeckEntries(cleaned);
+    if (totalDeck(cleaned) !== 20) {
+      return;
+    }
     await apiFetch("/deck", {
       method: "POST",
       body: JSON.stringify({ entries: cleaned }),
     });
-    setDeckEntries(cleaned);
   }
 
   function cardPoolInfo(kind: DeckEntry["kind"], templateId: string) {
