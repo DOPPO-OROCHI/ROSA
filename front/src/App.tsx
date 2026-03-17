@@ -1074,17 +1074,36 @@ export default function App() {
                   }}
                 >
                   <div className="hero-picker-body" onClick={(event) => event.stopPropagation()}>
+                    <button
+                      className="hero-picker-close"
+                      onClick={() => {
+                        setHeroPickerOpen(false);
+                        setHeldHero(null);
+                      }}
+                    >
+                      X
+                    </button>
+                    {heldHero && (
+                      <div className="hero-preview">
+                        <div className="hero-preview-media">
+                          <AssetImage
+                            imageKey={heldHero.image_key || resolveHeroImageKey(heldHero.hero_code)}
+                            alt={heldHero.name}
+                            fallbackSrc={resolveHeroFallbackSrc()}
+                            className="hero-preview-image"
+                          />
+                        </div>
+                        <div className="hero-preview-info">
+                          <strong>{heldHero.name}</strong>
+                          <span>HP {heldHero.health_points}</span>
+                          <span>ATK {heldHero.attack_power}</span>
+                          <span>CD {heldHero.attack_cooldown}</span>
+                          <span>{heldHero.description}</span>
+                        </div>
+                      </div>
+                    )}
                     <div className="hero-picker-head">
                       <strong>Выбери героя</strong>
-                      <button
-                        className="hero-picker-close"
-                        onClick={() => {
-                          setHeroPickerOpen(false);
-                          setHeldHero(null);
-                        }}
-                      >
-                        X
-                      </button>
                     </div>
                     <div className="hero-picker-list">
                       {heroes.map((hero) => {
@@ -1113,20 +1132,6 @@ export default function App() {
                         );
                       })}
                     </div>
-                    {heldHero && (
-                      <div className="hero-preview">
-                        <div className="hero-preview-media">
-                          {renderHeroGlyph(heldHero.hero_code, heldHero.image_key, "large")}
-                        </div>
-                        <div className="hero-preview-info">
-                          <strong>{heldHero.name}</strong>
-                          <span>HP {heldHero.health_points}</span>
-                          <span>ATK {heldHero.attack_power}</span>
-                          <span>CD {heldHero.attack_cooldown}</span>
-                          <span>{heldHero.description}</span>
-                        </div>
-                      </div>
-                    )}
                   </div>
                 </div>
               )}
