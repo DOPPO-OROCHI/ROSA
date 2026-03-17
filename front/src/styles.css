@@ -331,10 +331,30 @@ pre {
   flex-direction: column;
   align-items: center;
   text-align: center;
+  padding-top: 1.1rem;
+  gap: 0.9rem;
+}
+
+.hero-banner-copy {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
 }
 
 .hero-banner-top h3 {
-  margin-bottom: 0.35rem;
+  margin: 0;
+  font-size: 1.2rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.hero-banner-role {
+  margin: 0;
+  font-size: 0.86rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #e0c899;
 }
 
 .hero-glyph {
@@ -368,9 +388,10 @@ pre {
 }
 
 .hero-glyph.large {
-  width: 92px;
-  height: 92px;
+  width: 132px;
+  height: 132px;
   font-size: 0.72rem;
+  overflow: visible;
 }
 
 .hero-glyph::before,
@@ -386,7 +407,6 @@ pre {
   inset: 0;
 }
 
-.hero-glyph span,
 .asset-frame span {
   position: relative;
   z-index: 1;
@@ -401,6 +421,19 @@ pre {
   position: absolute;
   inset: 0;
   z-index: 0;
+}
+
+.hero-banner-top .hero-glyph.large::after {
+  content: "";
+  position: absolute;
+  left: 14%;
+  right: 14%;
+  bottom: -18px;
+  height: 30px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(0, 0, 0, 0.48), rgba(0, 0, 0, 0));
+  filter: blur(7px);
+  z-index: -1;
 }
 
 .tone-crimson {

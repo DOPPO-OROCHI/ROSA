@@ -837,7 +837,6 @@ export default function App() {
           fallbackSrc={resolveHeroFallbackSrc()}
           className="hero-glyph-media"
         />
-        <span>{label}</span>
       </div>
     );
   }
@@ -927,11 +926,9 @@ export default function App() {
                   heroes.find((hero) => hero.hero_code === me?.selected_hero_code)?.image_key,
                   "large",
                 )}
-                <div>
-                  <h3>{me?.selected_hero_name || "No Hero Assigned"}</h3>
-                  <p className="muted">
-                    {me?.first_name || me?.username || "No profile loaded"}
-                  </p>
+                <div className="hero-banner-copy">
+                  <h3>{me?.first_name || me?.username || "No profile loaded"}</h3>
+                  <p className="hero-banner-role">{me?.selected_hero_name || "No Hero Assigned"}</p>
                   <p className="muted">Rating {me?.rating ?? "-"}</p>
                 </div>
               </div>
