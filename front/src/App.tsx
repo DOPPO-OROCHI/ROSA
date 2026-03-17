@@ -922,6 +922,12 @@ export default function App() {
               </div>
               <div className="hero-banner hero-banner-top">
                 <div className="hero-portrait-stage">
+                  <AssetImage
+                    imageKey={heroes.find((hero) => hero.hero_code === me?.selected_hero_code)?.image_key || resolveHeroImageKey(me?.selected_hero_code || "unassigned")}
+                    alt={me?.selected_hero_name || "Hero aura"}
+                    fallbackSrc={resolveHeroFallbackSrc()}
+                    className="hero-portrait-aura"
+                  />
                   {renderHeroGlyph(
                     me?.selected_hero_code || "unassigned",
                     heroes.find((hero) => hero.hero_code === me?.selected_hero_code)?.image_key,
