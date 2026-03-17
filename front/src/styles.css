@@ -366,7 +366,7 @@ pre {
 
 .hero-portrait-stage {
   position: relative;
-  width: 180px;
+  width: 220px;
   max-width: 100%;
   padding-bottom: 0.6rem;
   isolation: isolate;
@@ -374,8 +374,12 @@ pre {
 }
 
 .hero-select-trigger {
-  border: 0;
-  background: transparent;
+  padding: 0 !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  min-height: 0 !important;
   cursor: pointer;
 }
 
@@ -463,8 +467,8 @@ pre {
 }
 
 .hero-glyph.large {
-  width: 180px;
-  height: 220px;
+  width: 220px;
+  height: 280px;
   font-size: 0.72rem;
   border-radius: 999px 999px 0 0;
   overflow: hidden;
@@ -509,6 +513,11 @@ pre {
   position: absolute;
   inset: 0;
   z-index: 0;
+}
+
+.hero-glyph.large .hero-glyph-media {
+  object-position: center 18%;
+  transform: scale(1.08);
 }
 
 .hero-banner-top .hero-glyph.large::before {
