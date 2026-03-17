@@ -357,6 +357,7 @@ export default function App() {
   const [cards, setCards] = useState<CardsResponse | null>(null);
   const [deckEntries, setDeckEntries] = useState<DeckEntry[]>(defaultDeck);
   const [deckInspectorKey, setDeckInspectorKey] = useState<string | null>(null);
+  const [heroPickerOpen, setHeroPickerOpen] = useState(false);
   const [matches, setMatches] = useState<MatchState[]>([]);
   const [selectedMatchId, setSelectedMatchId] = useState<number | null>(null);
   const [selectedMatch, setSelectedMatch] = useState<MatchState | null>(null);
@@ -1028,7 +1029,7 @@ export default function App() {
                   } as CSSProperties
                 }
               >
-                <div className="hero-portrait-stage">
+                <button className="hero-portrait-stage hero-select-trigger" onClick={() => setHeroPickerOpen(true)}>
                   {renderHeroGlyph(
                     me?.selected_hero_code || "unassigned",
                     selectedHeroImageKey,
@@ -1039,8 +1040,44 @@ export default function App() {
                     <p className="hero-banner-role">{me?.selected_hero_name || "No Hero Assigned"}</p>
                     <p className="muted">Rating {me?.rating ?? "-"}</p>
                   </div>
-                </div>
+                </button>
               </div>
+              {heroPickerOpen && (
+                <div className="hero-picker" onClick={() => setHeroPickerOpen(false)}>
+                  <div className="hero-picker-body" onClick={(event) => event.stopPropagation()}>
+                    <div className="hero-picker-head">
+                      <strong>Выбери героя</strong>
+                      <button className="hero-picker-close" onClick={() => setHeroPickerOpen(false)}>
+                        x
+                      </button>
+                    </div>
+                    <div className="hero-picker-list">
+                      {heroes.map((hero) => {
+                        const selected = hero.hero_code === me?.selected_hero_code;
+                        return (
+                          <button
+                            key={hero.hero_code}
+                            className={`hero-card ${selected ? "selected" : ""}`}
+                            onClick={() =>
+                              void runTask(async () => {
+                                await selectHero(hero.hero_code);
+                                setHeroPickerOpen(false);
+                              })
+                            }
+                          >
+                            {renderHeroGlyph(hero.hero_code, hero.image_key, "small")}
+                            <div>
+                              <strong>{hero.name}</strong>
+                              <span>HP {hero.health_points}</span>
+                              <span>ATK {hero.attack_power}</span>
+                            </div>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </div>
+              )}
               <div className="login-row">
                 <label>
                   Active user
@@ -1084,25 +1121,6 @@ export default function App() {
               </div>
             </div>
 
-            <div className="panel hero-select">
-              <h2>War Council</h2>
-              <div className="hero-grid">
-                {heroes.map((hero) => (
-                  <button
-                    key={hero.hero_code}
-                    className="hero-card"
-                    onClick={() => void runTask(() => selectHero(hero.hero_code))}
-                  >
-                    {renderHeroGlyph(hero.hero_code, hero.image_key, "small")}
-                    <div>
-                      <strong>{hero.name}</strong>
-                      <span>HP {hero.health_points}</span>
-                      <span>ATK {hero.attack_power}</span>
-                    </div>
-                  </button>
-                ))}
-              </div>
-            </div>
           </section>
         )}
 

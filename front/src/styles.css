@@ -373,6 +373,12 @@ pre {
   z-index: 3;
 }
 
+.hero-select-trigger {
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+}
+
 .hero-banner-copy {
   display: flex;
   flex-direction: column;
@@ -558,6 +564,56 @@ pre {
   text-align: left;
   background: rgba(7, 10, 13, 0.5);
   color: #e7dbc0;
+}
+
+.hero-card.selected {
+  border: 1px solid rgba(118, 189, 211, 0.55);
+  box-shadow: 0 0 0 1px rgba(118, 189, 211, 0.24) inset;
+}
+
+.hero-picker {
+  position: absolute;
+  inset: 0;
+  z-index: 13;
+  border-radius: 22px;
+  background: rgba(4, 7, 10, 0.82);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding: 0.8rem;
+}
+
+.hero-picker-body {
+  width: 100%;
+  max-height: 74%;
+  overflow: auto;
+  border-radius: 16px;
+  padding: 0.7rem;
+  background: linear-gradient(180deg, rgba(18, 22, 29, 0.98), rgba(8, 10, 14, 0.98));
+  border: 1px solid rgba(231, 219, 192, 0.1);
+}
+
+.hero-picker-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.65rem;
+}
+
+.hero-picker-close {
+  width: 28px;
+  height: 28px;
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+  background: rgba(123, 41, 49, 0.9);
+  color: #ffe2de;
+}
+
+.hero-picker-list {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.55rem;
 }
 
 .asset-card {
