@@ -893,18 +893,6 @@ export default function App() {
 
   return (
     <div className="war-shell">
-      <header className="top-frame">
-        <button className={`avatar-trigger ${loading ? "busy" : ""}`} onClick={() => setShowProfile(true)}>
-          <span className="avatar-core">
-            {(me?.first_name?.[0] || me?.username?.[0] || "?").toUpperCase()}
-          </span>
-        </button>
-        <div className="masthead">
-          <span className="masthead-kicker">{loading ? "Live Sync" : "War Grid"}</span>
-          <strong>{me?.selected_hero_name || "Operator Console"}</strong>
-        </div>
-      </header>
-
       {!activeBattle && (
         <nav className="battle-nav two-up">
           <button className={tab === "home" ? "nav-pill active" : "nav-pill"} onClick={() => setTab("home")}>
@@ -921,6 +909,14 @@ export default function App() {
           <section className="screen-grid">
             <div className="panel command-panel">
               <div className="panel-heading">
+                <button
+                  className={`avatar-trigger operator-avatar ${loading ? "busy" : ""}`}
+                  onClick={() => setShowProfile(true)}
+                >
+                  <span className="avatar-core">
+                    {(me?.first_name?.[0] || me?.username?.[0] || "?").toUpperCase()}
+                  </span>
+                </button>
                 <span className="panel-kicker">Live Command</span>
                 <h2>Operator Console</h2>
               </div>
@@ -954,10 +950,6 @@ export default function App() {
                   />
                 </label>
                 <button onClick={() => void runTask(() => login(devUserId))}>Login</button>
-              </div>
-              <div className="quick-login">
-                <button onClick={() => void runTask(() => login("1"))}>Quick Login</button>
-                <button onClick={() => void runTask(refreshAll)}>Refresh Intel</button>
               </div>
             </div>
 
