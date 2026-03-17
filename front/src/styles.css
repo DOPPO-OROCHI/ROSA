@@ -648,47 +648,72 @@ pre {
 
 .hero-picker-list {
   display: grid;
-  grid-template-columns: 1fr;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 0.55rem;
 }
 
-.hero-picker-list .hero-card {
-  gap: 0.6rem;
-  padding: 0.65rem 0.8rem;
+.hero-tile {
+  background: transparent;
+  border: 0;
+  padding: 0;
+  display: grid;
+  place-items: center;
+  min-height: 64px;
 }
 
-.hero-picker-list .hero-card .hero-glyph.small {
-  width: 50px;
-  height: 50px;
-  flex: 0 0 50px;
+.hero-tile .hero-glyph.small {
+  width: 62px;
+  height: 62px;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.32);
 }
 
-.hero-picker-info {
+.hero-tile.selected .hero-glyph.small {
+  box-shadow:
+    0 0 0 2px rgba(118, 189, 211, 0.65),
+    0 6px 18px rgba(0, 0, 0, 0.34);
+}
+
+.hero-preview {
+  margin-top: 0.8rem;
+  border-radius: 14px;
+  border: 1px solid rgba(231, 219, 192, 0.12);
+  background: rgba(7, 10, 13, 0.64);
+  padding: 0.55rem;
+  display: grid;
+  grid-template-columns: 118px 1fr;
+  gap: 0.7rem;
+  align-items: center;
+}
+
+.hero-preview-media {
+  display: grid;
+  place-items: center;
+}
+
+.hero-preview-media .hero-glyph.large {
+  width: 118px;
+  height: 156px;
+}
+
+.hero-preview-info {
   min-width: 0;
   display: flex;
   flex-direction: column;
-  gap: 0.18rem;
+  gap: 0.16rem;
+  text-align: left;
 }
 
-.hero-picker-info strong {
-  display: block;
-  font-size: 0.66rem;
-  line-height: 1.15;
-  letter-spacing: 0.04em;
+.hero-preview-info strong {
+  font-size: 0.76rem;
+  letter-spacing: 0.05em;
   text-transform: uppercase;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  color: #f2dfb8;
 }
 
-.hero-picker-meta {
-  display: block;
-  font-size: 0.58rem;
-  line-height: 1.1;
-  color: #d6ccba;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+.hero-preview-info span {
+  font-size: 0.64rem;
+  line-height: 1.2;
+  color: #d7ccbb;
 }
 
 .asset-card {
@@ -1583,6 +1608,24 @@ pre {
 
   .deck-inspector-grid {
     grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .hero-picker-list {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .hero-tile .hero-glyph.small {
+    width: 56px;
+    height: 56px;
+  }
+
+  .hero-preview {
+    grid-template-columns: 102px 1fr;
+  }
+
+  .hero-preview-media .hero-glyph.large {
+    width: 102px;
+    height: 138px;
   }
 }
 

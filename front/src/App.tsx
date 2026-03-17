@@ -358,6 +358,7 @@ export default function App() {
   const [deckEntries, setDeckEntries] = useState<DeckEntry[]>(defaultDeck);
   const [deckInspectorKey, setDeckInspectorKey] = useState<string | null>(null);
   const [heroPickerOpen, setHeroPickerOpen] = useState(false);
+  const [heldHero, setHeldHero] = useState<OwnedHero | null>(null);
   const [matches, setMatches] = useState<MatchState[]>([]);
   const [selectedMatchId, setSelectedMatchId] = useState<number | null>(null);
   const [selectedMatch, setSelectedMatch] = useState<MatchState | null>(null);
@@ -371,6 +372,8 @@ export default function App() {
   const battleBoardRef = useRef<HTMLElement | null>(null);
   const [dragAttack, setDragAttack] = useState<DragAttackState | null>(null);
   const toastIdRef = useRef(1);
+  const heroHoldTimerRef = useRef<number | null>(null);
+  const heroHoldTriggeredRef = useRef(false);
 
   function pushToast(message: string, tone: ToastEntry["tone"] = "info") {
     const id = toastIdRef.current++;
@@ -584,6 +587,30 @@ export default function App() {
     });
     await Promise.all([refreshMe(), refreshHeroes()]);
     pushToast(`Hero selected: ${heroCode}`);
+  }
+
+  function clearHeroHoldTimer() {
+    if (heroHoldTimerRef.current !== null) {
+      window.clearTimeout(heroHoldTimerRef.current);
+      heroHoldTimerRef.current = null;
+    }
+  }
+
+  function beginHeroHold(hero: OwnedHero) {
+    clearHeroHoldTimer();
+    heroHoldTriggeredRef.current = false;
+    heroHoldTimerRef.current = window.setTimeout(() => {
+      heroHoldTriggeredRef.current = true;
+      setHeldHero(hero);
+    }, 360);
+  }
+
+  function endHeroHold() {
+    clearHeroHoldTimer();
+    setHeldHero(null);
+    window.setTimeout(() => {
+      heroHoldTriggeredRef.current = false;
+    }, 0);
   }
 
   async function saveDefaultDeck() {
@@ -1039,11 +1066,23 @@ export default function App() {
                 </button>
               </div>
               {heroPickerOpen && (
-                <div className="hero-picker" onClick={() => setHeroPickerOpen(false)}>
+                <div
+                  className="hero-picker"
+                  onClick={() => {
+                    setHeroPickerOpen(false);
+                    setHeldHero(null);
+                  }}
+                >
                   <div className="hero-picker-body" onClick={(event) => event.stopPropagation()}>
                     <div className="hero-picker-head">
                       <strong>Выбери героя</strong>
-                      <button className="hero-picker-close" onClick={() => setHeroPickerOpen(false)}>
+                      <button
+                        className="hero-picker-close"
+                        onClick={() => {
+                          setHeroPickerOpen(false);
+                          setHeldHero(null);
+                        }}
+                      >
                         X
                       </button>
                     </div>
@@ -1053,25 +1092,41 @@ export default function App() {
                         return (
                           <button
                             key={hero.hero_code}
-                            className={`hero-card ${selected ? "selected" : ""}`}
-                            onClick={() =>
+                            className={`hero-tile ${selected ? "selected" : ""}`}
+                            onPointerDown={() => beginHeroHold(hero)}
+                            onPointerUp={endHeroHold}
+                            onPointerLeave={endHeroHold}
+                            onPointerCancel={endHeroHold}
+                            onClick={() => {
+                              if (heroHoldTriggeredRef.current) {
+                                return;
+                              }
                               void runTask(async () => {
                                 await selectHero(hero.hero_code);
                                 setHeroPickerOpen(false);
-                              })
-                            }
+                                setHeldHero(null);
+                              });
+                            }}
                           >
                             {renderHeroGlyph(hero.hero_code, hero.image_key, "small")}
-                            <div className="hero-picker-info">
-                              <strong>{hero.name}</strong>
-                              <span className="hero-picker-meta">
-                                HP {hero.health_points} | ATK {hero.attack_power} | {hero.description}
-                              </span>
-                            </div>
                           </button>
                         );
                       })}
                     </div>
+                    {heldHero && (
+                      <div className="hero-preview">
+                        <div className="hero-preview-media">
+                          {renderHeroGlyph(heldHero.hero_code, heldHero.image_key, "large")}
+                        </div>
+                        <div className="hero-preview-info">
+                          <strong>{heldHero.name}</strong>
+                          <span>HP {heldHero.health_points}</span>
+                          <span>ATK {heldHero.attack_power}</span>
+                          <span>CD {heldHero.attack_cooldown}</span>
+                          <span>{heldHero.description}</span>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
               )}
