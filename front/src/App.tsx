@@ -921,15 +921,17 @@ export default function App() {
                 <h2>Operator Console</h2>
               </div>
               <div className="hero-banner hero-banner-top">
-                {renderHeroGlyph(
-                  me?.selected_hero_code || "unassigned",
-                  heroes.find((hero) => hero.hero_code === me?.selected_hero_code)?.image_key,
-                  "large",
-                )}
-                <div className="hero-banner-copy">
-                  <h3>{me?.first_name || me?.username || "No profile loaded"}</h3>
-                  <p className="hero-banner-role">{me?.selected_hero_name || "No Hero Assigned"}</p>
-                  <p className="muted">Rating {me?.rating ?? "-"}</p>
+                <div className="hero-portrait-stage">
+                  {renderHeroGlyph(
+                    me?.selected_hero_code || "unassigned",
+                    heroes.find((hero) => hero.hero_code === me?.selected_hero_code)?.image_key,
+                    "large",
+                  )}
+                  <div className="hero-banner-copy overlay">
+                    <h3>{me?.first_name || me?.username || "No profile loaded"}</h3>
+                    <p className="hero-banner-role">{me?.selected_hero_name || "No Hero Assigned"}</p>
+                    <p className="muted">Rating {me?.rating ?? "-"}</p>
+                  </div>
                 </div>
               </div>
               <div className="login-row">
