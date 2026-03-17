@@ -13,6 +13,7 @@ const (
 	OrganicalCard  = "organical"
 	DemonicalCard  = "demonical"
 	HealerCard     = "healer"
+	All            = "all"
 
 	//улучшения для карт, которые можно засунуть в матче
 	CoolDownUpdate     = "cooldown_update"
