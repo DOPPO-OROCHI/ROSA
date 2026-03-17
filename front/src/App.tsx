@@ -1010,14 +1010,6 @@ export default function App() {
           <section className="screen-grid">
             <div className="panel command-panel">
               <div className="panel-heading">
-                <button
-                  className={`avatar-trigger operator-avatar ${loading ? "busy" : ""}`}
-                  onClick={() => setShowProfile(true)}
-                >
-                  <span className="avatar-core">
-                    {(me?.first_name?.[0] || me?.username?.[0] || "?").toUpperCase()}
-                  </span>
-                </button>
                 <span className="panel-kicker">Live Command</span>
                 <h2>Operator Console</h2>
               </div>
@@ -1029,6 +1021,14 @@ export default function App() {
                   } as CSSProperties
                 }
               >
+                <button
+                  className={`avatar-trigger hero-profile-mini ${loading ? "busy" : ""}`}
+                  onClick={() => setShowProfile(true)}
+                >
+                  <span className="avatar-core">
+                    {(me?.first_name?.[0] || me?.username?.[0] || "?").toUpperCase()}
+                  </span>
+                </button>
                 <button className="hero-portrait-stage hero-select-trigger" onClick={() => setHeroPickerOpen(true)}>
                   {renderHeroGlyph(
                     me?.selected_hero_code || "unassigned",
