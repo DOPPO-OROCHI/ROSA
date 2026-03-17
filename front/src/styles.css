@@ -653,17 +653,20 @@ pre {
 }
 
 .hero-tile {
-  background: transparent;
-  border: 0;
-  padding: 0;
-  display: grid;
-  place-items: center;
-  min-height: 64px;
+  background: linear-gradient(180deg, rgba(37, 115, 140, 0.72), rgba(21, 83, 106, 0.72));
+  border: 1px solid rgba(126, 199, 221, 0.25);
+  padding: 0.45rem 0.35rem 0.4rem;
+  border-radius: 14px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.28rem;
+  min-height: 148px;
 }
 
 .hero-tile .hero-glyph.small {
-  width: 62px;
-  height: 62px;
+  width: 76px;
+  height: 76px;
   box-shadow: 0 6px 16px rgba(0, 0, 0, 0.32);
 }
 
@@ -671,6 +674,30 @@ pre {
   box-shadow:
     0 0 0 2px rgba(118, 189, 211, 0.65),
     0 6px 18px rgba(0, 0, 0, 0.34);
+}
+
+.hero-tile-name {
+  width: 100%;
+  font-size: 0.56rem;
+  line-height: 1.1;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #f3e2bc;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.hero-tile-pick {
+  margin-top: auto;
+  width: 100%;
+  min-height: 26px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #18465f, #2f7a8e);
+  color: #eaf6fb;
+  font-size: 0.6rem;
+  font-weight: 700;
+  padding: 0.28rem 0.35rem;
 }
 
 .hero-preview {
@@ -1632,8 +1659,8 @@ pre {
   }
 
   .hero-tile .hero-glyph.small {
-    width: 56px;
-    height: 56px;
+    width: 66px;
+    height: 66px;
   }
 
   .hero-preview {

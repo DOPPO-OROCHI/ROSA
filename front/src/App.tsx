@@ -372,8 +372,6 @@ export default function App() {
   const battleBoardRef = useRef<HTMLElement | null>(null);
   const [dragAttack, setDragAttack] = useState<DragAttackState | null>(null);
   const toastIdRef = useRef(1);
-  const heroHoldTimerRef = useRef<number | null>(null);
-  const heroHoldTriggeredRef = useRef(false);
 
   function pushToast(message: string, tone: ToastEntry["tone"] = "info") {
     const id = toastIdRef.current++;
@@ -587,30 +585,6 @@ export default function App() {
     });
     await Promise.all([refreshMe(), refreshHeroes()]);
     pushToast(`Hero selected: ${heroCode}`);
-  }
-
-  function clearHeroHoldTimer() {
-    if (heroHoldTimerRef.current !== null) {
-      window.clearTimeout(heroHoldTimerRef.current);
-      heroHoldTimerRef.current = null;
-    }
-  }
-
-  function beginHeroHold(hero: OwnedHero) {
-    clearHeroHoldTimer();
-    heroHoldTriggeredRef.current = false;
-    heroHoldTimerRef.current = window.setTimeout(() => {
-      heroHoldTriggeredRef.current = true;
-      setHeldHero(hero);
-    }, 360);
-  }
-
-  function endHeroHold() {
-    clearHeroHoldTimer();
-    setHeldHero(null);
-    window.setTimeout(() => {
-      heroHoldTriggeredRef.current = false;
-    }, 0);
   }
 
   async function saveDefaultDeck() {
@@ -1109,26 +1083,27 @@ export default function App() {
                       {heroes.map((hero) => {
                         const selected = hero.hero_code === me?.selected_hero_code;
                         return (
-                          <button
+                          <article
                             key={hero.hero_code}
                             className={`hero-tile ${selected ? "selected" : ""}`}
-                            onPointerDown={() => beginHeroHold(hero)}
-                            onPointerUp={endHeroHold}
-                            onPointerLeave={endHeroHold}
-                            onPointerCancel={endHeroHold}
-                            onClick={() => {
-                              if (heroHoldTriggeredRef.current) {
-                                return;
-                              }
-                              void runTask(async () => {
-                                await selectHero(hero.hero_code);
-                                setHeroPickerOpen(false);
-                                setHeldHero(null);
-                              });
-                            }}
+                            onClick={() => setHeldHero(hero)}
                           >
                             {renderHeroGlyph(hero.hero_code, hero.image_key, "small")}
-                          </button>
+                            <span className="hero-tile-name">{hero.name}</span>
+                            <button
+                              className="hero-tile-pick"
+                              onClick={(event) => {
+                                event.stopPropagation();
+                                void runTask(async () => {
+                                  await selectHero(hero.hero_code);
+                                  setHeroPickerOpen(false);
+                                  setHeldHero(null);
+                                });
+                              }}
+                            >
+                              Выбрать
+                            </button>
+                          </article>
                         );
                       })}
                     </div>
