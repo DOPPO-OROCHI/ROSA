@@ -414,6 +414,14 @@ pre {
   box-shadow:
     0 26px 54px rgba(0, 0, 0, 0.34),
     0 0 34px rgba(0, 0, 0, 0.2);
+  -webkit-mask-image:
+    radial-gradient(circle at 50% 14%, #000 0 42%, rgba(0, 0, 0, 0.92) 52%, rgba(0, 0, 0, 0.55) 66%, rgba(0, 0, 0, 0.18) 80%, transparent 100%),
+    linear-gradient(180deg, transparent 0%, rgba(0, 0, 0, 0.72) 10%, #000 24%, #000 72%, rgba(0, 0, 0, 0.62) 88%, transparent 100%);
+  -webkit-mask-composite: source-in;
+  mask-image:
+    radial-gradient(circle at 50% 14%, #000 0 42%, rgba(0, 0, 0, 0.92) 52%, rgba(0, 0, 0, 0.55) 66%, rgba(0, 0, 0, 0.18) 80%, transparent 100%),
+    linear-gradient(180deg, transparent 0%, rgba(0, 0, 0, 0.72) 10%, #000 24%, #000 72%, rgba(0, 0, 0, 0.62) 88%, transparent 100%);
+  mask-composite: intersect;
 }
 
 .hero-glyph::before,
