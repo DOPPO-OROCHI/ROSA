@@ -196,6 +196,19 @@ type ToastEntry = {
   tone: "info" | "error";
 };
 
+type CardPreview = {
+  kind: "battle" | "buff";
+  name: string;
+  description: string;
+  imageKey: string;
+  hp?: number;
+  attack?: number;
+  cooldown?: number;
+  buffType?: string;
+  buffValue?: number;
+  duration?: number;
+};
+
 const defaultDeck: DeckEntry[] = [
   { kind: "battle", template_id: "imperial_guardian", count: 5 },
   { kind: "battle", template_id: "mechanical_knight", count: 3 },
@@ -359,6 +372,7 @@ export default function App() {
   const [deckInspectorKey, setDeckInspectorKey] = useState<string | null>(null);
   const [heroPickerOpen, setHeroPickerOpen] = useState(false);
   const [heldHero, setHeldHero] = useState<OwnedHero | null>(null);
+  const [cardPreview, setCardPreview] = useState<CardPreview | null>(null);
   const [matches, setMatches] = useState<MatchState[]>([]);
   const [selectedMatchId, setSelectedMatchId] = useState<number | null>(null);
   const [selectedMatch, setSelectedMatch] = useState<MatchState | null>(null);
@@ -1210,7 +1224,21 @@ export default function App() {
               </div>
               <div className="asset-grid">
                 {cards?.battle.map((card) => (
-                  <article key={card.template_id} className={`asset-card tone-${getAssetTone(card.asset_base_key)}`}>
+                  <article
+                    key={card.template_id}
+                    className={`asset-card tone-${getAssetTone(card.asset_base_key)} clickable`}
+                    onClick={() =>
+                      setCardPreview({
+                        kind: "battle",
+                        name: card.name,
+                        description: card.description,
+                        imageKey: card.image_key || resolveBattleCardImageKey(card.template_id),
+                        hp: card.health_points,
+                        attack: card.attack,
+                        cooldown: card.cooldown,
+                      })
+                    }
+                  >
                     <div className="asset-frame">
                       <AssetImage
                         imageKey={card.image_key || resolveBattleCardImageKey(card.template_id)}
@@ -1220,16 +1248,15 @@ export default function App() {
                       />
                       <button
                         className="asset-add"
-                        onClick={() => void runTask(() => addCardToDeck("battle", card.template_id))}
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          void runTask(() => addCardToDeck("battle", card.template_id));
+                        }}
                       >
                         +
                       </button>
                     </div>
                     <strong>{card.name}</strong>
-                    <span>HP {card.health_points}</span>
-                    <span>ATK {card.attack}</span>
-                    <span>CD {card.cooldown}</span>
-                    <span>Max copies {card.max_copies}</span>
                   </article>
                 ))}
               </div>
@@ -1239,7 +1266,21 @@ export default function App() {
               <h2>Buff Cards</h2>
               <div className="asset-grid">
                 {cards?.buff.map((card) => (
-                  <article key={card.template_id} className={`asset-card tone-${getAssetTone(card.asset_base_key)}`}>
+                  <article
+                    key={card.template_id}
+                    className={`asset-card tone-${getAssetTone(card.asset_base_key)} clickable`}
+                    onClick={() =>
+                      setCardPreview({
+                        kind: "buff",
+                        name: card.name,
+                        description: card.description,
+                        imageKey: card.image_key || resolveBuffCardImageKey(card.template_id),
+                        buffType: card.buff_type,
+                        buffValue: card.buff_value,
+                        duration: card.duration,
+                      })
+                    }
+                  >
                     <div className="asset-frame">
                       <AssetImage
                         imageKey={card.image_key || resolveBuffCardImageKey(card.template_id)}
@@ -1247,19 +1288,17 @@ export default function App() {
                         fallbackSrc={resolveCardFallbackSrc()}
                         className="asset-frame-media"
                       />
-                      <span>{resolveAssetLabel(card.image_key || card.template_id)}</span>
                       <button
                         className="asset-add"
-                        onClick={() => void runTask(() => addCardToDeck("buff", card.template_id))}
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          void runTask(() => addCardToDeck("buff", card.template_id));
+                        }}
                       >
                         +
                       </button>
                     </div>
                     <strong>{card.name}</strong>
-                    <span>{card.template_id}</span>
-                    <span>{card.buff_type}</span>
-                    <span>Value {card.buff_value}</span>
-                    <span>{card.copies} copies</span>
                   </article>
                 ))}
               </div>
@@ -1450,6 +1489,34 @@ export default function App() {
 
       {showProfile && (
         <ProfilePanel me={me} matches={matches} onClose={() => setShowProfile(false)} />
+      )}
+      {cardPreview && (
+        <div className="card-viewer-overlay" onClick={() => setCardPreview(null)}>
+          <div className="card-viewer-window" onClick={(event) => event.stopPropagation()}>
+            <button className="card-viewer-close" onClick={() => setCardPreview(null)}>
+              X
+            </button>
+            <AssetImage
+              imageKey={cardPreview.imageKey}
+              alt={cardPreview.name}
+              fallbackSrc={resolveCardFallbackSrc()}
+              className="card-viewer-image"
+            />
+            <div className="card-viewer-info">
+              <strong>{cardPreview.name}</strong>
+              {cardPreview.kind === "battle" ? (
+                <span>
+                  HP {cardPreview.hp ?? 0} | ATK {cardPreview.attack ?? 0} | CD {cardPreview.cooldown ?? 0}
+                </span>
+              ) : (
+                <span>
+                  {cardPreview.buffType || "Buff"} {cardPreview.buffValue ?? 0} | DUR {cardPreview.duration ?? 0}
+                </span>
+              )}
+              <span>{cardPreview.description}</span>
+            </div>
+          </div>
+        </div>
       )}
       <div className="toast-stack" aria-live="polite" aria-atomic="true">
         {toasts.map((toast) => (
