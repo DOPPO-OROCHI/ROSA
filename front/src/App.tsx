@@ -201,6 +201,7 @@ type CardPreview = {
   name: string;
   description: string;
   imageKey: string;
+  mana?: number;
   hp?: number;
   attack?: number;
   cooldown?: number;
@@ -1233,6 +1234,7 @@ export default function App() {
                         name: card.name,
                         description: card.description,
                         imageKey: card.image_key || resolveBattleCardImageKey(card.template_id),
+                        mana: card.mana_cost,
                         hp: card.health_points,
                         attack: card.attack,
                         cooldown: card.cooldown,
@@ -1275,6 +1277,7 @@ export default function App() {
                         name: card.name,
                         description: card.description,
                         imageKey: card.image_key || resolveBuffCardImageKey(card.template_id),
+                        mana: card.mana_cost,
                         buffType: card.buff_type,
                         buffValue: card.buff_value,
                         duration: card.duration,
@@ -1506,11 +1509,11 @@ export default function App() {
               <strong>{cardPreview.name}</strong>
               {cardPreview.kind === "battle" ? (
                 <span>
-                  HP {cardPreview.hp ?? 0} | ATK {cardPreview.attack ?? 0} | CD {cardPreview.cooldown ?? 0}
+                  MANA {cardPreview.mana ?? 0} | HP {cardPreview.hp ?? 0} | ATK {cardPreview.attack ?? 0} | CD {cardPreview.cooldown ?? 0}
                 </span>
               ) : (
                 <span>
-                  {cardPreview.buffType || "Buff"} {cardPreview.buffValue ?? 0} | DUR {cardPreview.duration ?? 0}
+                  MANA {cardPreview.mana ?? 0} | {cardPreview.buffType || "Buff"} {cardPreview.buffValue ?? 0} | DUR {cardPreview.duration ?? 0}
                 </span>
               )}
               <span>{cardPreview.description}</span>
