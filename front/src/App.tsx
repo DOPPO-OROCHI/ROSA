@@ -1085,12 +1085,12 @@ export default function App() {
                         fallbackSrc={resolveCardFallbackSrc()}
                         className="asset-frame-media"
                       />
-                      <span>{resolveAssetLabel(card.image_key || card.template_id)}</span>
                     </div>
                     <strong>{card.name}</strong>
-                    <span>{card.template_id}</span>
-                    <span>HP {card.health_points} / ATK {card.attack}</span>
-                    <span>{card.copies} copies</span>
+                    <span>HP {card.health_points}</span>
+                    <span>ATK {card.attack}</span>
+                    <span>CD {card.cooldown}</span>
+                    <span>Max copies {card.max_copies}</span>
                   </article>
                 ))}
               </div>

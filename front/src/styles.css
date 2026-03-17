@@ -539,10 +539,15 @@ pre {
   background-color: rgba(58, 109, 52, 0.18);
 }
 
-.hero-grid,
-.asset-grid {
+.hero-grid {
   display: grid;
   grid-template-columns: 1fr;
+}
+
+.asset-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.55rem;
 }
 
 .hero-card {
@@ -557,19 +562,32 @@ pre {
 .asset-card {
   display: flex;
   flex-direction: column;
-  gap: 0.45rem;
-  padding: 0.9rem;
-  border-radius: 18px;
+  gap: 0.28rem;
+  padding: 0.42rem;
+  border-radius: 12px;
   background:
     linear-gradient(180deg, rgba(31, 35, 44, 0.92), rgba(10, 12, 16, 0.92));
 }
 
+.asset-card strong {
+  font-size: 0.68rem;
+  line-height: 1.15;
+  text-align: left;
+}
+
+.asset-card > span {
+  font-size: 0.62rem;
+  line-height: 1.1;
+  text-align: left;
+  color: #d2c6ac;
+}
+
 .asset-frame {
   width: 100%;
-  min-height: 92px;
+  min-height: 106px;
   position: relative;
   overflow: hidden;
-  border-radius: 14px;
+  border-radius: 10px;
   display: grid;
   place-items: center;
   border: 1px solid rgba(231, 219, 192, 0.08);
@@ -1262,9 +1280,12 @@ pre {
     grid-column: span 1;
   }
 
-  .hero-grid,
-  .asset-grid {
+  .hero-grid {
     grid-template-columns: 1fr;
+  }
+
+  .asset-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 
   .battle-screen {
@@ -1315,8 +1336,13 @@ pre {
     width: min(100%, 460px);
   }
 
-  .hero-grid,
-  .asset-grid {
+  .hero-grid {
     grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 380px) {
+  .asset-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
