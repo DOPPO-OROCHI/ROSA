@@ -1,4 +1,4 @@
-import { type CSSProperties, useEffect, useMemo, useRef, useState } from "react";
+﻿import { type CSSProperties, useEffect, useMemo, useRef, useState } from "react";
 import {
   getAssetTone,
   resolveAssetLabel,
@@ -356,6 +356,7 @@ export default function App() {
   const [heroes, setHeroes] = useState<OwnedHero[]>([]);
   const [cards, setCards] = useState<CardsResponse | null>(null);
   const [deckEntries, setDeckEntries] = useState<DeckEntry[]>(defaultDeck);
+  const [deckInspectorKey, setDeckInspectorKey] = useState<string | null>(null);
   const [matches, setMatches] = useState<MatchState[]>([]);
   const [selectedMatchId, setSelectedMatchId] = useState<number | null>(null);
   const [selectedMatch, setSelectedMatch] = useState<MatchState | null>(null);
@@ -590,7 +591,85 @@ export default function App() {
       body: JSON.stringify({ entries: defaultDeck }),
     });
     setDeckEntries(defaultDeck);
+    setDeckInspectorKey(null);
     pushToast("Standard combat deck loaded");
+  }
+
+  async function persistDeck(entries: DeckEntry[]) {
+    const cleaned = entries.filter((entry) => entry.count > 0);
+    await apiFetch("/deck", {
+      method: "POST",
+      body: JSON.stringify({ entries: cleaned }),
+    });
+    setDeckEntries(cleaned);
+  }
+
+  function cardPoolInfo(kind: DeckEntry["kind"], templateId: string) {
+    if (kind === "battle") {
+      const card = cards?.battle.find((entry) => entry.template_id === templateId);
+      return {
+        owned: card?.copies ?? 0,
+        maxCopies: card?.max_copies ?? 0,
+      };
+    }
+    const card = cards?.buff.find((entry) => entry.template_id === templateId);
+    return {
+      owned: card?.copies ?? 0,
+      maxCopies: card?.max_copies ?? 0,
+    };
+  }
+
+  async function addCardToDeck(kind: DeckEntry["kind"], templateId: string) {
+    const total = totalDeck(deckEntries);
+    if (total >= 20) {
+      pushToast("Deck is full (20 cards)", "error");
+      return;
+    }
+
+    const { owned, maxCopies } = cardPoolInfo(kind, templateId);
+    const limit = Math.min(owned, maxCopies);
+    if (limit <= 0) {
+      pushToast("No copies available", "error");
+      return;
+    }
+
+    const current = deckEntries.find((entry) => entry.kind === kind && entry.template_id === templateId);
+    const currentCount = current?.count ?? 0;
+    if (currentCount >= limit) {
+      pushToast("Copy limit reached", "error");
+      return;
+    }
+
+    const next = current
+      ? deckEntries.map((entry) =>
+          entry.kind === kind && entry.template_id === templateId
+            ? { ...entry, count: entry.count + 1 }
+            : entry,
+        )
+      : [...deckEntries, { kind, template_id: templateId, count: 1 }];
+
+    await persistDeck(next);
+  }
+
+  async function removeCardFromDeck(kind: DeckEntry["kind"], templateId: string) {
+    const current = deckEntries.find((entry) => entry.kind === kind && entry.template_id === templateId);
+    if (!current) {
+      return;
+    }
+
+    const next = deckEntries
+      .map((entry) =>
+        entry.kind === kind && entry.template_id === templateId
+          ? { ...entry, count: Math.max(0, entry.count - 1) }
+          : entry,
+      )
+      .filter((entry) => entry.count > 0);
+
+    await persistDeck(next);
+    const remaining = next.find((entry) => entry.kind === kind && entry.template_id === templateId);
+    if (!remaining) {
+      setDeckInspectorKey(null);
+    }
   }
 
   async function createMatch() {
@@ -888,36 +967,26 @@ export default function App() {
     resolveHeroImageKey(me?.selected_hero_code || "unassigned");
   const deckTotal = totalDeck(deckEntries);
   const deckReady = deckTotal === 20;
-  const deckSlots = useMemo(() => {
-    const expanded: Array<{
-      id: string;
-      templateId: string;
-      name: string;
-      imageKey: string;
-      mana: number;
-    }> = [];
-
-    for (const entry of deckEntries) {
+  const deckGroups = useMemo(() => {
+    return deckEntries.map((entry) => {
       const meta = cardCatalog.get(entry.template_id);
       const imageKey = meta?.image_key
         ? meta.image_key
         : entry.kind === "buff"
           ? resolveBuffCardImageKey(entry.template_id)
           : resolveBattleCardImageKey(entry.template_id);
-
-      for (let copy = 0; copy < entry.count; copy += 1) {
-        expanded.push({
-          id: `${entry.kind}:${entry.template_id}:${copy}`,
-          templateId: entry.template_id,
-          name: meta?.name || resolveAssetLabel(entry.template_id),
-          imageKey,
-          mana: meta?.mana_cost ?? 0,
-        });
-      }
-    }
-
-    return Array.from({ length: 20 }, (_, index) => expanded[index] ?? null);
+      return {
+        key: `${entry.kind}:${entry.template_id}`,
+        kind: entry.kind,
+        templateId: entry.template_id,
+        name: meta?.name || resolveAssetLabel(entry.template_id),
+        count: entry.count,
+        imageKey,
+        mana: meta?.mana_cost ?? 0,
+      };
+    });
   }, [cardCatalog, deckEntries]);
+  const inspectedDeckGroup = deckGroups.find((group) => group.key === deckInspectorKey) ?? null;
 
   return (
     <div className="war-shell">
@@ -1047,27 +1116,61 @@ export default function App() {
               </div>
               {!deckReady && <p className="deck-warning">Дека не собрана (нужно 20 карт)</p>}
               <div className="deck-grid">
-                {deckSlots.map((card, index) =>
-                  card ? (
-                    <article key={card.id} className="deck-slot filled">
-                      <AssetImage
-                        imageKey={card.imageKey}
-                        alt={card.name}
-                        fallbackSrc={resolveCardFallbackSrc()}
-                        className="deck-slot-media"
-                      />
-                      <div className="deck-slot-meta">
-                        <span className="deck-slot-mana">{card.mana}</span>
-                        <strong>{card.name}</strong>
-                      </div>
-                    </article>
-                  ) : (
-                    <article key={`empty-${index}`} className="deck-slot empty">
-                      <span>Empty</span>
-                    </article>
-                  ),
+                {deckGroups.map((group) => (
+                  <button
+                    key={group.key}
+                    className="deck-slot filled interactive"
+                    onClick={() => setDeckInspectorKey(group.key)}
+                  >
+                    <AssetImage
+                      imageKey={group.imageKey}
+                      alt={group.name}
+                      fallbackSrc={resolveCardFallbackSrc()}
+                      className="deck-slot-media"
+                    />
+                    <div className="deck-slot-meta">
+                      <span className="deck-slot-mana">{group.mana}</span>
+                      <strong>{group.name}</strong>
+                    </div>
+                    <span className="deck-slot-count">x{group.count}</span>
+                  </button>
+                ))}
+                {deckGroups.length === 0 && (
+                  <article className="deck-slot empty deck-slot-empty-wide">
+                    <span>Deck is empty</span>
+                  </article>
                 )}
               </div>
+              {inspectedDeckGroup && (
+                <div className="deck-inspector" onClick={() => setDeckInspectorKey(null)}>
+                  <div className="deck-inspector-body" onClick={(event) => event.stopPropagation()}>
+                    <div className="deck-inspector-head">
+                      <strong>{inspectedDeckGroup.name}</strong>
+                      <button className="deck-inspector-close" onClick={() => setDeckInspectorKey(null)}>
+                        x
+                      </button>
+                    </div>
+                    <div className="deck-inspector-grid">
+                      {Array.from({ length: inspectedDeckGroup.count }).map((_, index) => (
+                        <article key={`${inspectedDeckGroup.key}:${index}`} className="deck-copy-card">
+                          <AssetImage
+                            imageKey={inspectedDeckGroup.imageKey}
+                            alt={inspectedDeckGroup.name}
+                            fallbackSrc={resolveCardFallbackSrc()}
+                            className="deck-copy-media"
+                          />
+                          <button
+                            className="deck-copy-remove"
+                            onClick={() => void runTask(() => removeCardFromDeck(inspectedDeckGroup.kind, inspectedDeckGroup.templateId))}
+                          >
+                            x
+                          </button>
+                        </article>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
 
             <div className="panel inventory-panel">
@@ -1085,6 +1188,12 @@ export default function App() {
                         fallbackSrc={resolveCardFallbackSrc()}
                         className="asset-frame-media"
                       />
+                      <button
+                        className="asset-add"
+                        onClick={() => void runTask(() => addCardToDeck("battle", card.template_id))}
+                      >
+                        +
+                      </button>
                     </div>
                     <strong>{card.name}</strong>
                     <span>HP {card.health_points}</span>
@@ -1109,6 +1218,12 @@ export default function App() {
                         className="asset-frame-media"
                       />
                       <span>{resolveAssetLabel(card.image_key || card.template_id)}</span>
+                      <button
+                        className="asset-add"
+                        onClick={() => void runTask(() => addCardToDeck("buff", card.template_id))}
+                      >
+                        +
+                      </button>
                     </div>
                     <strong>{card.name}</strong>
                     <span>{card.template_id}</span>
@@ -1316,3 +1431,4 @@ export default function App() {
     </div>
   );
 }
+
