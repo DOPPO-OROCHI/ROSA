@@ -190,6 +190,12 @@ type DragAttackState = {
   currentY: number;
 };
 
+type ToastEntry = {
+  id: number;
+  message: string;
+  tone: "info" | "error";
+};
+
 const defaultDeck: DeckEntry[] = [
   { kind: "battle", template_id: "imperial_guardian", count: 5 },
   { kind: "battle", template_id: "mechanical_knight", count: 3 },
@@ -319,10 +325,6 @@ function ProfilePanel(props: {
             <strong>{props.me?.rating ?? "-"}</strong>
           </div>
           <div className="metric-tile">
-            <span>XP</span>
-            <strong>{props.me?.xp ?? "-"}</strong>
-          </div>
-          <div className="metric-tile">
             <span>User ID</span>
             <strong>{props.me?.user_id ?? "-"}</strong>
           </div>
@@ -348,11 +350,11 @@ function ProfilePanel(props: {
 
 export default function App() {
   const [tab, setTab] = useState<TabId>("home");
-  const [status, setStatus] = useState("System ready");
   const [loading, setLoading] = useState(false);
   const [devUserId, setDevUserId] = useState("1");
   const [opponentUserId, setOpponentUserId] = useState("5");
   const [showProfile, setShowProfile] = useState(false);
+  const [toasts, setToasts] = useState<ToastEntry[]>([]);
 
   const [me, setMe] = useState<MeResponse | null>(null);
   const [heroes, setHeroes] = useState<OwnedHero[]>([]);
@@ -370,6 +372,15 @@ export default function App() {
   const streamRef = useRef<EventSource | null>(null);
   const battleBoardRef = useRef<HTMLElement | null>(null);
   const [dragAttack, setDragAttack] = useState<DragAttackState | null>(null);
+  const toastIdRef = useRef(1);
+
+  function pushToast(message: string, tone: ToastEntry["tone"] = "info") {
+    const id = toastIdRef.current++;
+    setToasts((prev) => [...prev, { id, message, tone }]);
+    window.setTimeout(() => {
+      setToasts((prev) => prev.filter((entry) => entry.id !== id));
+    }, 1200);
+  }
 
   useEffect(() => {
     bootstrapTelegramWebApp();
@@ -390,11 +401,11 @@ export default function App() {
         const state = JSON.parse((event as MessageEvent<string>).data) as MatchState;
         setSelectedMatch(state);
       } catch {
-        setStatus("Failed to parse SSE state");
+        pushToast("Failed to parse battle feed", "error");
       }
     });
     stream.onerror = () => {
-      setStatus("Battle feed disconnected. Refresh match list.");
+      pushToast("Battle feed disconnected", "error");
     };
     streamRef.current = stream;
     return () => stream.close();
@@ -484,7 +495,7 @@ export default function App() {
     try {
       await task();
     } catch (error) {
-      setStatus(error instanceof Error ? error.message : "Unknown error");
+      pushToast(error instanceof Error ? error.message : "Unknown error", "error");
     } finally {
       setLoading(false);
     }
@@ -523,7 +534,7 @@ export default function App() {
     if (active) {
       setSelectedMatchId(active.match_id);
       setSelectedMatch(active);
-      setStatus(`Battle #${active.match_id} ready`);
+      pushToast(`Battle #${active.match_id} ready`);
     }
   }
 
@@ -532,7 +543,7 @@ export default function App() {
     if (data.finished) {
       setSelectedMatchId(null);
       setSelectedMatch(null);
-      setStatus(`Battle #${matchId} already finished`);
+      pushToast(`Battle #${matchId} already finished`);
       return;
     }
     setSelectedMatchId(matchId);
@@ -565,7 +576,7 @@ export default function App() {
     });
     setDevUserId(userId);
     await refreshAll();
-    setStatus(`Authenticated as user ${userId}`);
+    pushToast(`Authenticated as user ${userId}`);
   }
 
   async function selectHero(heroCode: string) {
@@ -574,7 +585,7 @@ export default function App() {
       body: JSON.stringify({ hero_code: heroCode }),
     });
     await Promise.all([refreshMe(), refreshHeroes()]);
-    setStatus(`Hero selected: ${heroCode}`);
+    pushToast(`Hero selected: ${heroCode}`);
   }
 
   async function saveDefaultDeck() {
@@ -583,7 +594,7 @@ export default function App() {
       body: JSON.stringify({ entries: defaultDeck }),
     });
     setDeckEntries(defaultDeck);
-    setStatus("Standard combat deck loaded");
+    pushToast("Standard combat deck loaded");
   }
 
   async function createMatch() {
@@ -594,7 +605,7 @@ export default function App() {
     await refreshMatches();
     setSelectedMatchId(match.match_id);
     setSelectedMatch(match);
-    setStatus(`Battle #${match.match_id} deployed`);
+    pushToast(`Battle #${match.match_id} deployed`);
   }
 
   function clearSelections() {
@@ -605,7 +616,7 @@ export default function App() {
 
   async function applyAction(payload: Record<string, unknown>, successText: string) {
     if (!selectedMatch) {
-      setStatus("No match selected");
+      pushToast("No match selected", "error");
       return;
     }
     const next = await apiFetch<MatchState>(`/matches/${selectedMatch.match_id}/actions`, {
@@ -627,7 +638,7 @@ export default function App() {
       streamRef.current?.close();
       streamRef.current = null;
       setSelectedMatchId(null);
-      setStatus(`Battle finished: ${next.result}`);
+      pushToast(`Battle finished: ${next.result}`);
     }
   }
 
@@ -653,7 +664,7 @@ export default function App() {
 
   async function handlePlaySelectedCard(slot: number) {
     if (!selectedCard) {
-      setStatus("Select a card from hand first");
+      pushToast("Select a card from hand first", "error");
       return;
     }
     const type = cardKind(selectedCard) === "buff" ? "play_buff_card" : "play_battle_card";
@@ -678,7 +689,7 @@ export default function App() {
 
   async function handleHeroSpell() {
     if (!selectedMatch || !myPlayer) {
-      setStatus("No battle selected");
+      pushToast("No battle selected", "error");
       return;
     }
     const heroCode = myPlayer.hero_code;
@@ -686,7 +697,7 @@ export default function App() {
 
     if (heroCode === "imperial_commander" || heroCode === "black_cell" || heroCode === "karn" || heroCode === "slavic_priest") {
       if (!selectedOwnUnitId) {
-        setStatus("Select your unit for this hero ability");
+        pushToast("Select your unit for this hero ability", "error");
         return;
       }
       payload = {
@@ -695,7 +706,7 @@ export default function App() {
       };
     } else if (heroCode === "the_system") {
       if (!selectedEnemyUnitId) {
-        setStatus("Select an enemy unit for this hero ability");
+        pushToast("Select an enemy unit for this hero ability", "error");
         return;
       }
       payload = {
@@ -880,16 +891,14 @@ export default function App() {
   return (
     <div className="war-shell">
       <header className="top-frame">
-        <button className="avatar-trigger" onClick={() => setShowProfile(true)}>
+        <button className={`avatar-trigger ${loading ? "busy" : ""}`} onClick={() => setShowProfile(true)}>
           <span className="avatar-core">
             {(me?.first_name?.[0] || me?.username?.[0] || "?").toUpperCase()}
           </span>
         </button>
-        <div className="status-rack">
-          <span className={`status-pill ${loading ? "hot" : "cold"}`}>
-            {loading ? "Operational" : "Standby"}
-          </span>
-          <span className="status-pill cold">{status}</span>
+        <div className="masthead">
+          <span className="masthead-kicker">{loading ? "Live Sync" : "War Grid"}</span>
+          <strong>{me?.selected_hero_name || "Operator Console"}</strong>
         </div>
       </header>
 
@@ -908,7 +917,10 @@ export default function App() {
         {!activeBattle && tab === "home" && (
           <section className="screen-grid">
             <div className="panel command-panel">
-              <h2>Command Link</h2>
+              <div className="panel-heading">
+                <span className="panel-kicker">Live Command</span>
+                <h2>Operator Console</h2>
+              </div>
               <div className="hero-banner hero-banner-top">
                 {renderHeroGlyph(
                   me?.selected_hero_code || "unassigned",
@@ -920,7 +932,7 @@ export default function App() {
                   <p className="muted">
                     {me?.first_name || me?.username || "No profile loaded"}
                   </p>
-                  <p className="muted">Rating {me?.rating ?? "-"} / XP {me?.xp ?? "-"}</p>
+                  <p className="muted">Rating {me?.rating ?? "-"}</p>
                 </div>
               </div>
               <div className="login-row">
@@ -1242,6 +1254,13 @@ export default function App() {
       {showProfile && (
         <ProfilePanel me={me} matches={matches} onClose={() => setShowProfile(false)} />
       )}
+      <div className="toast-stack" aria-live="polite" aria-atomic="true">
+        {toasts.map((toast) => (
+          <div key={toast.id} className={`toast ${toast.tone}`}>
+            {toast.message}
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
