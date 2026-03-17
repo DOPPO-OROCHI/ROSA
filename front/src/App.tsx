@@ -887,6 +887,10 @@ export default function App() {
     );
   }
 
+  const selectedHeroImageKey =
+    heroes.find((hero) => hero.hero_code === me?.selected_hero_code)?.image_key ||
+    resolveHeroImageKey(me?.selected_hero_code || "unassigned");
+
   return (
     <div className="war-shell">
       <header className="top-frame">
@@ -920,17 +924,18 @@ export default function App() {
                 <span className="panel-kicker">Live Command</span>
                 <h2>Operator Console</h2>
               </div>
-              <div className="hero-banner hero-banner-top">
+              <div
+                className="hero-banner hero-banner-top"
+                style={
+                  {
+                    "--hero-panel-image": `url(${resolveImageSrc(selectedHeroImageKey)})`,
+                  } as CSSProperties
+                }
+              >
                 <div className="hero-portrait-stage">
-                  <AssetImage
-                    imageKey={heroes.find((hero) => hero.hero_code === me?.selected_hero_code)?.image_key || resolveHeroImageKey(me?.selected_hero_code || "unassigned")}
-                    alt={me?.selected_hero_name || "Hero aura"}
-                    fallbackSrc={resolveHeroFallbackSrc()}
-                    className="hero-portrait-aura"
-                  />
                   {renderHeroGlyph(
                     me?.selected_hero_code || "unassigned",
-                    heroes.find((hero) => hero.hero_code === me?.selected_hero_code)?.image_key,
+                    selectedHeroImageKey,
                     "large",
                   )}
                   <div className="hero-banner-copy overlay">
