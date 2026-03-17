@@ -1007,12 +1007,8 @@ export default function App() {
 
       <main className="view-frame">
         {!activeBattle && tab === "home" && (
-          <section className="screen-grid">
+          <section className="screen-grid home-grid">
             <div className="panel command-panel">
-              <div className="panel-heading">
-                <span className="panel-kicker">Live Command</span>
-                <h2>Operator Console</h2>
-              </div>
               <div
                 className="hero-banner hero-banner-top"
                 style={
@@ -1088,10 +1084,6 @@ export default function App() {
                 </label>
                 <button onClick={() => void runTask(() => login(devUserId))}>Login</button>
               </div>
-            </div>
-
-            <div className="panel command-panel">
-              <h2>Deployment</h2>
               <label>
                 Opponent user id
                 <input
@@ -1099,26 +1091,7 @@ export default function App() {
                   onChange={(event) => setOpponentUserId(event.target.value)}
                 />
               </label>
-              <div className="quick-login">
-                <button onClick={() => void runTask(createMatch)}>Start Battle</button>
-                <button onClick={() => void runTask(saveDefaultDeck)}>Load Standard Deck</button>
-              </div>
-              <div className="match-list compact">
-                {matches.length === 0 ? (
-                  <p className="muted">No battle history yet.</p>
-                ) : (
-                  matches.map((match) => (
-                    <button
-                      key={match.match_id}
-                      className={selectedMatchId === match.match_id ? "match-pill active" : "match-pill"}
-                    onClick={() => void runTask(() => refreshMatch(match.match_id))}
-                    >
-                      <span>Battle #{match.match_id}</span>
-                      <span>{match.result}</span>
-                    </button>
-                  ))
-                )}
-              </div>
+              <button onClick={() => void runTask(createMatch)}>Start Battle</button>
             </div>
 
           </section>
