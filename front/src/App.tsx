@@ -1044,7 +1044,7 @@ export default function App() {
                     <div className="hero-picker-head">
                       <strong>Выбери героя</strong>
                       <button className="hero-picker-close" onClick={() => setHeroPickerOpen(false)}>
-                        x
+                        X
                       </button>
                     </div>
                     <div className="hero-picker-list">
@@ -1062,10 +1062,11 @@ export default function App() {
                             }
                           >
                             {renderHeroGlyph(hero.hero_code, hero.image_key, "small")}
-                            <div>
+                            <div className="hero-picker-info">
                               <strong>{hero.name}</strong>
-                              <span>HP {hero.health_points}</span>
-                              <span>ATK {hero.attack_power}</span>
+                              <span className="hero-picker-meta">
+                                HP {hero.health_points} | ATK {hero.attack_power} | {hero.description}
+                              </span>
                             </div>
                           </button>
                         );

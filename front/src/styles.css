@@ -531,10 +531,11 @@ pre {
   position: absolute;
   inset: 0;
   z-index: 0;
+  object-position: center 34%;
 }
 
 .hero-glyph.large .hero-glyph-media {
-  object-position: center 18%;
+  object-position: center 30%;
   transform: scale(1.08);
 }
 
@@ -621,13 +622,18 @@ pre {
 }
 
 .hero-picker-head {
+  position: relative;
   display: flex;
-  justify-content: space-between;
+  justify-content: flex-start;
   align-items: center;
   margin-bottom: 0.65rem;
+  padding-right: 34px;
 }
 
 .hero-picker-close {
+  position: absolute;
+  top: 0;
+  right: 0;
   width: 28px;
   height: 28px;
   border-radius: 999px;
@@ -635,12 +641,54 @@ pre {
   place-items: center;
   background: rgba(123, 41, 49, 0.9);
   color: #ffe2de;
+  font-size: 0.82rem;
+  font-weight: 700;
+  line-height: 1;
 }
 
 .hero-picker-list {
   display: grid;
   grid-template-columns: 1fr;
   gap: 0.55rem;
+}
+
+.hero-picker-list .hero-card {
+  gap: 0.6rem;
+  padding: 0.65rem 0.8rem;
+}
+
+.hero-picker-list .hero-card .hero-glyph.small {
+  width: 50px;
+  height: 50px;
+  flex: 0 0 50px;
+}
+
+.hero-picker-info {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.18rem;
+}
+
+.hero-picker-info strong {
+  display: block;
+  font-size: 0.66rem;
+  line-height: 1.15;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.hero-picker-meta {
+  display: block;
+  font-size: 0.58rem;
+  line-height: 1.1;
+  color: #d6ccba;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .asset-card {
