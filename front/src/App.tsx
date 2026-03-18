@@ -1414,21 +1414,11 @@ export default function App() {
 
         {activeBattle && (
           <section className="battle-screen">
-            <aside className="battle-side left">
-              <button className="command-button" onClick={() => void runTask(handleEndTurn)}>
-                End Turn
-              </button>
-              <button className="command-button" onClick={() => void runTask(handleHeroSpell)}>
-                Hero Skill
-              </button>
-              <button className="command-button danger" onClick={() => void runTask(handleLeaveMatch)}>
+            <div className="battle-top-row">
+              <button className="ghost-button leave-inline" onClick={() => void runTask(handleLeaveMatch)}>
                 Leave Match
               </button>
-              <div className="debug-box">
-                <strong>Orders</strong>
-                <span>{actionStatus}</span>
-              </div>
-            </aside>
+            </div>
 
             <section
               className="battle-board panel"
@@ -1474,7 +1464,6 @@ export default function App() {
                     <div className="enemy-stats">
                       <span>Enemy mana {enemyPlayer.mana}</span>
                       <span>Enemy HP {enemyPlayer.hero_hp}</span>
-                      <span>Phase {selectedMatch.phase}</span>
                     </div>
                     <div className="enemy-hand">
                       {Array.from({ length: enemyPlayer.hand_count ?? 0 }).map((_, index, array) => {
@@ -1538,6 +1527,9 @@ export default function App() {
                           "large",
                         )}
                       </div>
+                      <button className="hero-skill-mini" onClick={() => void runTask(handleHeroSpell)}>
+                        Hero Skill
+                      </button>
                     </div>
                     <div className="ally-stats">
                       <span>Mana {myPlayer.mana}</span>
@@ -1586,6 +1578,9 @@ export default function App() {
                         })}
                     </div>
                   </div>
+                  <button className="end-turn-floating" onClick={() => void runTask(handleEndTurn)}>
+                    End Turn
+                  </button>
                 </>
               )}
             </section>

@@ -1368,6 +1368,18 @@ pre {
   min-height: calc(100vh - 164px - env(safe-area-inset-top) - env(safe-area-inset-bottom));
 }
 
+.battle-top-row {
+  display: flex;
+  justify-content: flex-start;
+}
+
+.leave-inline {
+  min-height: 38px;
+  padding: 0.45rem 0.85rem;
+  border-radius: 12px;
+  background: rgba(19, 25, 33, 0.88);
+}
+
 .battle-side {
   order: 2;
   display: grid;
@@ -1513,6 +1525,11 @@ pre {
   justify-content: center;
 }
 
+.hero-anchor.bottom {
+  align-items: center;
+  gap: 0.55rem;
+}
+
 .hero-anchor-button {
   background: transparent;
   padding: 0;
@@ -1550,6 +1567,32 @@ pre {
 .hero-anchor .hero-glyph.large .hero-glyph-media {
   object-position: center 24%;
   transform: scale(1.04);
+}
+
+.hero-skill-mini {
+  min-height: 40px;
+  padding: 0.48rem 0.78rem;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #18465f, #2f7a8e);
+  color: #edf9ff;
+  font-size: 0.74rem;
+  font-weight: 700;
+}
+
+.end-turn-floating {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 6;
+  min-height: 42px;
+  padding: 0.5rem 0.8rem;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #18465f, #2f7a8e);
+  color: #edf9ff;
+  font-size: 0.75rem;
+  font-weight: 700;
+  box-shadow: 0 10px 22px rgba(0, 0, 0, 0.34);
 }
 
 .battle-midline {
