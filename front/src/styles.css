@@ -1695,8 +1695,6 @@ pre {
 .hero-hp-value {
   stroke: #ff4f56;
   filter: drop-shadow(0 0 5px rgba(255, 79, 86, 0.45));
-  transform-origin: 60px 60px;
-  transform: rotate(-90deg);
 }
 
 .hero-mana-track {

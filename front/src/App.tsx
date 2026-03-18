@@ -1055,9 +1055,7 @@ export default function App() {
   function renderOwnHeroHud(player: MatchPlayer) {
     const hpMax = Math.max(1, ownHeroHpPeak || player.hero_hp || 1);
     const hpRatio = Math.max(0, Math.min(1, player.hero_hp / hpMax));
-    const hpRadius = 49;
-    const hpCircumference = 2 * Math.PI * hpRadius;
-    const hpDashOffset = hpCircumference * (1 - hpRatio);
+    const hpEnd = 180 + 180 * hpRatio;
     const manaCells = Math.max(0, Math.min(10, player.mana));
     const manaDividerAngles =
       manaCells > 1
@@ -1066,15 +1064,8 @@ export default function App() {
     return (
       <div className={`hero-orb ${selectedMatch?.active_player === player.player_id ? "active-turn" : ""}`}>
         <svg className="hero-orb-rings" viewBox="0 0 120 120" aria-hidden="true">
-          <circle className="hero-hp-track" cx="60" cy="60" r={hpRadius} />
-          <circle
-            className="hero-hp-value"
-            cx="60"
-            cy="60"
-            r={hpRadius}
-            strokeDasharray={hpCircumference}
-            strokeDashoffset={hpDashOffset}
-          />
+          <path className="hero-hp-track" d={describeArc(60, 60, 56, 180, 360)} />
+          <path className="hero-hp-value" d={describeArc(60, 60, 56, 180, hpEnd)} />
           <path className="hero-mana-track" d={describeArc(60, 60, 56, 0, 180)} />
           {manaCells > 0 && <path className="hero-mana-value" d={describeArc(60, 60, 56, 0, 180)} />}
           {manaDividerAngles.map((angle) => {
