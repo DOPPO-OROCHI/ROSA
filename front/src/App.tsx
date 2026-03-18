@@ -1516,14 +1516,7 @@ export default function App() {
                     <div className="ally-stats">
                       <span>Mana {myPlayer.mana}</span>
                       <span>HP {myPlayer.hero_hp}</span>
-                      <div className="deck-pile-mini">
-                        <div className="deck-pile-stack">
-                          <span className="card-back deck-back" />
-                          <span className="card-back deck-back" />
-                          <span className="card-back deck-back" />
-                        </div>
-                        <span className="deck-pile-count">{myPlayer.deck?.length ?? myPlayer.deck_count ?? 0}</span>
-                      </div>
+                      <span />
                     </div>
                     <div className="hand-row">
                       {myHand.map((card, index) => {
@@ -1567,6 +1560,14 @@ export default function App() {
                   <button className="end-turn-floating" onClick={() => void runTask(handleEndTurn)}>
                     End Turn
                   </button>
+                  <div className="battle-deck-anchor" aria-label="Deck">
+                    <div className="battle-deck-stack">
+                      <span className="battle-deck-card back-3" />
+                      <span className="battle-deck-card back-2" />
+                      <span className="battle-deck-card back-1" />
+                    </div>
+                    <span className="battle-deck-count">{myPlayer.deck?.length ?? myPlayer.deck_count ?? 0}</span>
+                  </div>
                 </>
               )}
             </section>

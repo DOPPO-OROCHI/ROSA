@@ -1657,7 +1657,7 @@ pre {
 .end-turn-floating {
   position: absolute;
   right: 10px;
-  top: 43%;
+  top: 50%;
   transform: translateY(-50%);
   z-index: 6;
   min-height: 42px;
@@ -1668,6 +1668,76 @@ pre {
   font-size: 0.75rem;
   font-weight: 700;
   box-shadow: 0 10px 22px rgba(0, 0, 0, 0.34);
+}
+
+.battle-deck-anchor {
+  position: absolute;
+  right: 8px;
+  bottom: -18px;
+  z-index: 6;
+  width: 72px;
+  height: 104px;
+  pointer-events: none;
+}
+
+.battle-deck-stack {
+  position: absolute;
+  inset: 0;
+}
+
+.battle-deck-card {
+  position: absolute;
+  left: 50%;
+  width: 64px;
+  height: 96px;
+  border-radius: 13px;
+  border: 1px solid rgba(231, 219, 192, 0.2);
+  background:
+    linear-gradient(180deg, rgba(72, 21, 19, 0.9), rgba(11, 15, 22, 0.95)),
+    repeating-linear-gradient(
+      35deg,
+      rgba(197, 151, 73, 0.1),
+      rgba(197, 151, 73, 0.1) 6px,
+      transparent 6px,
+      transparent 12px
+    );
+  box-shadow:
+    0 16px 30px rgba(0, 0, 0, 0.44),
+    inset 0 0 22px rgba(0, 0, 0, 0.34);
+  transform-origin: center bottom;
+}
+
+.battle-deck-card.back-3 {
+  transform: translateX(-50%) rotate(-8deg);
+  opacity: 0.72;
+}
+
+.battle-deck-card.back-2 {
+  transform: translateX(-50%) rotate(-2deg);
+  opacity: 0.86;
+}
+
+.battle-deck-card.back-1 {
+  transform: translateX(-50%) rotate(5deg);
+}
+
+.battle-deck-count {
+  position: absolute;
+  right: -6px;
+  bottom: 28px;
+  min-width: 28px;
+  height: 28px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 0.45rem;
+  font-size: 0.78rem;
+  font-weight: 800;
+  color: #f8e7c1;
+  background: linear-gradient(135deg, rgba(20, 82, 107, 0.96), rgba(10, 35, 49, 0.96));
+  border: 1px solid rgba(121, 194, 214, 0.4);
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.36);
 }
 
 .battle-midline {
