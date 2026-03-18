@@ -1886,7 +1886,7 @@ pre {
   border-radius: 12px;
   margin-left: -10px;
   transform:
-    translateY(calc(var(--fan-depth, 0px) - 44px))
+    translateY(calc(var(--fan-depth, 0px) - 10px))
     rotate(calc(var(--fan-offset, 0) * 2deg));
   transform-origin: center bottom;
   padding: 0;
@@ -1902,7 +1902,7 @@ pre {
 
 .hand-card.selected {
   transform:
-    translateY(calc(var(--fan-depth, 0px) - 50px))
+    translateY(calc(var(--fan-depth, 0px) - 16px))
     rotate(calc(var(--fan-offset, 0) * 2deg));
 }
 
@@ -1916,13 +1916,13 @@ pre {
   min-height: 102px;
   margin-left: -17px;
   transform:
-    translateY(calc(var(--fan-depth, 0px) - 38px))
+    translateY(calc(var(--fan-depth, 0px) - 6px))
     rotate(calc(var(--fan-offset, 0) * 1.6deg));
 }
 
 .hand-row.compact .hand-card.selected {
   transform:
-    translateY(calc(var(--fan-depth, 0px) - 43px))
+    translateY(calc(var(--fan-depth, 0px) - 12px))
     rotate(calc(var(--fan-offset, 0) * 1.6deg));
 }
 
@@ -1940,13 +1940,13 @@ pre {
   min-height: 94px;
   margin-left: -22px;
   transform:
-    translateY(calc(var(--fan-depth, 0px) - 31px))
+    translateY(calc(var(--fan-depth, 0px) - 2px))
     rotate(calc(var(--fan-offset, 0) * 1.3deg));
 }
 
 .hand-row.ultra-compact .hand-card.selected {
   transform:
-    translateY(calc(var(--fan-depth, 0px) - 36px))
+    translateY(calc(var(--fan-depth, 0px) - 8px))
     rotate(calc(var(--fan-offset, 0) * 1.3deg));
 }
 
