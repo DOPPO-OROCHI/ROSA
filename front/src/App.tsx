@@ -1156,7 +1156,6 @@ export default function App() {
             <div className="panel inventory-panel">
               <div className="section-head">
                 <h2>Deck Doctrine</h2>
-                <button onClick={() => void runTask(saveDefaultDeck)}>Load Standard Deck</button>
               </div>
               <div className="deck-summary">
                 <span>Total cards</span>
@@ -1252,7 +1251,6 @@ export default function App() {
             <div className="panel inventory-panel">
               <div className="section-head">
                 <h2>Battle Cards</h2>
-                <button onClick={() => void runTask(refreshCards)}>Refresh Cards</button>
               </div>
               <div className="asset-grid">
                 {cards?.battle.map((card) => (
