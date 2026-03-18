@@ -198,6 +198,9 @@ type ToastEntry = {
   tone: "info" | "error";
 };
 
+type CatalogKind = "battle" | "buff";
+type CatalogSort = "mana" | "attack" | "hp" | "tank";
+
 type CardPreview = {
   kind: "battle" | "buff";
   name: string;
@@ -376,6 +379,9 @@ export default function App() {
   const [heroPickerOpen, setHeroPickerOpen] = useState(false);
   const [heldHero, setHeldHero] = useState<OwnedHero | null>(null);
   const [cardPreview, setCardPreview] = useState<CardPreview | null>(null);
+  const [catalogKind, setCatalogKind] = useState<CatalogKind>("battle");
+  const [catalogSort, setCatalogSort] = useState<CatalogSort>("mana");
+  const [catalogPage, setCatalogPage] = useState(0);
   const [matches, setMatches] = useState<MatchState[]>([]);
   const [selectedMatchId, setSelectedMatchId] = useState<number | null>(null);
   const [selectedMatch, setSelectedMatch] = useState<MatchState | null>(null);
@@ -1010,6 +1016,43 @@ export default function App() {
   }, [cardCatalog, deckEntries]);
   const inspectedDeckGroup = deckGroups.find((group) => group.key === deckInspectorKey) ?? null;
   const inspectedDeckMeta = inspectedDeckGroup ? cardCatalog.get(inspectedDeckGroup.templateId) : undefined;
+  const deckCountMap = useMemo(() => {
+    const next = new Map<string, number>();
+    for (const entry of deckEntries) {
+      next.set(`${entry.kind}:${entry.template_id}`, entry.count);
+    }
+    return next;
+  }, [deckEntries]);
+  const catalogCards = useMemo(() => {
+    if (catalogKind === "battle") {
+      const battle = [...(cards?.battle ?? [])];
+      battle.sort((a, b) => {
+        switch (catalogSort) {
+          case "attack":
+            return b.attack - a.attack || a.mana_cost - b.mana_cost;
+          case "hp":
+            return b.health_points - a.health_points || a.mana_cost - b.mana_cost;
+          case "tank":
+            return Number(b.is_tank) - Number(a.is_tank) || a.mana_cost - b.mana_cost;
+          case "mana":
+          default:
+            return a.mana_cost - b.mana_cost || b.attack - a.attack;
+        }
+      });
+      return battle;
+    }
+    const buff = [...(cards?.buff ?? [])];
+    buff.sort((a, b) => a.mana_cost - b.mana_cost || a.name.localeCompare(b.name));
+    return buff;
+  }, [cards, catalogKind, catalogSort]);
+  const catalogPages = Math.max(1, Math.ceil(catalogCards.length / 6));
+  useEffect(() => {
+    setCatalogPage((prev) => Math.min(prev, catalogPages - 1));
+  }, [catalogPages]);
+  const catalogPageItems = useMemo(() => {
+    const from = catalogPage * 6;
+    return catalogCards.slice(from, from + 6);
+  }, [catalogCards, catalogPage]);
 
   return (
     <div className="war-shell">
@@ -1248,91 +1291,125 @@ export default function App() {
               )}
             </div>
 
-            <div className="panel inventory-panel">
-              <div className="section-head">
-                <h2>Battle Cards</h2>
-              </div>
-              <div className="asset-grid">
-                {cards?.battle.map((card) => (
-                  <article
-                    key={card.template_id}
-                    className={`asset-card tone-${getAssetTone(card.asset_base_key)} clickable`}
-                    onClick={() =>
-                      setCardPreview({
-                        kind: "battle",
-                        name: card.name,
-                        description: card.description,
-                        imageKey: card.image_key || resolveBattleCardImageKey(card.template_id),
-                        mana: card.mana_cost,
-                        hp: card.health_points,
-                        attack: card.attack,
-                        cooldown: card.cooldown,
-                      })
-                    }
+            <div className="panel inventory-panel catalog-panel">
+              <div className="catalog-toolbar">
+                <div className="catalog-kind-switch">
+                  <button
+                    className={catalogKind === "battle" ? "nav-pill active" : "nav-pill"}
+                    onClick={() => {
+                      setCatalogKind("battle");
+                      setCatalogPage(0);
+                    }}
                   >
-                    <div className="asset-frame">
-                      <AssetImage
-                        imageKey={card.image_key || resolveBattleCardImageKey(card.template_id)}
-                        alt={card.name}
-                        fallbackSrc={resolveCardFallbackSrc()}
-                        className="asset-frame-media"
-                      />
-                      <button
-                        className="asset-add"
-                        onClick={(event) => {
-                          event.stopPropagation();
-                          void runTask(() => addCardToDeck("battle", card.template_id));
-                        }}
-                      >
-                        +
-                      </button>
-                    </div>
-                    <strong>{card.name}</strong>
-                  </article>
-                ))}
-              </div>
-            </div>
-
-            <div className="panel inventory-panel span-all">
-              <h2>Buff Cards</h2>
-              <div className="asset-grid">
-                {cards?.buff.map((card) => (
-                  <article
-                    key={card.template_id}
-                    className={`asset-card tone-${getAssetTone(card.asset_base_key)} clickable`}
-                    onClick={() =>
-                      setCardPreview({
-                        kind: "buff",
-                        name: card.name,
-                        description: card.description,
-                        imageKey: card.image_key || resolveBuffCardImageKey(card.template_id),
-                        mana: card.mana_cost,
-                        buffType: card.buff_type,
-                        buffValue: card.buff_value,
-                        duration: card.duration,
-                      })
-                    }
+                    Battle Cards
+                  </button>
+                  <button
+                    className={catalogKind === "buff" ? "nav-pill active" : "nav-pill"}
+                    onClick={() => {
+                      setCatalogKind("buff");
+                      setCatalogPage(0);
+                    }}
                   >
-                    <div className="asset-frame">
-                      <AssetImage
-                        imageKey={card.image_key || resolveBuffCardImageKey(card.template_id)}
-                        alt={card.name}
-                        fallbackSrc={resolveCardFallbackSrc()}
-                        className="asset-frame-media"
-                      />
-                      <button
-                        className="asset-add"
-                        onClick={(event) => {
-                          event.stopPropagation();
-                          void runTask(() => addCardToDeck("buff", card.template_id));
-                        }}
-                      >
-                        +
-                      </button>
-                    </div>
-                    <strong>{card.name}</strong>
-                  </article>
-                ))}
+                    Buff Cards
+                  </button>
+                </div>
+                <label className="catalog-sort">
+                  <span>Sort</span>
+                  <select
+                    value={catalogSort}
+                    onChange={(event) => setCatalogSort(event.target.value as CatalogSort)}
+                  >
+                    <option value="mana">Mana</option>
+                    <option value="attack">Attack</option>
+                    <option value="hp">HP</option>
+                    <option value="tank">Tank / Non-tank</option>
+                  </select>
+                </label>
+              </div>
+              <div className="catalog-grid">
+                {catalogPageItems.map((card) => {
+                  const imageKey =
+                    card.kind === "battle"
+                      ? card.image_key || resolveBattleCardImageKey(card.template_id)
+                      : card.image_key || resolveBuffCardImageKey(card.template_id);
+                  const templateKey = `${card.kind}:${card.template_id}`;
+                  const deckCount = deckCountMap.get(templateKey) ?? 0;
+                  const addLimit = Math.min(card.max_copies, card.copies);
+                  const exhausted = deckCount >= addLimit;
+                  return (
+                    <article
+                      key={templateKey}
+                      className={`asset-card tone-${getAssetTone(card.asset_base_key)} clickable ${exhausted ? "exhausted" : ""}`}
+                      onClick={() =>
+                        setCardPreview(
+                          card.kind === "battle"
+                            ? {
+                                kind: "battle",
+                                name: card.name,
+                                description: card.description,
+                                imageKey,
+                                mana: card.mana_cost,
+                                hp: card.health_points,
+                                attack: card.attack,
+                                cooldown: card.cooldown,
+                              }
+                            : {
+                                kind: "buff",
+                                name: card.name,
+                                description: card.description,
+                                imageKey,
+                                mana: card.mana_cost,
+                                buffType: card.buff_type,
+                                buffValue: card.buff_value,
+                                duration: card.duration,
+                              },
+                        )
+                      }
+                    >
+                      <div className="asset-frame">
+                        <AssetImage
+                          imageKey={imageKey}
+                          alt={card.name}
+                          fallbackSrc={resolveCardFallbackSrc()}
+                          className="asset-frame-media"
+                        />
+                        <button
+                          className="asset-add"
+                          disabled={exhausted}
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            if (exhausted) {
+                              return;
+                            }
+                            void runTask(() => addCardToDeck(card.kind, card.template_id));
+                          }}
+                        >
+                          +
+                        </button>
+                      </div>
+                      <strong>{card.name}</strong>
+                    </article>
+                  );
+                })}
+              </div>
+              <div className="catalog-pager">
+                <button
+                  className="ghost-button"
+                  onClick={() => setCatalogPage((prev) => Math.max(0, prev - 1))}
+                  disabled={catalogPage === 0}
+                >
+                  ←
+                </button>
+                <span>
+                  {catalogPage + 1} / {catalogPages}
+                </span>
+                <button
+                  className="ghost-button"
+                  onClick={() => setCatalogPage((prev) => Math.min(catalogPages - 1, prev + 1))}
+                  disabled={catalogPage >= catalogPages - 1}
+                >
+                  →
+                </button>
               </div>
             </div>
           </section>

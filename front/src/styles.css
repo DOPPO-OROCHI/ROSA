@@ -779,6 +779,11 @@ pre {
   cursor: pointer;
 }
 
+.asset-card.exhausted {
+  filter: saturate(0.45) brightness(0.55);
+  opacity: 0.86;
+}
+
 .asset-card strong {
   font-size: 0.68rem;
   line-height: 1.15;
@@ -823,6 +828,85 @@ pre {
   background: linear-gradient(135deg, rgba(23, 83, 108, 0.94), rgba(39, 126, 150, 0.94));
   color: #e6f8ff;
   box-shadow: 0 6px 16px rgba(0, 0, 0, 0.38);
+}
+
+.asset-add:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.catalog-panel {
+  gap: 0.6rem;
+}
+
+.catalog-toolbar {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+}
+
+.catalog-kind-switch {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.5rem;
+}
+
+.catalog-kind-switch .nav-pill {
+  min-height: 44px;
+  font-size: 0.74rem;
+}
+
+.catalog-sort {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  font-size: 0.74rem;
+  color: #d7ccbb;
+}
+
+.catalog-sort select {
+  width: auto;
+  min-width: 168px;
+  padding: 0.5rem 0.6rem;
+  border-radius: 10px;
+  border: 1px solid rgba(231, 219, 192, 0.14);
+  background: rgba(7, 10, 13, 0.66);
+  color: #e7dbc0;
+}
+
+.catalog-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-rows: repeat(2, minmax(0, 1fr));
+  gap: 0.5rem;
+  min-height: 296px;
+}
+
+.catalog-grid .asset-card {
+  min-height: 138px;
+}
+
+.catalog-grid .asset-frame {
+  min-height: 88px;
+}
+
+.catalog-pager {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.65rem;
+}
+
+.catalog-pager .ghost-button {
+  min-width: 44px;
+  min-height: 36px;
+  padding: 0.2rem 0.55rem;
+}
+
+.catalog-pager span {
+  font-size: 0.74rem;
+  color: #d7ccbb;
 }
 
 .card-viewer-overlay {
