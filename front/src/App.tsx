@@ -1200,30 +1200,48 @@ export default function App() {
                       <span>x{inspectedDeckGroup.count}</span>
                     </div>
                     <div className="deck-fan-row">
-                      {Array.from({ length: inspectedDeckGroup.count }).map((_, index) => (
-                        <article
-                          key={`${inspectedDeckGroup.key}:${index}`}
-                          className="deck-fan-card"
-                          style={
-                            {
-                              "--fan-offset": `${index - (inspectedDeckGroup.count - 1) / 2}`,
-                            } as CSSProperties
-                          }
+                      <article className="deck-fan-main">
+                        <AssetImage
+                          imageKey={inspectedDeckGroup.imageKey}
+                          alt={inspectedDeckGroup.name}
+                          fallbackSrc={resolveCardFallbackSrc()}
+                          className="deck-fan-media"
+                        />
+                        <button
+                          className="deck-fan-remove"
+                          onClick={() => void runTask(() => removeCardFromDeck(inspectedDeckGroup.kind, inspectedDeckGroup.templateId))}
                         >
-                          <AssetImage
-                            imageKey={inspectedDeckGroup.imageKey}
-                            alt={inspectedDeckGroup.name}
-                            fallbackSrc={resolveCardFallbackSrc()}
-                            className="deck-fan-media"
-                          />
-                          <button
-                            className="deck-fan-remove"
-                            onClick={() => void runTask(() => removeCardFromDeck(inspectedDeckGroup.kind, inspectedDeckGroup.templateId))}
-                          >
-                            X
-                          </button>
-                        </article>
-                      ))}
+                          X
+                        </button>
+                      </article>
+                      {inspectedDeckGroup.count > 1 && (
+                        <div className="deck-fan-stack">
+                          {Array.from({ length: inspectedDeckGroup.count - 1 }).map((_, index, array) => (
+                            <article
+                              key={`${inspectedDeckGroup.key}:fan:${index}`}
+                              className="deck-fan-card"
+                              style={
+                                {
+                                  "--fan-offset": `${index - (array.length - 1) / 2}`,
+                                } as CSSProperties
+                              }
+                            >
+                              <AssetImage
+                                imageKey={inspectedDeckGroup.imageKey}
+                                alt={inspectedDeckGroup.name}
+                                fallbackSrc={resolveCardFallbackSrc()}
+                                className="deck-fan-media"
+                              />
+                              <button
+                                className="deck-fan-remove"
+                                onClick={() => void runTask(() => removeCardFromDeck(inspectedDeckGroup.kind, inspectedDeckGroup.templateId))}
+                              >
+                                X
+                              </button>
+                            </article>
+                          ))}
+                        </div>
+                      )}
                     </div>
                     <div className="deck-fan-info">
                       <span>DECK COPIES {inspectedDeckGroup.count}</span>

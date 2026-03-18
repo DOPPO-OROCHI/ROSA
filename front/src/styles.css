@@ -1175,25 +1175,53 @@ pre {
 }
 
 .deck-fan-row {
+  position: relative;
   flex: 1;
+  min-height: 230px;
+  display: block;
+  padding: 0.25rem 0.2rem 0.45rem;
+  overflow: hidden;
+}
+
+.deck-fan-main {
+  position: absolute;
+  left: 50%;
+  top: 4px;
+  transform: translateX(-50%);
+  z-index: 3;
+  width: 126px;
+  height: 178px;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid rgba(231, 219, 192, 0.16);
+  background: rgba(7, 10, 13, 0.7);
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.42);
+}
+
+.deck-fan-stack {
+  position: absolute;
+  left: 50%;
+  bottom: 4px;
+  transform: translateX(-50%);
+  width: min(100%, 360px);
+  height: 108px;
   display: flex;
-  align-items: center;
   justify-content: center;
-  overflow-x: auto;
-  overflow-y: hidden;
-  padding: 0.45rem 0.2rem;
+  align-items: flex-end;
+  overflow: hidden;
+  z-index: 2;
 }
 
 .deck-fan-card {
   position: relative;
-  width: 120px;
-  height: 170px;
+  width: 86px;
+  height: 122px;
   border-radius: 12px;
   overflow: hidden;
   border: 1px solid rgba(231, 219, 192, 0.14);
   background: rgba(7, 10, 13, 0.68);
-  margin-left: calc(var(--fan-offset, 0) * -14px);
-  transform: rotate(calc(var(--fan-offset, 0) * 3deg));
+  margin-left: calc(var(--fan-offset, 0) * -18px);
+  transform: rotate(calc(var(--fan-offset, 0) * 6deg));
   flex: 0 0 auto;
   box-shadow: 0 10px 24px rgba(0, 0, 0, 0.34);
 }
@@ -1211,8 +1239,8 @@ pre {
   top: 6px;
   right: 6px;
   z-index: 2;
-  width: 26px;
-  height: 26px;
+  width: 24px;
+  height: 24px;
   border-radius: 999px;
   display: grid;
   place-items: center;
@@ -1869,9 +1897,19 @@ pre {
   }
 
   .deck-fan-card {
-    width: 104px;
-    height: 150px;
-    margin-left: calc(var(--fan-offset, 0) * -10px);
+    width: 74px;
+    height: 106px;
+    margin-left: calc(var(--fan-offset, 0) * -14px);
+  }
+
+  .deck-fan-main {
+    width: 110px;
+    height: 156px;
+  }
+
+  .deck-fan-stack {
+    width: min(100%, 300px);
+    height: 94px;
   }
 
   .hero-picker-list {
