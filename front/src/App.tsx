@@ -749,6 +749,16 @@ export default function App() {
     (card) => cardInstanceId(card) === selectedHandCardId,
   );
   const myHand = myPlayer?.hand ?? [];
+  const displayedDeckCount = (() => {
+    const explicitDeckCount = myPlayer?.deck?.length ?? myPlayer?.deck_count ?? 0;
+    if (explicitDeckCount > 0) {
+      return explicitDeckCount;
+    }
+    const handCount = myPlayer?.hand?.length ?? myPlayer?.hand_count ?? 0;
+    const discardCount = myPlayer?.discard?.length ?? myPlayer?.disc_count ?? 0;
+    const fallbackFromDeckSize = 20 - handCount - discardCount;
+    return Math.max(0, fallbackFromDeckSize);
+  })();
 
   function cardCatalogEntry(templateId: string): CardCatalogEntry | undefined {
     return cardCatalog.get(templateId);
@@ -1566,7 +1576,7 @@ export default function App() {
                       <span className="battle-deck-card back-2" />
                       <span className="battle-deck-card back-1" />
                     </div>
-                    <span className="battle-deck-count">{myPlayer.deck?.length ?? myPlayer.deck_count ?? 0}</span>
+                    <span className="battle-deck-count">{displayedDeckCount}</span>
                   </div>
                 </>
               )}

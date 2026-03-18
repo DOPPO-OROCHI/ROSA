@@ -1501,7 +1501,7 @@ pre {
   justify-content: center;
   align-items: flex-end;
   min-height: 142px;
-  padding: 0 0.25rem 0.1rem;
+  padding: 0 0.25rem 0;
   overflow: visible;
 }
 
@@ -1837,8 +1837,8 @@ pre {
   border-radius: 12px;
   margin-left: -10px;
   transform:
-    translateY(calc(var(--fan-depth, 0px) - 88px))
-    rotate(calc(var(--fan-offset, 0) * 5deg));
+    translateY(calc(var(--fan-depth, 0px) - 44px))
+    rotate(calc(var(--fan-offset, 0) * 2deg));
   transform-origin: center bottom;
   padding: 0;
   position: relative;
@@ -1853,8 +1853,8 @@ pre {
 
 .hand-card.selected {
   transform:
-    translateY(calc(var(--fan-depth, 0px) - 94px))
-    rotate(calc(var(--fan-offset, 0) * 5deg));
+    translateY(calc(var(--fan-depth, 0px) - 50px))
+    rotate(calc(var(--fan-offset, 0) * 2deg));
 }
 
 .hand-card::after {
