@@ -98,6 +98,8 @@ type CardCatalogEntry = {
   attack?: number;
   health_points?: number;
   cooldown?: number;
+  max_copies?: number;
+  duration?: number;
   buff_value?: number;
   buff_type?: string;
 };
@@ -1224,17 +1226,18 @@ export default function App() {
                       ))}
                     </div>
                     <div className="deck-fan-info">
+                      <span>DECK COPIES {inspectedDeckGroup.count}</span>
                       <span>MANA {inspectedDeckMeta?.mana_cost ?? 0}</span>
                       {inspectedDeckGroup.kind === "battle" ? (
                         <span>
-                          HP {inspectedDeckMeta?.health_points ?? 0} | ATK {inspectedDeckMeta?.attack ?? 0} | CD {inspectedDeckMeta?.cooldown ?? 0}
+                          HP {inspectedDeckMeta?.health_points ?? 0} | ATK {inspectedDeckMeta?.attack ?? 0} | CD {inspectedDeckMeta?.cooldown ?? 0} | MAX {inspectedDeckMeta?.max_copies ?? 0}
                         </span>
                       ) : (
                         <span>
-                          {inspectedDeckMeta?.buff_type || "Buff"} {inspectedDeckMeta?.buff_value ?? 0}
+                          {inspectedDeckMeta?.buff_type || "Buff"} {inspectedDeckMeta?.buff_value ?? 0} | DUR {inspectedDeckMeta?.duration ?? 0} | MAX {inspectedDeckMeta?.max_copies ?? 0}
                         </span>
                       )}
-                      <span>{inspectedDeckMeta?.description || "No description yet"}</span>
+                      <span>{inspectedDeckMeta?.description || "-"}</span>
                     </div>
                   </div>
                 </div>
