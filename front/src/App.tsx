@@ -1007,6 +1007,7 @@ export default function App() {
     });
   }, [cardCatalog, deckEntries]);
   const inspectedDeckGroup = deckGroups.find((group) => group.key === deckInspectorKey) ?? null;
+  const inspectedDeckMeta = inspectedDeckGroup ? cardCatalog.get(inspectedDeckGroup.templateId) : undefined;
 
   return (
     <div className="war-shell">
@@ -1187,31 +1188,53 @@ export default function App() {
                 )}
               </div>
               {inspectedDeckGroup && (
-                <div className="deck-inspector" onClick={() => setDeckInspectorKey(null)}>
-                  <div className="deck-inspector-body" onClick={(event) => event.stopPropagation()}>
-                    <div className="deck-inspector-head">
+                <div className="deck-fan-overlay" onClick={() => setDeckInspectorKey(null)}>
+                  <div className="deck-fan-window" onClick={(event) => event.stopPropagation()}>
+                    <button className="deck-fan-close" onClick={() => setDeckInspectorKey(null)}>
+                      X
+                    </button>
+                    <div className="deck-fan-head">
                       <strong>{inspectedDeckGroup.name}</strong>
-                      <button className="deck-inspector-close" onClick={() => setDeckInspectorKey(null)}>
-                        x
-                      </button>
+                      <span>x{inspectedDeckGroup.count}</span>
                     </div>
-                    <div className="deck-inspector-grid">
+                    <div className="deck-fan-row">
                       {Array.from({ length: inspectedDeckGroup.count }).map((_, index) => (
-                        <article key={`${inspectedDeckGroup.key}:${index}`} className="deck-copy-card">
+                        <article
+                          key={`${inspectedDeckGroup.key}:${index}`}
+                          className="deck-fan-card"
+                          style={
+                            {
+                              "--fan-offset": `${index - (inspectedDeckGroup.count - 1) / 2}`,
+                            } as CSSProperties
+                          }
+                        >
                           <AssetImage
                             imageKey={inspectedDeckGroup.imageKey}
                             alt={inspectedDeckGroup.name}
                             fallbackSrc={resolveCardFallbackSrc()}
-                            className="deck-copy-media"
+                            className="deck-fan-media"
                           />
                           <button
-                            className="deck-copy-remove"
+                            className="deck-fan-remove"
                             onClick={() => void runTask(() => removeCardFromDeck(inspectedDeckGroup.kind, inspectedDeckGroup.templateId))}
                           >
-                            x
+                            X
                           </button>
                         </article>
                       ))}
+                    </div>
+                    <div className="deck-fan-info">
+                      <span>MANA {inspectedDeckMeta?.mana_cost ?? 0}</span>
+                      {inspectedDeckGroup.kind === "battle" ? (
+                        <span>
+                          HP {inspectedDeckMeta?.health_points ?? 0} | ATK {inspectedDeckMeta?.attack ?? 0} | CD {inspectedDeckMeta?.cooldown ?? 0}
+                        </span>
+                      ) : (
+                        <span>
+                          {inspectedDeckMeta?.buff_type || "Buff"} {inspectedDeckMeta?.buff_value ?? 0}
+                        </span>
+                      )}
+                      <span>{inspectedDeckMeta?.description || "No description yet"}</span>
                     </div>
                   </div>
                 </div>
