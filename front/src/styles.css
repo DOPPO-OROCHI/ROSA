@@ -1657,16 +1657,16 @@ pre {
 
 .end-turn-floating {
   position: absolute;
-  right: 10px;
+  right: 6px;
   top: 50%;
   transform: translateY(-50%);
   z-index: 6;
-  min-height: 42px;
-  padding: 0.5rem 0.8rem;
+  min-height: 34px;
+  padding: 0.34rem 0.58rem;
   border-radius: 999px;
   background: linear-gradient(135deg, #18465f, #2f7a8e);
   color: #edf9ff;
-  font-size: 0.75rem;
+  font-size: 0.66rem;
   font-weight: 700;
   box-shadow: 0 10px 22px rgba(0, 0, 0, 0.34);
 }
@@ -1811,7 +1811,26 @@ pre {
 }
 
 .slot-media {
-  opacity: 0.28;
+  opacity: 1;
+}
+
+.slot-cooldown-label {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 2;
+  padding: 0.12rem 0.36rem;
+  border-radius: 999px;
+  background: rgba(6, 9, 12, 0.78);
+  border: 1px solid rgba(231, 219, 192, 0.24);
+  color: #f0ddbc;
+  font-size: 0.48rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  pointer-events: none;
 }
 
 .slot.empty {

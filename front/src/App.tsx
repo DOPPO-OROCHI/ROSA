@@ -962,6 +962,8 @@ export default function App() {
     const selected = side === "own" ? selectedOwnUnitId === unitInstanceId(unit) : selectedEnemyUnitId === unitInstanceId(unit);
     const tone = getAssetTone(unitTemplateId(unit));
     const meta = cardCatalogEntry(unitTemplateId(unit));
+    const cooldownLeft = unitCooldown(unit);
+    const isOnCooldown = cooldownLeft > 0;
 
     return (
       <button
@@ -991,10 +993,11 @@ export default function App() {
           <span className="card-chip mana">{meta?.mana_cost ?? 0}</span>
           <span className="card-chip side">{side === "own" ? "ALLY" : "HOSTILE"}</span>
         </div>
+        {isOnCooldown && <div className="slot-cooldown-label">-CoolDown-</div>}
         <div className="slot-stats">
           <span className="slot-stat hp">{unitHP(unit)}</span>
           <span className="slot-stat atk">{unitAttack(unit)}</span>
-          <span className="slot-stat cd">{unitCooldown(unit)}</span>
+          <span className="slot-stat cd">{cooldownLeft}</span>
         </div>
       </button>
     );
