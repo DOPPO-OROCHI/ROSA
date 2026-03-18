@@ -1380,6 +1380,13 @@ pre {
   background: rgba(19, 25, 33, 0.88);
 }
 
+.leave-inline.in-board {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  z-index: 7;
+}
+
 .battle-side {
   order: 2;
   display: grid;
@@ -1489,7 +1496,7 @@ pre {
   display: flex;
   justify-content: center;
   align-items: flex-end;
-  min-height: 170px;
+  min-height: 142px;
   padding: 0 0.25rem 0.1rem;
   overflow: visible;
 }
@@ -1616,7 +1623,7 @@ pre {
 
 .hero-skill-mini {
   position: absolute;
-  right: 12px;
+  left: calc(50% + 56px);
   top: 50%;
   transform: translateY(-50%);
   width: 46px;
@@ -1742,19 +1749,19 @@ pre {
 }
 
 .hand-card {
-  width: 92px;
-  min-width: 92px;
+  width: 72px;
+  min-width: 72px;
   flex: 0 0 auto;
   display: flex;
   flex-direction: column;
   gap: 0.12rem;
   font-size: 0.62rem;
-  min-height: 132px;
+  min-height: 104px;
   justify-content: space-between;
   border-radius: 14px 14px 20px 20px;
-  margin-left: -14px;
+  margin-left: -10px;
   transform:
-    translateY(calc(var(--fan-depth, 0px) - 52px))
+    translateY(calc(var(--fan-depth, 0px) - 94px))
     rotate(calc(var(--fan-offset, 0) * 5deg));
   transform-origin: center bottom;
   padding: 0.35rem;
@@ -1766,7 +1773,7 @@ pre {
 
 .hand-card.selected {
   transform:
-    translateY(calc(var(--fan-depth, 0px) - 58px))
+    translateY(calc(var(--fan-depth, 0px) - 100px))
     rotate(calc(var(--fan-offset, 0) * 5deg));
 }
 
@@ -2089,9 +2096,9 @@ pre {
   }
 
   .hand-card {
-    width: 78px;
-    min-width: 78px;
-    min-height: 118px;
+    width: 72px;
+    min-width: 72px;
+    min-height: 104px;
   }
 
   .battle-nav {

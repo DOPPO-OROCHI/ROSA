@@ -1414,16 +1414,13 @@ export default function App() {
 
         {activeBattle && (
           <section className="battle-screen">
-            <div className="battle-top-row">
-              <button className="ghost-button leave-inline" onClick={() => void runTask(handleLeaveMatch)}>
-                Leave Match
-              </button>
-            </div>
-
             <section
               className="battle-board panel"
               ref={battleBoardRef}
             >
+              <button className="ghost-button leave-inline in-board" onClick={() => void runTask(handleLeaveMatch)}>
+                Leave Match
+              </button>
               <div
                 className="battle-board-background"
                 style={{ backgroundImage: `url(${resolveBoardBackgroundSrc()})` }}
@@ -1480,7 +1477,7 @@ export default function App() {
                     </div>
                     <div className="hero-anchor top">
                       <button
-                        className="hero-anchor-button"
+                        className={`hero-anchor-button ${selectedMatch.active_player !== myPlayer.player_id ? "active-turn" : ""}`}
                         onClick={() => void runTask(handleEnemyHeroClick)}
                         data-attack-target="enemy-hero"
                       >
@@ -1496,32 +1493,18 @@ export default function App() {
                     </div>
                   </div>
 
-                  <div className="battle-midline">
-                    <div className="turn-indicator">
-                      <span>Battle #{selectedMatch.match_id}</span>
-                      <strong>
-                        {selectedMatch.active_player === myPlayer.player_id
-                          ? "Your Turn"
-                          : "Enemy Turn"}
-                      </strong>
-                    </div>
-                    <div className="event-feed">
-                      {(selectedMatch.events ?? []).slice(-3).map((event, index) => (
-                        <div key={`${event.type}-${index}`} className="event-line">
-                          <span>{event.type}</span>
-                          <span>{event.vfx_key || "no vfx"}</span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
+                  <div className="battle-midline" />
 
                   <div className="ally-zone">
                     <div className="table-line">
                       {myPlayer.table.map((unit, index) => renderUnitSlot(unit, "own", index))}
                     </div>
                     <div className="hero-anchor bottom">
+                      <button className="hero-skill-mini" onClick={() => void runTask(handleHeroSpell)}>
+                        HS
+                      </button>
                       <div className="hero-center-wrap">
-                        <div className="hero-anchor-button passive">
+                        <div className={`hero-anchor-button passive ${selectedMatch.active_player === myPlayer.player_id ? "active-turn" : ""}`}>
                           {renderHeroGlyph(
                             myPlayer.hero_code,
                             `heroes/${myPlayer.hero_code}/image`,
@@ -1529,9 +1512,6 @@ export default function App() {
                           )}
                         </div>
                       </div>
-                      <button className="hero-skill-mini" onClick={() => void runTask(handleHeroSpell)}>
-                        HS
-                      </button>
                     </div>
                     <div className="ally-stats">
                       <span>Mana {myPlayer.mana}</span>
