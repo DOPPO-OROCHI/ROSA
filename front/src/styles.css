@@ -1509,7 +1509,8 @@ pre {
   align-items: flex-end;
   min-height: 142px;
   padding: 0 0.25rem 0;
-  overflow: hidden;
+  overflow-x: hidden;
+  overflow-y: visible;
 }
 
 .card-back {
