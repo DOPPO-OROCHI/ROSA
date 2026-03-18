@@ -1065,7 +1065,7 @@ export default function App() {
   }, [catalogCards, catalogPage]);
 
   return (
-    <div className="war-shell">
+    <div className={`war-shell ${activeBattle ? "battle-mode" : ""}`}>
       <main className="view-frame">
         {!activeBattle && tab === "home" && (
           <section className="screen-grid home-grid">
