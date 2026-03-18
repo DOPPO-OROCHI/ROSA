@@ -1520,21 +1520,30 @@ export default function App() {
                       {myPlayer.table.map((unit, index) => renderUnitSlot(unit, "own", index))}
                     </div>
                     <div className="hero-anchor bottom">
-                      <div className="hero-anchor-button passive">
-                        {renderHeroGlyph(
-                          myPlayer.hero_code,
-                          `heroes/${myPlayer.hero_code}/image`,
-                          "large",
-                        )}
+                      <div className="hero-center-wrap">
+                        <div className="hero-anchor-button passive">
+                          {renderHeroGlyph(
+                            myPlayer.hero_code,
+                            `heroes/${myPlayer.hero_code}/image`,
+                            "large",
+                          )}
+                        </div>
                       </div>
                       <button className="hero-skill-mini" onClick={() => void runTask(handleHeroSpell)}>
-                        Hero Skill
+                        HS
                       </button>
                     </div>
                     <div className="ally-stats">
                       <span>Mana {myPlayer.mana}</span>
                       <span>HP {myPlayer.hero_hp}</span>
-                      <span>Deck {myPlayer.deck?.length ?? myPlayer.deck_count ?? 0}</span>
+                      <div className="deck-pile-mini">
+                        <div className="deck-pile-stack">
+                          <span className="card-back deck-back" />
+                          <span className="card-back deck-back" />
+                          <span className="card-back deck-back" />
+                        </div>
+                        <span className="deck-pile-count">{myPlayer.deck?.length ?? myPlayer.deck_count ?? 0}</span>
+                      </div>
                     </div>
                     <div className="hand-row">
                       {myHand.map((card, index) => {

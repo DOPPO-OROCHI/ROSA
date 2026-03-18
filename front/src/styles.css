@@ -1489,7 +1489,7 @@ pre {
   display: flex;
   justify-content: center;
   align-items: flex-end;
-  min-height: 120px;
+  min-height: 170px;
   padding: 0 0.25rem 0.1rem;
   overflow: visible;
 }
@@ -1520,14 +1520,59 @@ pre {
   margin-left: 0;
 }
 
+.deck-pile-mini {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.deck-pile-stack {
+  position: relative;
+  width: 28px;
+  height: 40px;
+}
+
+.deck-back {
+  position: absolute;
+  width: 24px;
+  height: 36px;
+  margin-left: 0;
+  transform: none;
+  border-radius: 8px;
+}
+
+.deck-back:nth-child(1) {
+  left: 0;
+  top: 4px;
+  opacity: 0.75;
+}
+
+.deck-back:nth-child(2) {
+  left: 2px;
+  top: 2px;
+  opacity: 0.88;
+}
+
+.deck-back:nth-child(3) {
+  left: 4px;
+  top: 0;
+}
+
+.deck-pile-count {
+  font-size: 0.82rem;
+  color: #d7ccbb;
+}
+
 .hero-anchor {
   display: flex;
   justify-content: center;
 }
 
 .hero-anchor.bottom {
+  position: relative;
   align-items: center;
-  gap: 0.55rem;
+  justify-content: center;
+  min-height: 96px;
 }
 
 .hero-anchor-button {
@@ -1570,13 +1615,25 @@ pre {
 }
 
 .hero-skill-mini {
-  min-height: 40px;
-  padding: 0.48rem 0.78rem;
-  border-radius: 999px;
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 46px;
+  height: 46px;
+  min-height: 46px;
+  padding: 0;
+  border-radius: 50%;
   background: linear-gradient(135deg, #18465f, #2f7a8e);
   color: #edf9ff;
-  font-size: 0.74rem;
+  font-size: 0.72rem;
   font-weight: 700;
+}
+
+.hero-center-wrap {
+  width: 100%;
+  display: flex;
+  justify-content: center;
 }
 
 .end-turn-floating {
@@ -1685,19 +1742,19 @@ pre {
 }
 
 .hand-card {
-  width: 78px;
-  min-width: 78px;
+  width: 92px;
+  min-width: 92px;
   flex: 0 0 auto;
   display: flex;
   flex-direction: column;
   gap: 0.12rem;
   font-size: 0.62rem;
-  min-height: 102px;
+  min-height: 132px;
   justify-content: space-between;
   border-radius: 14px 14px 20px 20px;
   margin-left: -14px;
   transform:
-    translateY(var(--fan-depth, 0px))
+    translateY(calc(var(--fan-depth, 0px) - 52px))
     rotate(calc(var(--fan-offset, 0) * 5deg));
   transform-origin: center bottom;
   padding: 0.35rem;
@@ -1709,7 +1766,7 @@ pre {
 
 .hand-card.selected {
   transform:
-    translateY(calc(var(--fan-depth, 0px) - 6px))
+    translateY(calc(var(--fan-depth, 0px) - 58px))
     rotate(calc(var(--fan-offset, 0) * 5deg));
 }
 
