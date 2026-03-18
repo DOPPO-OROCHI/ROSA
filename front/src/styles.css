@@ -1642,8 +1642,8 @@ pre {
 
 .hero-skill-mini {
   position: absolute;
-  left: calc(50% + 56px);
-  top: 50%;
+  left: calc(50% + 66px);
+  top: 52%;
   transform: translateY(-50%);
   width: 46px;
   height: 46px;
@@ -1654,6 +1654,25 @@ pre {
   color: #edf9ff;
   font-size: 0.72rem;
   font-weight: 700;
+}
+
+.hero-skill-mana {
+  position: absolute;
+  right: -2px;
+  bottom: -2px;
+  min-width: 16px;
+  height: 16px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 0.18rem;
+  font-size: 0.48rem;
+  font-weight: 800;
+  background: linear-gradient(135deg, rgba(197, 151, 73, 0.9), rgba(66, 37, 10, 0.96));
+  color: #ffedc6;
+  border: 1px solid rgba(231, 219, 192, 0.28);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.34);
 }
 
 .hero-center-wrap {
@@ -1685,7 +1704,13 @@ pre {
 .hero-mana-value {
   fill: none;
   stroke-linecap: round;
-  stroke-width: 7;
+  stroke-width: 6;
+}
+
+.hero-ring-separator {
+  fill: none;
+  stroke: rgba(8, 13, 19, 0.95);
+  stroke-width: 2;
 }
 
 .hero-hp-track {

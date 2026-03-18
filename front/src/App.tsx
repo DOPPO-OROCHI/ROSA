@@ -158,6 +158,8 @@ type MatchPlayer = {
   hero_attack_base_cooldown: number;
   hero_splash_radius: number;
   hero_ability_cooldown: number;
+  hero_ability_mana_cost?: number;
+  HeroAbilityManaCost?: number;
   mana: number;
   turns: number;
   table: Array<UnitState | null>;
@@ -326,6 +328,10 @@ function unitIsTank(unit: UnitState): boolean {
 
 function unitSummonedInTurn(unit: UnitState): number {
   return unit.summoned_in_turn ?? unit.SummonedInTurn ?? -1;
+}
+
+function heroAbilityManaCost(player: MatchPlayer): number {
+  return player.hero_ability_mana_cost ?? player.HeroAbilityManaCost ?? 0;
 }
 
 function ProfilePanel(props: {
@@ -1061,16 +1067,19 @@ export default function App() {
       manaCells > 1
         ? Array.from({ length: manaCells - 1 }, (_, index) => ((index + 1) * 180) / manaCells)
         : [];
+    const hpRadius = 52;
+    const manaRadius = 58;
     return (
       <div className={`hero-orb ${selectedMatch?.active_player === player.player_id ? "active-turn" : ""}`}>
         <svg className="hero-orb-rings" viewBox="0 0 120 120" aria-hidden="true">
-          <path className="hero-hp-track" d={describeArc(60, 60, 56, 180, 360)} />
-          <path className="hero-hp-value" d={describeArc(60, 60, 56, 180, hpEnd)} />
-          <path className="hero-mana-track" d={describeArc(60, 60, 56, 0, 180)} />
-          {manaCells > 0 && <path className="hero-mana-value" d={describeArc(60, 60, 56, 0, 180)} />}
+          <circle className="hero-ring-separator" cx="60" cy="60" r="55" />
+          <path className="hero-hp-track" d={describeArc(60, 60, hpRadius, 180, 360)} />
+          <path className="hero-hp-value" d={describeArc(60, 60, hpRadius, 180, hpEnd)} />
+          <path className="hero-mana-track" d={describeArc(60, 60, manaRadius, 0, 180)} />
+          {manaCells > 0 && <path className="hero-mana-value" d={describeArc(60, 60, manaRadius, 0, 180)} />}
           {manaDividerAngles.map((angle) => {
-            const outer = polarToCartesian(60, 60, 58, angle);
-            const inner = polarToCartesian(60, 60, 50, angle);
+            const outer = polarToCartesian(60, 60, 62, angle);
+            const inner = polarToCartesian(60, 60, 54, angle);
             return (
               <line
                 key={`mana-divider-${angle}`}
@@ -1606,6 +1615,7 @@ export default function App() {
                     <div className="hero-anchor bottom">
                       <button className="hero-skill-mini" onClick={() => void runTask(handleHeroSpell)}>
                         HS
+                        <span className="hero-skill-mana">{heroAbilityManaCost(myPlayer)}</span>
                       </button>
                       <div className="hero-center-wrap">
                         {renderOwnHeroHud(myPlayer)}
