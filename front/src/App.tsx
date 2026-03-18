@@ -1531,16 +1531,19 @@ export default function App() {
                       <span>HP {myPlayer.hero_hp}</span>
                       <span />
                     </div>
-                    <div className="hand-row">
+                    <div
+                      className={`hand-row ${myHand.length >= 9 ? "ultra-compact" : myHand.length >= 7 ? "compact" : ""}`}
+                    >
                       {myHand.map((card, index) => {
                         const selected = selectedHandCardId === cardInstanceId(card);
                         const templateId = cardTemplateId(card);
                         const tone = getAssetTone(templateId);
                         const meta = cardCatalogEntry(templateId);
                         const offset = index - (myHand.length - 1) / 2;
+                        const depthScale = myHand.length >= 9 ? 1.8 : myHand.length >= 7 ? 2.4 : 3;
                         const fanStyle = {
                           "--fan-offset": `${offset}`,
-                          "--fan-depth": `${Math.abs(offset) * 3}px`,
+                          "--fan-depth": `${Math.abs(offset) * depthScale}px`,
                           zIndex: selected ? 30 : myHand.length - index,
                         } as CSSProperties;
                         return (

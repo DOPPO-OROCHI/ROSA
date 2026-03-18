@@ -62,6 +62,12 @@ pre {
     12px;
 }
 
+.war-shell.battle-mode {
+  height: 100vh;
+  height: 100dvh;
+  overflow: hidden;
+}
+
 
 .top-frame,
 .panel,
@@ -1503,7 +1509,7 @@ pre {
   align-items: flex-end;
   min-height: 142px;
   padding: 0 0.25rem 0;
-  overflow: visible;
+  overflow: hidden;
 }
 
 .card-back {
@@ -1878,6 +1884,58 @@ pre {
   transform:
     translateY(calc(var(--fan-depth, 0px) - 50px))
     rotate(calc(var(--fan-offset, 0) * 2deg));
+}
+
+.hand-row.compact {
+  min-height: 132px;
+}
+
+.hand-row.compact .hand-card {
+  width: 64px;
+  min-width: 64px;
+  min-height: 102px;
+  margin-left: -17px;
+  transform:
+    translateY(calc(var(--fan-depth, 0px) - 38px))
+    rotate(calc(var(--fan-offset, 0) * 1.6deg));
+}
+
+.hand-row.compact .hand-card.selected {
+  transform:
+    translateY(calc(var(--fan-depth, 0px) - 43px))
+    rotate(calc(var(--fan-offset, 0) * 1.6deg));
+}
+
+.hand-row.compact .hand-card-name {
+  font-size: 0.44rem;
+}
+
+.hand-row.ultra-compact {
+  min-height: 122px;
+}
+
+.hand-row.ultra-compact .hand-card {
+  width: 58px;
+  min-width: 58px;
+  min-height: 94px;
+  margin-left: -22px;
+  transform:
+    translateY(calc(var(--fan-depth, 0px) - 31px))
+    rotate(calc(var(--fan-offset, 0) * 1.3deg));
+}
+
+.hand-row.ultra-compact .hand-card.selected {
+  transform:
+    translateY(calc(var(--fan-depth, 0px) - 36px))
+    rotate(calc(var(--fan-offset, 0) * 1.3deg));
+}
+
+.hand-row.ultra-compact .hand-card-name {
+  font-size: 0.4rem;
+}
+
+.hand-row.ultra-compact .hand-card-stats span {
+  font-size: 0.36rem;
 }
 
 .hand-card::after {
