@@ -1527,6 +1527,31 @@ pre {
   transform: scale(0.98);
 }
 
+.hero-anchor .hero-glyph.large {
+  width: 92px;
+  height: 92px;
+  border-radius: 50%;
+  overflow: hidden;
+  box-shadow:
+    0 0 0 2px rgba(121, 194, 214, 0.28),
+    0 10px 22px rgba(0, 0, 0, 0.4);
+  -webkit-mask-image: none;
+  mask-image: none;
+}
+
+.hero-anchor .hero-glyph.large::before {
+  background: none;
+}
+
+.hero-anchor .hero-glyph.large::after {
+  display: none;
+}
+
+.hero-anchor .hero-glyph.large .hero-glyph-media {
+  object-position: center 24%;
+  transform: scale(1.04);
+}
+
 .battle-midline {
   display: grid;
   grid-template-columns: 1fr;
