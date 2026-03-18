@@ -405,6 +405,7 @@ export default function App() {
   const battleBoardRef = useRef<HTMLElement | null>(null);
   const [dragAttack, setDragAttack] = useState<DragAttackState | null>(null);
   const toastIdRef = useRef(1);
+  const [ownHeroHpPeak, setOwnHeroHpPeak] = useState(0);
 
   function pushToast(message: string, tone: ToastEntry["tone"] = "info") {
     const id = toastIdRef.current++;
@@ -601,6 +602,14 @@ export default function App() {
     }, 3000);
     return () => window.clearInterval(pollId);
   }, [me, activeBattle]);
+
+  useEffect(() => {
+    if (!myPlayer) {
+      setOwnHeroHpPeak(0);
+      return;
+    }
+    setOwnHeroHpPeak((prev) => Math.max(prev, myPlayer.hero_hp));
+  }, [myPlayer]);
 
   async function login(userId: string) {
     await apiFetch<void>(`/auth/dev?user_id=${encodeURIComponent(userId)}`, {
@@ -1021,6 +1030,66 @@ export default function App() {
           <span className="slot-stat cd">{cooldownLeft}/{baseCooldown}</span>
         </div>
       </button>
+    );
+  }
+
+  function polarToCartesian(cx: number, cy: number, r: number, angleDeg: number) {
+    const rad = (angleDeg * Math.PI) / 180;
+    return {
+      x: cx + r * Math.cos(rad),
+      y: cy + r * Math.sin(rad),
+    };
+  }
+
+  function describeArc(cx: number, cy: number, r: number, startAngle: number, endAngle: number) {
+    const start = polarToCartesian(cx, cy, r, startAngle);
+    const end = polarToCartesian(cx, cy, r, endAngle);
+    let delta = endAngle - startAngle;
+    if (delta < 0) {
+      delta += 360;
+    }
+    const largeArcFlag = delta > 180 ? 1 : 0;
+    return `M ${start.x.toFixed(2)} ${start.y.toFixed(2)} A ${r} ${r} 0 ${largeArcFlag} 1 ${end.x.toFixed(2)} ${end.y.toFixed(2)}`;
+  }
+
+  function renderOwnHeroHud(player: MatchPlayer) {
+    const hpMax = Math.max(1, ownHeroHpPeak || player.hero_hp || 1);
+    const hpRatio = Math.max(0, Math.min(1, player.hero_hp / hpMax));
+    const hpEnd = 180 + 180 * hpRatio;
+    const manaCells = Math.max(0, Math.min(10, player.mana));
+    const manaDividerAngles =
+      manaCells > 1
+        ? Array.from({ length: manaCells - 1 }, (_, index) => 180 - ((index + 1) * 180) / manaCells)
+        : [];
+    return (
+      <div className={`hero-orb ${selectedMatch?.active_player === player.player_id ? "active-turn" : ""}`}>
+        <svg className="hero-orb-rings" viewBox="0 0 120 120" aria-hidden="true">
+          <path className="hero-hp-track" d={describeArc(60, 60, 54, 180, 360)} />
+          <path className="hero-hp-value" d={describeArc(60, 60, 54, 180, hpEnd)} />
+          {manaCells > 0 && <path className="hero-mana-value" d={describeArc(60, 60, 54, 180, 0)} />}
+          {manaDividerAngles.map((angle) => {
+            const outer = polarToCartesian(60, 60, 58, angle);
+            const inner = polarToCartesian(60, 60, 50, angle);
+            return (
+              <line
+                key={`mana-divider-${angle}`}
+                className="hero-mana-divider"
+                x1={inner.x}
+                y1={inner.y}
+                x2={outer.x}
+                y2={outer.y}
+              />
+            );
+          })}
+        </svg>
+        <div className="hero-orb-avatar">
+          {renderHeroGlyph(
+            player.hero_code,
+            `heroes/${player.hero_code}/image`,
+            "large",
+          )}
+        </div>
+      </div>
     );
   }
 
@@ -1538,13 +1607,7 @@ export default function App() {
                         HS
                       </button>
                       <div className="hero-center-wrap">
-                        <div className={`hero-anchor-button passive ${selectedMatch.active_player === myPlayer.player_id ? "active-turn" : ""}`}>
-                          {renderHeroGlyph(
-                            myPlayer.hero_code,
-                            `heroes/${myPlayer.hero_code}/image`,
-                            "large",
-                          )}
-                        </div>
+                        {renderOwnHeroHud(myPlayer)}
                       </div>
                     </div>
                     <div className="ally-stats">

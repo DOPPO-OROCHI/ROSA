@@ -1662,6 +1662,65 @@ pre {
   justify-content: center;
 }
 
+.hero-orb {
+  position: relative;
+  width: 120px;
+  height: 120px;
+  display: grid;
+  place-items: center;
+}
+
+.hero-orb-rings {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  pointer-events: none;
+}
+
+.hero-hp-track,
+.hero-hp-value,
+.hero-mana-value {
+  fill: none;
+  stroke-linecap: round;
+  stroke-width: 8;
+}
+
+.hero-hp-track {
+  stroke: rgba(231, 219, 192, 0.16);
+}
+
+.hero-hp-value {
+  stroke: #e88f7d;
+  filter: drop-shadow(0 0 5px rgba(232, 143, 125, 0.45));
+}
+
+.hero-mana-value {
+  stroke: #62bfd9;
+  filter: drop-shadow(0 0 5px rgba(98, 191, 217, 0.45));
+}
+
+.hero-mana-divider {
+  stroke: rgba(7, 13, 18, 0.95);
+  stroke-width: 2.8;
+  stroke-linecap: round;
+}
+
+.hero-orb-avatar {
+  width: 96px;
+  height: 96px;
+  border-radius: 50%;
+  overflow: hidden;
+}
+
+.hero-orb.active-turn .hero-orb-avatar .hero-glyph.large {
+  box-shadow:
+    0 0 0 2px rgba(255, 83, 83, 0.95),
+    0 0 18px rgba(255, 83, 83, 0.52),
+    0 10px 22px rgba(0, 0, 0, 0.44);
+}
+
 .end-turn-floating {
   position: absolute;
   right: 6px;
