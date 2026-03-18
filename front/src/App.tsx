@@ -1056,17 +1056,6 @@ export default function App() {
 
   return (
     <div className="war-shell">
-      {!activeBattle && (
-        <nav className="battle-nav two-up">
-          <button className={tab === "home" ? "nav-pill active" : "nav-pill"} onClick={() => setTab("home")}>
-            Start Game
-          </button>
-          <button className={tab === "inventory" ? "nav-pill active" : "nav-pill"} onClick={() => setTab("inventory")}>
-            Inventory
-          </button>
-        </nav>
-      )}
-
       <main className="view-frame">
         {!activeBattle && tab === "home" && (
           <section className="screen-grid home-grid">
@@ -1189,6 +1178,9 @@ export default function App() {
                 />
               </label>
               <button onClick={() => void runTask(createMatch)}>Start Battle</button>
+              <button className="open-inventory" onClick={() => setTab("inventory")}>
+                Inventory
+              </button>
             </div>
 
           </section>
@@ -1196,6 +1188,11 @@ export default function App() {
 
         {!activeBattle && tab === "inventory" && (
           <section className="screen-grid">
+            <div className="inventory-back-row">
+              <button className="ghost-button" onClick={() => setTab("home")}>
+                ← Back
+              </button>
+            </div>
             <div className="panel inventory-panel">
               <div className="section-head">
                 <h2>Deck Doctrine</h2>

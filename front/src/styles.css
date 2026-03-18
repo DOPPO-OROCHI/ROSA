@@ -58,7 +58,7 @@ pre {
   padding:
     calc(12px + env(safe-area-inset-top))
     12px
-    calc(110px + env(safe-area-inset-bottom))
+    calc(28px + env(safe-area-inset-bottom))
     12px;
 }
 
@@ -234,6 +234,20 @@ pre {
 
 .command-button.danger {
   background: linear-gradient(135deg, #6d1820, #ab3142);
+}
+
+.open-inventory {
+  width: 100%;
+  min-height: 52px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, #19455f, #2f7a8e);
+  color: #edf9ff;
+  font-weight: 700;
+}
+
+.inventory-back-row {
+  display: flex;
+  justify-content: flex-start;
 }
 
 .view-frame {
