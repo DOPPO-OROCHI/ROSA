@@ -133,6 +133,7 @@ type UnitState = {
   MaxHP?: number;
   Cooldown?: number;
   IsTank?: boolean;
+  SummonedInTurn?: number;
   Effects?: Array<{ EffectType?: string; TurnsLeft?: number; Value?: number }>;
   instance_id?: string;
   template_id?: string;
@@ -141,6 +142,7 @@ type UnitState = {
   max_hp?: number;
   cooldown?: number;
   is_tank?: boolean;
+  summoned_in_turn?: number;
   effects?: Array<{ effect_type?: string; turns_left?: number; value?: number }>;
 };
 
@@ -316,6 +318,14 @@ function unitAttack(unit: UnitState): number {
 
 function unitCooldown(unit: UnitState): number {
   return unit.cooldown ?? unit.Cooldown ?? 0;
+}
+
+function unitIsTank(unit: UnitState): boolean {
+  return unit.is_tank ?? unit.IsTank ?? false;
+}
+
+function unitSummonedInTurn(unit: UnitState): number {
+  return unit.summoned_in_turn ?? unit.SummonedInTurn ?? -1;
 }
 
 function ProfilePanel(props: {
@@ -963,7 +973,14 @@ export default function App() {
     const tone = getAssetTone(unitTemplateId(unit));
     const meta = cardCatalogEntry(unitTemplateId(unit));
     const cooldownLeft = unitCooldown(unit);
+    const baseCooldown =
+      meta && "cooldown" in meta && typeof meta.cooldown === "number"
+        ? Math.max(meta.cooldown, cooldownLeft)
+        : cooldownLeft;
     const isOnCooldown = cooldownLeft > 0;
+    const isTank = unitIsTank(unit);
+    const ownerTurns = side === "own" ? (myPlayer?.turns ?? -1) : (enemyPlayer?.turns ?? -1);
+    const isDeployed = ownerTurns >= 0 && unitSummonedInTurn(unit) === ownerTurns;
 
     return (
       <button
@@ -991,13 +1008,17 @@ export default function App() {
         />
         <div className="slot-topline">
           <span className="card-chip mana">{meta?.mana_cost ?? 0}</span>
-          <span className="card-chip side">{side === "own" ? "ALLY" : "HOSTILE"}</span>
+          <span className="slot-tags">
+            {isTank && <span className="card-chip tank">TANK</span>}
+            <span className="card-chip side">{side === "own" ? "ALLY" : "HOSTILE"}</span>
+          </span>
         </div>
+        {isDeployed && <div className="slot-deployed-label">-Deployed-</div>}
         {isOnCooldown && <div className="slot-cooldown-label">-CoolDown-</div>}
         <div className="slot-stats">
           <span className="slot-stat hp">{unitHP(unit)}</span>
           <span className="slot-stat atk">{unitAttack(unit)}</span>
-          <span className="slot-stat cd">{cooldownLeft}</span>
+          <span className="slot-stat cd">{cooldownLeft}/{baseCooldown}</span>
         </div>
       </button>
     );

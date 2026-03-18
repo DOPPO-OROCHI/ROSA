@@ -1842,6 +1842,25 @@ pre {
   pointer-events: none;
 }
 
+.slot-deployed-label {
+  position: absolute;
+  left: 50%;
+  top: 30%;
+  transform: translate(-50%, -50%);
+  z-index: 2;
+  padding: 0.1rem 0.32rem;
+  border-radius: 999px;
+  background: rgba(10, 38, 30, 0.78);
+  border: 1px solid rgba(143, 220, 176, 0.36);
+  color: #d9f8df;
+  font-size: 0.46rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  pointer-events: none;
+}
+
 .slot.empty {
   align-items: center;
   justify-content: center;
@@ -2090,6 +2109,12 @@ pre {
   padding: 0.08rem 0.24rem;
 }
 
+.slot-tags {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.12rem;
+}
+
 .slot-stat.hp {
   border-color: rgba(91, 176, 114, 0.35);
 }
@@ -2100,6 +2125,12 @@ pre {
 
 .slot-stat.cd {
   border-color: rgba(106, 143, 204, 0.35);
+}
+
+.card-chip.tank {
+  background: linear-gradient(135deg, rgba(75, 96, 133, 0.52), rgba(28, 40, 62, 0.84));
+  border-color: rgba(150, 178, 231, 0.38);
+  color: #dbe9ff;
 }
 
 .card-chip.mana {
