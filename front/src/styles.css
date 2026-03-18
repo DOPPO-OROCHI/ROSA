@@ -1812,6 +1812,9 @@ pre {
 
 .slot-media {
   opacity: 1;
+  object-fit: contain;
+  object-position: center;
+  background: rgba(5, 8, 12, 0.62);
 }
 
 .slot-cooldown-label {
