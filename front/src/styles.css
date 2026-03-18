@@ -1470,6 +1470,10 @@ pre {
   font-size: 0.82rem;
 }
 
+.enemy-stats {
+  padding-top: 34px;
+}
+
 .enemy-hand,
 .hand-row,
 .table-line {
@@ -1621,6 +1625,13 @@ pre {
   transform: scale(1.04);
 }
 
+.hero-anchor-button.active-turn .hero-glyph.large {
+  box-shadow:
+    0 0 0 2px rgba(255, 83, 83, 0.95),
+    0 0 18px rgba(255, 83, 83, 0.52),
+    0 10px 22px rgba(0, 0, 0, 0.44);
+}
+
 .hero-skill-mini {
   position: absolute;
   left: calc(50% + 56px);
@@ -1646,7 +1657,7 @@ pre {
 .end-turn-floating {
   position: absolute;
   right: 10px;
-  top: 50%;
+  top: 43%;
   transform: translateY(-50%);
   z-index: 6;
   min-height: 42px;
@@ -1752,19 +1763,18 @@ pre {
   width: 72px;
   min-width: 72px;
   flex: 0 0 auto;
-  display: flex;
-  flex-direction: column;
-  gap: 0.12rem;
-  font-size: 0.62rem;
-  min-height: 104px;
-  justify-content: space-between;
-  border-radius: 14px 14px 20px 20px;
+  min-height: 112px;
+  border-radius: 12px;
   margin-left: -10px;
   transform:
-    translateY(calc(var(--fan-depth, 0px) - 94px))
+    translateY(calc(var(--fan-depth, 0px) - 88px))
     rotate(calc(var(--fan-offset, 0) * 5deg));
   transform-origin: center bottom;
-  padding: 0.35rem;
+  padding: 0;
+  position: relative;
+  overflow: hidden;
+  background: rgba(9, 12, 16, 0.9);
+  border: 1px solid rgba(231, 219, 192, 0.14);
 }
 
 .hand-card:first-child {
@@ -1773,12 +1783,72 @@ pre {
 
 .hand-card.selected {
   transform:
-    translateY(calc(var(--fan-depth, 0px) - 100px))
+    translateY(calc(var(--fan-depth, 0px) - 94px))
     rotate(calc(var(--fan-offset, 0) * 5deg));
 }
 
+.hand-card::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(180deg, rgba(4, 6, 10, 0.05) 0%, rgba(4, 6, 10, 0.08) 48%, rgba(4, 6, 10, 0.8) 76%, rgba(4, 6, 10, 0.96) 100%);
+  z-index: 1;
+  pointer-events: none;
+}
+
+.hand-card-media {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center center;
+}
+
+.hand-card-mana {
+  position: absolute;
+  top: 4px;
+  left: 4px;
+  z-index: 3;
+  min-width: 20px;
+  height: 20px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.58rem;
+  font-weight: 800;
+  background: linear-gradient(135deg, rgba(197, 151, 73, 0.88), rgba(66, 37, 10, 0.95));
+  color: #ffedc6;
+  border: 1px solid rgba(231, 219, 192, 0.28);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.34);
+}
+
+.hand-card-bottom {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 2;
+  padding: 0.26rem 0.2rem 0.24rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.18rem;
+}
+
+.hand-card-name {
+  display: block;
+  font-size: 0.48rem;
+  line-height: 1.05;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #f3e0b9;
+  text-align: center;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.75);
+}
+
 .slot-topline,
-.hand-card-topline,
 .slot-stats,
 .hand-card-stats {
   display: flex;
@@ -1812,36 +1882,23 @@ pre {
   z-index: 2;
 }
 
-.hand-card-topline {
-  position: relative;
-  z-index: 2;
-}
-
-.hand-card .asset-frame.compact {
-  min-height: 48px;
-  height: 48px;
-  flex: 0 0 48px;
-}
-
 .hand-card-stats {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 0.12rem;
-  position: relative;
-  z-index: 2;
 }
 
 .hand-card-stats span {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-height: 16px;
-  padding: 0.04rem 0.08rem;
+  min-height: 13px;
+  padding: 0.02rem 0.08rem;
   border-radius: 6px;
   background: rgba(6, 9, 12, 0.92);
   border: 1px solid rgba(231, 219, 192, 0.08);
   color: #fff2d3;
-  font-size: 0.44rem;
+  font-size: 0.4rem;
   font-weight: 700;
   line-height: 1;
 }

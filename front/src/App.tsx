@@ -1544,25 +1544,22 @@ export default function App() {
                             style={fanStyle}
                             onClick={() => setSelectedHandCardId(cardInstanceId(card))}
                           >
-                              <div className="hand-card-topline">
-                                <span className="card-chip mana">{meta?.mana_cost ?? "?"}</span>
-                                <span className="card-chip kind">{cardKind(card)}</span>
-                              </div>
-                              <div className="asset-frame compact">
-                                <AssetImage
-                                  imageKey={cardImageKeyForTemplate(templateId)}
-                                  alt={templateId}
-                                  fallbackSrc={resolveCardFallbackSrc()}
-                                  className="asset-frame-media"
-                                />
-                                <span>{resolveAssetLabel(templateId)}</span>
-                              </div>
+                            <AssetImage
+                              imageKey={cardImageKeyForTemplate(templateId)}
+                              alt={templateId}
+                              fallbackSrc={resolveCardFallbackSrc()}
+                              className="hand-card-media"
+                            />
+                            <span className="hand-card-mana">{meta?.mana_cost ?? "?"}</span>
+                            <div className="hand-card-bottom">
+                              <strong className="hand-card-name">{resolveAssetLabel(templateId)}</strong>
                               <div className="hand-card-stats">
                                 {"attack" in (meta ?? {}) && meta?.attack !== undefined ? <span>ATK {meta.attack}</span> : <span>{meta?.buff_type || cardKind(card)}</span>}
                                 {"health_points" in (meta ?? {}) && meta?.health_points !== undefined ? <span>HP {meta.health_points}</span> : <span>VAL {meta?.buff_value ?? "-"}</span>}
                                 {"cooldown" in (meta ?? {}) && meta?.cooldown !== undefined ? <span>CD {meta.cooldown}</span> : <span>LVL {card.card_level ?? card.CardLevel ?? 1}</span>}
                               </div>
-                            </button>
+                            </div>
+                          </button>
                           );
                         })}
                     </div>
