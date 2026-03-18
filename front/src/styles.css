@@ -1681,19 +1681,26 @@ pre {
 
 .hero-hp-track,
 .hero-hp-value,
+.hero-mana-track,
 .hero-mana-value {
   fill: none;
   stroke-linecap: round;
-  stroke-width: 8;
+  stroke-width: 7;
 }
 
 .hero-hp-track {
-  stroke: rgba(231, 219, 192, 0.16);
+  stroke: rgba(108, 35, 35, 0.45);
 }
 
 .hero-hp-value {
-  stroke: #e88f7d;
-  filter: drop-shadow(0 0 5px rgba(232, 143, 125, 0.45));
+  stroke: #ff4f56;
+  filter: drop-shadow(0 0 5px rgba(255, 79, 86, 0.45));
+  transform-origin: 60px 60px;
+  transform: rotate(-90deg);
+}
+
+.hero-mana-track {
+  stroke: rgba(44, 94, 114, 0.42);
 }
 
 .hero-mana-value {
