@@ -25,6 +25,7 @@ import (
 */
 func Init() error {
 	if err := db.DB.AutoMigrate(&player.TelegramUser{},
+		&player.AuthSession{},
 		&cards.BattleCardTemplate{},
 		&cards.BuffCardsTemplate{},
 		&heroes.CharacterTemplate{},

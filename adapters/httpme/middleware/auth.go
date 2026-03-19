@@ -1,6 +1,7 @@
 package middleware
 
 import (
+	"TheWar/internal/domain/player"
 	"context"
 	"crypto/hmac"
 	"crypto/rand"
@@ -9,14 +10,16 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"log"
 	"net/http"
 	"net/url"
 	"sort"
 	"strconv"
 	"strings"
-	"sync"
 	"time"
+
+	"gorm.io/gorm"
 )
 
 var (
@@ -32,9 +35,8 @@ type ctxKey string
 const AuthKey ctxKey = "auth_user"
 
 type TokenStore struct {
-	mu   sync.RWMutex
-	data map[string]session
-	ttl  time.Duration
+	db  *gorm.DB
+	ttl time.Duration
 }
 type tgInitUser struct {
 	ID int `json:"id"`
@@ -136,37 +138,58 @@ func ValidateTelegramInitData(initDataRaw, botToken string, maxAge time.Duration
 }
 
 func (s *TokenStore) Validate(token string) (session, bool) {
-	s.mu.RLock()
-	sess, ok := s.data[token]
-	s.mu.RUnlock()
-	if !ok {
+	if s == nil || s.db == nil || token == "" {
 		return session{}, false
 	}
-	if time.Now().After(sess.ExpiredAt) {
-		s.mu.Lock()
-		delete(s.data, token)
-		s.mu.Unlock()
+	now := time.Now()
+	var row player.AuthSession
+	if err := s.db.Where("token_hash = ? AND expires_at > ?", tokenHash(token), now).First(&row).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return session{}, false
+		}
+		log.Printf("session validate db err: %v", err)
 		return session{}, false
 	}
-	return sess, true
+	return session{
+		UserID:    row.UserID,
+		TGID:      int(row.TGID),
+		ExpiredAt: row.ExpiresAt,
+	}, true
 }
 
 func (s *TokenStore) Issue(userID uint, tgID int) (token string, exp time.Time, err error) {
+	if s == nil || s.db == nil {
+		return "", time.Time{}, fmt.Errorf("token store db is nil")
+	}
 	b := make([]byte, 32)
 	if _, err := rand.Read(b); err != nil {
 		return "", time.Time{}, err
 	}
 	token = base64.RawURLEncoding.EncodeToString(b)
 	exp = time.Now().Add(s.ttl)
-	s.mu.Lock()
-	defer s.mu.Unlock()
-	s.data[token] = session{UserID: userID, TGID: tgID, ExpiredAt: exp}
+	row := player.AuthSession{
+		TokenHash: tokenHash(token),
+		UserID:    userID,
+		TGID:      int64(tgID),
+		ExpiresAt: exp,
+	}
+	if err := s.db.Create(&row).Error; err != nil {
+		return "", time.Time{}, err
+	}
+
+	_ = s.db.Where("expires_at <= ?", time.Now()).Delete(&player.AuthSession{}).Error
+
 	return token, exp, nil
 }
 
-func NewTokenStore(ttl time.Duration) *TokenStore {
+func NewTokenStore(db *gorm.DB, ttl time.Duration) *TokenStore {
 	return &TokenStore{
-		data: make(map[string]session),
-		ttl:  ttl,
+		db:  db,
+		ttl: ttl,
 	}
+}
+
+func tokenHash(token string) string {
+	sum := sha256.Sum256([]byte(token))
+	return hex.EncodeToString(sum[:])
 }

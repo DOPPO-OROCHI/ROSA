@@ -48,7 +48,7 @@ type OwnedBattleCardsDTO struct {
 
 	ImageKey     string `json:"image_key"`
 	AssetBaseKey string `json:"asset_base_key"`
-	BackKey      string `json:"back_key"`
+	BackKey      string `json:"back_key,omitempty"`
 }
 
 /*
@@ -73,6 +73,7 @@ type OwnedBuffCardsDTO struct {
 	XP           int    `json:"xp"`
 	ImageKey     string `json:"image_key"`
 	AssetBaseKey string `json:"asset_base_key"`
+	BackKey      string `json:"back_key,omitempty"` //<-временно omitempty
 }
 
 /*Таким образом я создал структуры DTO для работы с картами игрока,

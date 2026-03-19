@@ -50,7 +50,7 @@ func main() {
 	}
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
-	store := middleware.NewTokenStore(24 * time.Hour)
+	store := middleware.NewTokenStore(db.DB, 72*time.Hour)
 	hub := transport.NewHub()
 	app := adapters.App{
 		CreateMatch: handlers.NewCreateMatchHandler(handlers.CreateMatchHandlerDeps{DB: db.DB}),

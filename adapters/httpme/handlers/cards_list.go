@@ -75,6 +75,7 @@ func NewCardsListHandler(d CardListHandlerDeps) http.HandlerFunc {
 				XP:           r.XP,
 				ImageKey:     t.ImageKey,
 				AssetBaseKey: t.AssetBaseKey,
+				BackKey:      t.BackPic,
 			})
 		}
 		for _, r := range buffRows {
@@ -96,12 +97,14 @@ func NewCardsListHandler(d CardListHandlerDeps) http.HandlerFunc {
 				XP:           r.XP,
 				ImageKey:     t.ImageKey,
 				AssetBaseKey: t.AssetBaseKey,
+				BackKey:      t.BackPic,
 			})
 		}
 		//после успешного заполнения всей муры, отдаем пользователю карты, в которых уже есть все необходимое
 		middleware.WriteJSON(w, http.StatusOK, out)
 	}
 }
+
 /*Важно понимать про карты следующее (позднее я еще напишу об этом). Уровень карты напрямую (в интерфейсе игрока) никак
 (пока что) не отражается на характеристиках а считается непосредственно в матче. Согласен, пока что это сыро и тупо, в
 будущем я сделаю отдельный функицонал под левелинг, чтобы он менялся в БД непосредственно, во владении, но пока имеем что

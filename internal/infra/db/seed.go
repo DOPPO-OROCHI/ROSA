@@ -43,6 +43,7 @@ func SeedBattleCardTemplate(db *gorm.DB) error {
 			"description",
 			"image_key",
 			"asset_base_key",
+			"back_pic",
 		}),
 	}).CreateInBatches(&cards.DefaultBattleCards, 200).Error //<-вот это тоже интересно, до сих пор не виданно
 	/*Здесь стоит представить, что такое массовый сидинг данных внутрь БД. По сути, отдельный сид = отдельный SQL
@@ -72,6 +73,7 @@ func SeedBuffCardTemplate(db *gorm.DB) error {
 			"description",
 			"image_key",
 			"asset_base_key",
+			"back_pic",
 		}),
 	}).CreateInBatches(&cards.DefaultBuffCards, 200).Error
 }
@@ -98,6 +100,7 @@ func SeedCharacterTemplate(db *gorm.DB) error {
 			"description",
 			"image_key",
 			"asset_base_key",
+			"back_pic",
 		}),
 	}).CreateInBatches(&heroes.DefaultHeroTemplate, 200).Error
 }
