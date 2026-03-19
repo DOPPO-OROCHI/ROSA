@@ -4,6 +4,7 @@ export type TelegramWebApp = {
   disableVerticalSwipes?: () => void;
   setHeaderColor?: (color: string) => void;
   setBackgroundColor?: (color: string) => void;
+  initData?: string;
 };
 
 declare global {

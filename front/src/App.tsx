@@ -600,6 +600,58 @@ export default function App() {
     ]);
   }
 
+  function isUnauthorizedError(error: unknown): boolean {
+    if (!(error instanceof Error)) {
+      return false;
+    }
+    const message = error.message.toLowerCase();
+    return message.includes("unauthorized") || message.includes("401");
+  }
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function bootstrapAuth() {
+      try {
+        await refreshAll();
+        return;
+      } catch (error) {
+        if (!isUnauthorizedError(error)) {
+          pushToast(error instanceof Error ? error.message : "Failed to initialize profile", "error");
+          return;
+        }
+      }
+
+      const initData = window.Telegram?.WebApp?.initData ?? "";
+      if (!initData) {
+        return;
+      }
+
+      try {
+        await apiFetch<void>("/auth/telegram", {
+          method: "POST",
+          body: JSON.stringify({ initData }),
+        });
+        if (cancelled) {
+          return;
+        }
+        await refreshAll();
+        if (!cancelled) {
+          pushToast("Logged in via Telegram");
+        }
+      } catch (error) {
+        if (!cancelled) {
+          pushToast(error instanceof Error ? error.message : "Telegram auth failed", "error");
+        }
+      }
+    }
+
+    void bootstrapAuth();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
   useEffect(() => {
     if (!me || activeBattle) {
       return;
@@ -627,12 +679,20 @@ export default function App() {
   }, [enemyPlayer]);
 
   async function login(userId: string) {
-    await apiFetch<void>(`/auth/dev?user_id=${encodeURIComponent(userId)}`, {
-      method: "POST",
-    });
-    setDevUserId(userId);
+    const initData = window.Telegram?.WebApp?.initData ?? "";
+    if (initData) {
+      await apiFetch<void>("/auth/telegram", {
+        method: "POST",
+        body: JSON.stringify({ initData }),
+      });
+    } else {
+      await apiFetch<void>(`/auth/dev?user_id=${encodeURIComponent(userId)}`, {
+        method: "POST",
+      });
+      setDevUserId(userId);
+    }
     await refreshAll();
-    pushToast(`Authenticated as user ${userId}`);
+    pushToast("Authenticated");
   }
 
   async function selectHero(heroCode: string) {
