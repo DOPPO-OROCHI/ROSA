@@ -1499,6 +1499,10 @@ pre {
   margin-inline: auto;
 }
 
+.enemy-zone .table-line {
+  transform: translateY(20px);
+}
+
 .enemy-hand {
   display: flex;
   justify-content: center;
@@ -1858,11 +1862,13 @@ pre {
 }
 
 .battle-midline {
+  position: relative;
   display: flex;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-end;
   min-height: 44px;
   width: 100%;
+  padding-right: 8px;
 }
 
 .turn-indicator,
