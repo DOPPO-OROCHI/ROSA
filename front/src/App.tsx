@@ -382,7 +382,6 @@ function ProfilePanel(props: {
 export default function App() {
   const [tab, setTab] = useState<TabId>("home");
   const [loading, setLoading] = useState(false);
-  const [devUserId, setDevUserId] = useState("1");
   const [opponentUserId, setOpponentUserId] = useState("5");
   const [showProfile, setShowProfile] = useState(false);
   const [toasts, setToasts] = useState<ToastEntry[]>([]);
@@ -677,23 +676,6 @@ export default function App() {
     }
     setEnemyHeroHpPeak((prev) => Math.max(prev, enemyPlayer.hero_hp));
   }, [enemyPlayer]);
-
-  async function login(userId: string) {
-    const initData = window.Telegram?.WebApp?.initData ?? "";
-    if (initData) {
-      await apiFetch<void>("/auth/telegram", {
-        method: "POST",
-        body: JSON.stringify({ initData }),
-      });
-    } else {
-      await apiFetch<void>(`/auth/dev?user_id=${encodeURIComponent(userId)}`, {
-        method: "POST",
-      });
-      setDevUserId(userId);
-    }
-    await refreshAll();
-    pushToast("Authenticated");
-  }
 
   async function selectHero(heroCode: string) {
     await apiFetch("/heroes/select", {
@@ -1365,16 +1347,6 @@ export default function App() {
                   </div>
                 </div>
               )}
-              <div className="login-row">
-                <label>
-                  Active user
-                  <input
-                    value={devUserId}
-                    onChange={(event) => setDevUserId(event.target.value)}
-                  />
-                </label>
-                <button onClick={() => void runTask(() => login(devUserId))}>Login</button>
-              </div>
               <label>
                 Opponent user id
                 <input
