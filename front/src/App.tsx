@@ -1603,10 +1603,6 @@ export default function App() {
               ) : (
                 <>
                   <div className="enemy-zone">
-                    <div className="enemy-stats">
-                      <span>Enemy mana {enemyPlayer.mana}</span>
-                      <span>Enemy HP {enemyPlayer.hero_hp}</span>
-                    </div>
                     <div className="enemy-hand">
                       {Array.from({ length: enemyPlayer.hand_count ?? 0 }).map((_, index, array) => {
                         const offset = index - (array.length - 1) / 2;
@@ -1644,11 +1640,6 @@ export default function App() {
                       <div className="hero-center-wrap">
                         {renderHeroHud(myPlayer, ownHeroHpPeak, false)}
                       </div>
-                    </div>
-                    <div className="ally-stats">
-                      <span>Mana {myPlayer.mana}</span>
-                      <span>HP {myPlayer.hero_hp}</span>
-                      <span />
                     </div>
                     <div
                       className={`hand-row ${myHand.length >= 9 ? "ultra-compact" : myHand.length >= 7 ? "compact" : ""}`}
