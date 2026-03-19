@@ -1626,7 +1626,11 @@ export default function App() {
                     </div>
                   </div>
 
-                  <div className="battle-midline" />
+                  <div className="battle-midline">
+                    <button className="end-turn-floating" onClick={() => void runTask(handleEndTurn)}>
+                      End Turn
+                    </button>
+                  </div>
 
                   <div className="ally-zone">
                     <div className="table-line">
@@ -1683,9 +1687,6 @@ export default function App() {
                         })}
                     </div>
                   </div>
-                  <button className="end-turn-floating" onClick={() => void runTask(handleEndTurn)}>
-                    End Turn
-                  </button>
                   <div className="battle-deck-anchor" aria-label="Deck">
                     <div className="battle-deck-stack">
                       <span className="battle-deck-card back-3" />

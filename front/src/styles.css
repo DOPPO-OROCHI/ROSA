@@ -1499,14 +1499,6 @@ pre {
   margin-inline: auto;
 }
 
-.enemy-zone .table-line {
-  transform: translateY(10px);
-}
-
-.ally-zone > .table-line {
-  transform: translateY(-10px);
-}
-
 .enemy-hand {
   display: flex;
   justify-content: center;
@@ -1783,11 +1775,8 @@ pre {
 }
 
 .end-turn-floating {
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  transform: translate(-50%, -50%);
-  z-index: 6;
+  position: relative;
+  z-index: 2;
   min-height: 34px;
   padding: 0.34rem 0.58rem;
   border-radius: 999px;
@@ -1869,7 +1858,11 @@ pre {
 }
 
 .battle-midline {
-  display: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  width: 100%;
 }
 
 .turn-indicator,
