@@ -412,6 +412,7 @@ export default function App() {
   const [dragAttack, setDragAttack] = useState<DragAttackState | null>(null);
   const toastIdRef = useRef(1);
   const [ownHeroHpPeak, setOwnHeroHpPeak] = useState(0);
+  const [enemyHeroHpPeak, setEnemyHeroHpPeak] = useState(0);
 
   function pushToast(message: string, tone: ToastEntry["tone"] = "info") {
     const id = toastIdRef.current++;
@@ -616,6 +617,14 @@ export default function App() {
     }
     setOwnHeroHpPeak((prev) => Math.max(prev, myPlayer.hero_hp));
   }, [myPlayer]);
+
+  useEffect(() => {
+    if (!enemyPlayer) {
+      setEnemyHeroHpPeak(0);
+      return;
+    }
+    setEnemyHeroHpPeak((prev) => Math.max(prev, enemyPlayer.hero_hp));
+  }, [enemyPlayer]);
 
   async function login(userId: string) {
     await apiFetch<void>(`/auth/dev?user_id=${encodeURIComponent(userId)}`, {
@@ -1058,8 +1067,8 @@ export default function App() {
     return `M ${start.x.toFixed(2)} ${start.y.toFixed(2)} A ${r} ${r} 0 ${largeArcFlag} 1 ${end.x.toFixed(2)} ${end.y.toFixed(2)}`;
   }
 
-  function renderOwnHeroHud(player: MatchPlayer) {
-    const hpMax = Math.max(1, ownHeroHpPeak || player.hero_hp || 1);
+  function renderHeroHud(player: MatchPlayer, hpPeak: number) {
+    const hpMax = Math.max(1, hpPeak || player.hero_hp || 1);
     const hpRatio = Math.max(0, Math.min(1, player.hero_hp / hpMax));
     const ringRadius = 58;
     const hpStart = 184;
@@ -1608,16 +1617,8 @@ export default function App() {
                       })}
                     </div>
                     <div className="hero-anchor top">
-                      <button
-                        className={`hero-anchor-button ${selectedMatch.active_player !== myPlayer.player_id ? "active-turn" : ""}`}
-                        onClick={() => void runTask(handleEnemyHeroClick)}
-                        data-attack-target="enemy-hero"
-                      >
-                        {renderHeroGlyph(
-                          enemyPlayer.hero_code,
-                          `heroes/${enemyPlayer.hero_code}/image`,
-                          "large",
-                        )}
+                      <button className="hero-orb-button" onClick={() => void runTask(handleEnemyHeroClick)} data-attack-target="enemy-hero">
+                        {renderHeroHud(enemyPlayer, enemyHeroHpPeak)}
                       </button>
                     </div>
                     <div className="table-line">
@@ -1637,7 +1638,7 @@ export default function App() {
                         <span className="hero-skill-mana">{heroAbilityManaCost(myPlayer)}</span>
                       </button>
                       <div className="hero-center-wrap">
-                        {renderOwnHeroHud(myPlayer)}
+                        {renderHeroHud(myPlayer, ownHeroHpPeak)}
                       </div>
                     </div>
                     <div className="ally-stats">

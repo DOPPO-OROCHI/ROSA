@@ -1689,6 +1689,13 @@ pre {
   place-items: center;
 }
 
+.hero-orb-button {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  border-radius: 999px;
+}
+
 .hero-orb.active-turn::before {
   content: "";
   position: absolute;
