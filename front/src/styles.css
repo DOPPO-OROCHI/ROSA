@@ -1495,6 +1495,16 @@ pre {
   grid-template-columns: repeat(5, minmax(0, 1fr));
   gap: 0.32rem;
   align-items: stretch;
+  width: min(100%, 96%);
+  margin-inline: auto;
+}
+
+.enemy-zone .table-line {
+  transform: translateY(10px);
+}
+
+.ally-zone > .table-line {
+  transform: translateY(-10px);
 }
 
 .enemy-hand {
@@ -1774,9 +1784,9 @@ pre {
 
 .end-turn-floating {
   position: absolute;
-  right: 6px;
+  left: 50%;
   top: 50%;
-  transform: translateY(-50%);
+  transform: translate(-50%, -50%);
   z-index: 6;
   min-height: 34px;
   padding: 0.34rem 0.58rem;
@@ -1859,10 +1869,7 @@ pre {
 }
 
 .battle-midline {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 0.45rem;
-  align-items: start;
+  display: none;
 }
 
 .turn-indicator,
