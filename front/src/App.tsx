@@ -1061,7 +1061,7 @@ export default function App() {
   function renderOwnHeroHud(player: MatchPlayer) {
     const hpMax = Math.max(1, ownHeroHpPeak || player.hero_hp || 1);
     const hpRatio = Math.max(0, Math.min(1, player.hero_hp / hpMax));
-    const ringRadius = 56;
+    const ringRadius = 58;
     const hpStart = 184;
     const hpEndMax = 356;
     const hpEnd = hpStart + (hpEndMax - hpStart) * hpRatio;
@@ -1083,8 +1083,8 @@ export default function App() {
           <path className="hero-mana-track" d={describeArc(60, 60, ringRadius, manaStart, manaEnd)} />
           {manaCells > 0 && <path className="hero-mana-value" d={describeArc(60, 60, ringRadius, manaStart, manaEnd)} />}
           {[0, 180].map((angle) => {
-            const outer = polarToCartesian(60, 60, 60, angle);
-            const inner = polarToCartesian(60, 60, 52, angle);
+            const outer = polarToCartesian(60, 60, 62, angle);
+            const inner = polarToCartesian(60, 60, 54, angle);
             return (
               <line
                 key={`ring-sep-${angle}`}
@@ -1097,8 +1097,8 @@ export default function App() {
             );
           })}
           {manaDividerAngles.map((angle) => {
-            const outer = polarToCartesian(60, 60, 60, angle);
-            const inner = polarToCartesian(60, 60, 52, angle);
+            const outer = polarToCartesian(60, 60, 62, angle);
+            const inner = polarToCartesian(60, 60, 54, angle);
             return (
               <line
                 key={`mana-divider-${angle}`}

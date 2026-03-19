@@ -1689,6 +1689,18 @@ pre {
   place-items: center;
 }
 
+.hero-orb.active-turn::before {
+  content: "";
+  position: absolute;
+  inset: -6px;
+  border-radius: 999px;
+  box-shadow:
+    0 0 0 1px rgba(255, 52, 66, 0.35),
+    0 0 16px rgba(255, 52, 66, 0.42),
+    0 0 28px rgba(255, 52, 66, 0.3);
+  pointer-events: none;
+}
+
 .hero-orb-rings {
   position: absolute;
   inset: 0;
@@ -1738,16 +1750,16 @@ pre {
 }
 
 .hero-orb-avatar {
-  width: 96px;
-  height: 96px;
+  width: 90px;
+  height: 90px;
   border-radius: 50%;
   overflow: hidden;
 }
 
 .hero-orb.active-turn .hero-orb-avatar .hero-glyph.large {
   box-shadow:
-    0 0 0 2px rgba(255, 83, 83, 0.95),
-    0 0 18px rgba(255, 83, 83, 0.52),
+    0 0 0 2px rgba(255, 83, 83, 0.88),
+    0 0 10px rgba(255, 83, 83, 0.38),
     0 10px 22px rgba(0, 0, 0, 0.44);
 }
 
