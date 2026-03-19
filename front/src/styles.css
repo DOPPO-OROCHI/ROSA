@@ -66,6 +66,7 @@ pre {
   height: 100vh;
   height: 100dvh;
   overflow: hidden;
+  overscroll-behavior: none;
 }
 
 
@@ -1373,6 +1374,7 @@ pre {
   grid-template-columns: 1fr;
   gap: 12px;
   min-height: calc(100vh - 164px - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+  overflow: hidden;
 }
 
 .battle-top-row {
@@ -1469,6 +1471,7 @@ pre {
   flex-direction: column;
   gap: 0.45rem;
   min-height: 0;
+  overflow: visible;
 }
 
 .enemy-stats,
@@ -1499,8 +1502,7 @@ pre {
   justify-content: center;
   align-items: flex-end;
   min-height: 54px;
-  overflow-x: hidden;
-  overflow-y: visible;
+  overflow: visible;
   padding: 0 0.45rem;
 }
 
@@ -1510,8 +1512,7 @@ pre {
   align-items: flex-end;
   min-height: 142px;
   padding: 0 0.25rem 0;
-  overflow-x: hidden;
-  overflow-y: visible;
+  overflow: visible;
 }
 
 .card-back {
@@ -2400,12 +2401,16 @@ pre {
 
   .war-shell.battle-mode .view-frame {
     margin-top: 0;
+    height: 100%;
+    overflow: hidden;
   }
 
   .war-shell.battle-mode .battle-screen {
     gap: 0;
     min-height: 100vh;
     min-height: 100dvh;
+    height: 100%;
+    overflow: hidden;
   }
 
   .war-shell.battle-mode .battle-board.panel {

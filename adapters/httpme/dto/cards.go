@@ -48,6 +48,7 @@ type OwnedBattleCardsDTO struct {
 
 	ImageKey     string `json:"image_key"`
 	AssetBaseKey string `json:"asset_base_key"`
+	BackKey      string `json:"back_key"`
 }
 
 /*
@@ -55,16 +56,16 @@ type OwnedBattleCardsDTO struct {
 Баф карты не могут бить, например, и прочие приколы
 */
 type OwnedBuffCardsDTO struct {
-	Kind       CardKind `json:"kind"`
-	TemplateID string   `json:"template_id"`
-	Name       string   `json:"name"`
-	Description string  `json:"description"`
-	ManaCost   int      `json:"mana_cost"`
-	BuffType   string   `json:"buff_type"`
-	BuffValue  int      `json:"buff_value"`
-	OnlyFor    string   `json:"only_for"`
-	Duration   int      `json:"duration"`
-	MaxCopies  int      `json:"max_copies"`
+	Kind        CardKind `json:"kind"`
+	TemplateID  string   `json:"template_id"`
+	Name        string   `json:"name"`
+	Description string   `json:"description"`
+	ManaCost    int      `json:"mana_cost"`
+	BuffType    string   `json:"buff_type"`
+	BuffValue   int      `json:"buff_value"`
+	OnlyFor     string   `json:"only_for"`
+	Duration    int      `json:"duration"`
+	MaxCopies   int      `json:"max_copies"`
 
 	OwnedCardID  uint   `json:"owned_card_id"`
 	Copies       int    `json:"copies"`
