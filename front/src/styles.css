@@ -1703,38 +1703,38 @@ pre {
 .hero-mana-track,
 .hero-mana-value {
   fill: none;
-  stroke-linecap: round;
+  stroke-linecap: butt;
   stroke-width: 6;
 }
 
-.hero-ring-separator {
-  fill: none;
-  stroke: rgba(8, 13, 19, 0.95);
-  stroke-width: 2;
-}
-
 .hero-hp-track {
-  stroke: rgba(108, 35, 35, 0.45);
+  stroke: rgba(120, 34, 38, 0.42);
 }
 
 .hero-hp-value {
-  stroke: #ff4f56;
-  filter: drop-shadow(0 0 5px rgba(255, 79, 86, 0.45));
+  stroke: #ff525a;
+  filter: drop-shadow(0 0 4px rgba(255, 82, 90, 0.42));
 }
 
 .hero-mana-track {
-  stroke: rgba(44, 94, 114, 0.42);
+  stroke: rgba(34, 88, 107, 0.34);
 }
 
 .hero-mana-value {
-  stroke: #62bfd9;
-  filter: drop-shadow(0 0 5px rgba(98, 191, 217, 0.45));
+  stroke: #66cde8;
+  filter: drop-shadow(0 0 4px rgba(102, 205, 232, 0.4));
 }
 
 .hero-mana-divider {
-  stroke: rgba(7, 13, 18, 0.95);
-  stroke-width: 2.8;
-  stroke-linecap: round;
+  stroke: rgba(7, 13, 18, 0.98);
+  stroke-width: 2.4;
+  stroke-linecap: butt;
+}
+
+.hero-ring-joint-separator {
+  stroke: rgba(7, 13, 18, 1);
+  stroke-width: 3;
+  stroke-linecap: butt;
 }
 
 .hero-orb-avatar {

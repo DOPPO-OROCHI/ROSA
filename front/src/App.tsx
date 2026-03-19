@@ -1061,25 +1061,44 @@ export default function App() {
   function renderOwnHeroHud(player: MatchPlayer) {
     const hpMax = Math.max(1, ownHeroHpPeak || player.hero_hp || 1);
     const hpRatio = Math.max(0, Math.min(1, player.hero_hp / hpMax));
-    const hpEnd = 180 + 180 * hpRatio;
+    const ringRadius = 56;
+    const hpStart = 184;
+    const hpEndMax = 356;
+    const hpEnd = hpStart + (hpEndMax - hpStart) * hpRatio;
+    const manaStart = 4;
+    const manaEnd = 176;
     const manaCells = Math.max(0, Math.min(10, player.mana));
     const manaDividerAngles =
       manaCells > 1
-        ? Array.from({ length: manaCells - 1 }, (_, index) => ((index + 1) * 180) / manaCells)
+        ? Array.from(
+            { length: manaCells - 1 },
+            (_, index) => manaStart + ((index + 1) * (manaEnd - manaStart)) / manaCells,
+          )
         : [];
-    const hpRadius = 52;
-    const manaRadius = 58;
     return (
       <div className={`hero-orb ${selectedMatch?.active_player === player.player_id ? "active-turn" : ""}`}>
         <svg className="hero-orb-rings" viewBox="0 0 120 120" aria-hidden="true">
-          <circle className="hero-ring-separator" cx="60" cy="60" r="55" />
-          <path className="hero-hp-track" d={describeArc(60, 60, hpRadius, 180, 360)} />
-          <path className="hero-hp-value" d={describeArc(60, 60, hpRadius, 180, hpEnd)} />
-          <path className="hero-mana-track" d={describeArc(60, 60, manaRadius, 0, 180)} />
-          {manaCells > 0 && <path className="hero-mana-value" d={describeArc(60, 60, manaRadius, 0, 180)} />}
+          <path className="hero-hp-track" d={describeArc(60, 60, ringRadius, hpStart, hpEndMax)} />
+          <path className="hero-hp-value" d={describeArc(60, 60, ringRadius, hpStart, hpEnd)} />
+          <path className="hero-mana-track" d={describeArc(60, 60, ringRadius, manaStart, manaEnd)} />
+          {manaCells > 0 && <path className="hero-mana-value" d={describeArc(60, 60, ringRadius, manaStart, manaEnd)} />}
+          {[0, 180].map((angle) => {
+            const outer = polarToCartesian(60, 60, 60, angle);
+            const inner = polarToCartesian(60, 60, 52, angle);
+            return (
+              <line
+                key={`ring-sep-${angle}`}
+                className="hero-ring-joint-separator"
+                x1={inner.x}
+                y1={inner.y}
+                x2={outer.x}
+                y2={outer.y}
+              />
+            );
+          })}
           {manaDividerAngles.map((angle) => {
-            const outer = polarToCartesian(60, 60, 62, angle);
-            const inner = polarToCartesian(60, 60, 54, angle);
+            const outer = polarToCartesian(60, 60, 60, angle);
+            const inner = polarToCartesian(60, 60, 52, angle);
             return (
               <line
                 key={`mana-divider-${angle}`}
