@@ -23,6 +23,7 @@ type BattleCardTemplate struct {
 	Description  string `gorm:"not null"` //<-описание карты
 	ImageKey     string
 	AssetBaseKey string
+	BackPic      string //<-шкурка карты
 }
 
 type BuffCardsTemplate struct {
@@ -39,4 +40,5 @@ type BuffCardsTemplate struct {
 	Description  string `gorm:"not null"`
 	ImageKey     string
 	AssetBaseKey string
+	BackPic      string //<-шкурка карты
 }

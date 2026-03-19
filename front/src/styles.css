@@ -1499,7 +1499,8 @@ pre {
   justify-content: center;
   align-items: flex-end;
   min-height: 54px;
-  overflow: hidden;
+  overflow-x: hidden;
+  overflow-y: visible;
   padding: 0 0.45rem;
 }
 

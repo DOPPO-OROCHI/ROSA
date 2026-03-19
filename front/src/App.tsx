@@ -1067,15 +1067,19 @@ export default function App() {
     return `M ${start.x.toFixed(2)} ${start.y.toFixed(2)} A ${r} ${r} 0 ${largeArcFlag} 1 ${end.x.toFixed(2)} ${end.y.toFixed(2)}`;
   }
 
-  function renderHeroHud(player: MatchPlayer, hpPeak: number) {
+  function renderHeroHud(player: MatchPlayer, hpPeak: number, hpOnBottom = false) {
     const hpMax = Math.max(1, hpPeak || player.hero_hp || 1);
     const hpRatio = Math.max(0, Math.min(1, player.hero_hp / hpMax));
     const ringRadius = 58;
-    const hpStart = 184;
-    const hpEndMax = 356;
+    const topStart = 184;
+    const topEnd = 356;
+    const bottomStart = 4;
+    const bottomEnd = 176;
+    const hpStart = hpOnBottom ? bottomStart : topStart;
+    const hpEndMax = hpOnBottom ? bottomEnd : topEnd;
     const hpEnd = hpStart + (hpEndMax - hpStart) * hpRatio;
-    const manaStart = 4;
-    const manaEnd = 176;
+    const manaStart = hpOnBottom ? topStart : bottomStart;
+    const manaEnd = hpOnBottom ? topEnd : bottomEnd;
     const manaCells = Math.max(0, Math.min(10, player.mana));
     const manaDividerAngles =
       manaCells > 1
@@ -1618,7 +1622,7 @@ export default function App() {
                     </div>
                     <div className="hero-anchor top">
                       <button className="hero-orb-button" onClick={() => void runTask(handleEnemyHeroClick)} data-attack-target="enemy-hero">
-                        {renderHeroHud(enemyPlayer, enemyHeroHpPeak)}
+                        {renderHeroHud(enemyPlayer, enemyHeroHpPeak, true)}
                       </button>
                     </div>
                     <div className="table-line">
@@ -1638,7 +1642,7 @@ export default function App() {
                         <span className="hero-skill-mana">{heroAbilityManaCost(myPlayer)}</span>
                       </button>
                       <div className="hero-center-wrap">
-                        {renderHeroHud(myPlayer, ownHeroHpPeak)}
+                        {renderHeroHud(myPlayer, ownHeroHpPeak, false)}
                       </div>
                     </div>
                     <div className="ally-stats">
