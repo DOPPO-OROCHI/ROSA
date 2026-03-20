@@ -28,3 +28,32 @@ export function bootstrapTelegramWebApp(): TelegramWebApp | null {
   webApp.setBackgroundColor?.("#0c0d10");
   return webApp;
 }
+
+function extractTgDataFromUrl(): string {
+  const fromQuery = new URLSearchParams(window.location.search).get("tgWebAppData") ?? "";
+  if (fromQuery) {
+    return decodeURIComponent(fromQuery);
+  }
+  const hash = window.location.hash.startsWith("#") ? window.location.hash.slice(1) : window.location.hash;
+  const fromHash = new URLSearchParams(hash).get("tgWebAppData") ?? "";
+  if (fromHash) {
+    return decodeURIComponent(fromHash);
+  }
+  return "";
+}
+
+export function getTelegramInitData(): string {
+  const fromWebApp = window.Telegram?.WebApp?.initData ?? "";
+  if (fromWebApp) {
+    sessionStorage.setItem("tg_init_data", fromWebApp);
+    return fromWebApp;
+  }
+
+  const fromUrl = extractTgDataFromUrl();
+  if (fromUrl) {
+    sessionStorage.setItem("tg_init_data", fromUrl);
+    return fromUrl;
+  }
+
+  return sessionStorage.getItem("tg_init_data") ?? "";
+}

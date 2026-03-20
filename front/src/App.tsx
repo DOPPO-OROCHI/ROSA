@@ -11,7 +11,7 @@ import {
   resolveImageSrc,
 } from "./assets";
 import { apiUrl } from "./config";
-import { bootstrapTelegramWebApp } from "./telegram";
+import { bootstrapTelegramWebApp, getTelegramInitData } from "./telegram";
 
 type TabId = "home" | "inventory";
 
@@ -241,7 +241,7 @@ async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> {
   let response = await fetch(apiUrl(path), requestInit);
 
   if (response.status === 401 && path !== "/auth/telegram") {
-    const initData = window.Telegram?.WebApp?.initData ?? "";
+    const initData = getTelegramInitData();
     if (initData) {
       const authResp = await fetch(apiUrl("/auth/telegram"), {
         method: "POST",
@@ -640,7 +640,7 @@ export default function App() {
         }
       }
 
-      const initData = window.Telegram?.WebApp?.initData ?? "";
+      const initData = getTelegramInitData();
       if (!initData) {
         return;
       }
@@ -728,7 +728,7 @@ export default function App() {
   }
 
   async function retryTelegramAuth() {
-    const initData = window.Telegram?.WebApp?.initData ?? "";
+    const initData = getTelegramInitData();
     if (!initData) {
       throw new Error("Open game from Telegram bot");
     }
