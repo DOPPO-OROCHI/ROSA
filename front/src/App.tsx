@@ -229,14 +229,33 @@ const defaultDeck: DeckEntry[] = [
 ];
 
 async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> {
-  const response = await fetch(apiUrl(path), {
+  const requestInit: RequestInit = {
     credentials: "include",
     headers: {
       "Content-Type": "application/json",
       ...(init?.headers ?? {}),
     },
     ...init,
-  });
+  };
+
+  let response = await fetch(apiUrl(path), requestInit);
+
+  if (response.status === 401 && path !== "/auth/telegram") {
+    const initData = window.Telegram?.WebApp?.initData ?? "";
+    if (initData) {
+      const authResp = await fetch(apiUrl("/auth/telegram"), {
+        method: "POST",
+        credentials: "include",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ initData }),
+      });
+      if (authResp.ok) {
+        response = await fetch(apiUrl(path), requestInit);
+      }
+    }
+  }
 
   if (!response.ok) {
     let message = `${response.status} ${response.statusText}`;
@@ -706,6 +725,19 @@ export default function App() {
       method: "POST",
       body: JSON.stringify({ entries: cleaned }),
     });
+  }
+
+  async function retryTelegramAuth() {
+    const initData = window.Telegram?.WebApp?.initData ?? "";
+    if (!initData) {
+      throw new Error("Open game from Telegram bot");
+    }
+    await apiFetch<void>("/auth/telegram", {
+      method: "POST",
+      body: JSON.stringify({ initData }),
+    });
+    await refreshAll();
+    pushToast("Telegram auth restored");
   }
 
   function cardPoolInfo(kind: DeckEntry["kind"], templateId: string) {
@@ -1354,6 +1386,7 @@ export default function App() {
                   onChange={(event) => setOpponentUserId(event.target.value)}
                 />
               </label>
+              {!me && <button onClick={() => void runTask(retryTelegramAuth)}>Retry Auth</button>}
               <button onClick={() => void runTask(createMatch)}>Start Battle</button>
               <button className="open-inventory" onClick={() => setTab("inventory")}>
                 Inventory
