@@ -34,8 +34,6 @@ type App struct {
 	SelectHero   http.HandlerFunc
 	StreamMatch  http.HandlerFunc
 	AuthTelegram http.HandlerFunc
-
-	DevAuth http.HandlerFunc
 }
 
 /*
@@ -143,10 +141,6 @@ func NewMux(app App) *http.ServeMux {
 	//аутентификационный мукс
 	mux.HandleFunc("/auth/telegram", func(w http.ResponseWriter, r *http.Request) {
 		app.AuthTelegram(w, r)
-	})
-	//аутентификационный мукс 2
-	mux.HandleFunc("/auth/dev", func(w http.ResponseWriter, r *http.Request) {
-		app.DevAuth(w, r)
 	})
 	return mux
 }

@@ -68,7 +68,6 @@ func main() {
 			DB:    db.DB,
 			Store: store,
 		}),
-		DevAuth: handlers.DevAuthRofl(store),
 	}
 	mux := adapters.NewMux(app)
 	httpHandler := middleware.AuthMiddleware(store)(mux)

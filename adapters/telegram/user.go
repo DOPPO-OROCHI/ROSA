@@ -11,6 +11,9 @@ import (
 	"gorm.io/gorm/clause"
 )
 
+/*Идемпотентное создание пользователя в БД при его отправке сообщения в бот. Без этого процесс регистрации
+не будет реализован никак.*/
+
 func AddNewUser(db *gorm.DB, update tgbotapi.Update) error {
 	if update.Message == nil || update.Message.From == nil {
 		return nil
