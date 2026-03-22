@@ -482,6 +482,11 @@ func castDecAllyCdSingle(
 	return nil
 }
 
+// СКИЛЛ ПОД РАЗЪЕБ ВСЕГО СТОЛА ПРИ СМЕРТИ (либо вражеского, либо вообще всего, зависит от таргета)
+func cast()
+
+func collectAoeUnits(m *MatchState, )
+
 func getCardSkillHandler(code string) (CardSkillHandler, error) {
 	h, ok := CardSkillHandlers[code]
 	if !ok {
