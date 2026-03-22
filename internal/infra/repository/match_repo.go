@@ -26,12 +26,12 @@ var ErrActiveMatchExists = errors.New("active match already exists")
 */
 type Match struct {
 	gorm.Model                    //<-уникальный айди матча
-	PlayerID1      uint           `gorm:"not null;index"`           //<-айдишник первого пользователя
-	PlayerID2      uint           `gorm:"not null;index"`           //<-второго
-	State          datatypes.JSON `gorm:"type:jsonb;not null"`      //<-состояние матча, которое складывается из JSON
-	Version        int64          `gorm:"not null;default:1"`       //<-версия матча. Добавлен для Optimistic Lock
-	Finished       bool           `gorm:"not null;default:false"`   //<-считается ли матч завершенным
-	TurnDeadLineAt int64          `gorm:"not null;default:0;index"` //<-время дедлайна текущего хода
+	PlayerID1      uint           `gorm:"not null;index"`                                   //<-айдишник первого пользователя
+	PlayerID2      uint           `gorm:"not null;index"`                                   //<-второго
+	State          datatypes.JSON `gorm:"type:jsonb;not null"`                              //<-состояние матча, которое складывается из JSON
+	Version        int64          `gorm:"not null;default:1"`                               //<-версия матча. Добавлен для Optimistic Lock
+	Finished       bool           `gorm:"not null;default:false"`                           //<-считается ли матч завершенным
+	TurnDeadLineAt int64          `gorm:"column:turn_deadline_at;not null;default:0;index"` //<-время дедлайна текущего хода
 }
 
 /*
