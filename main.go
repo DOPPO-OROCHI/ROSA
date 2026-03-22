@@ -108,8 +108,16 @@ func main() {
 		errCh <- srv.ListenAndServe()
 	}()
 	go func() {
-		if err := runTelegramBot(ctx); err != nil {
-			errCh <- err
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			default:
+			}
+			if err := runTelegramBot(ctx); err != nil {
+				log.Printf("telegram bot err: %v", err)
+				time.Sleep(5 * time.Second)
+			}
 		}
 	}()
 	select {
