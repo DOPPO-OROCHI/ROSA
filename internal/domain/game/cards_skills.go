@@ -23,6 +23,7 @@ var CardSkillHandlers = map[string]CardSkillHandler{
 	"reveal_enemy_hand":         castRevealEnemyHand,
 	"inc_enemy_cd_all_on_death": castIncEnemyCdAfterDeath,
 	"inc_enemy_cd_single":       castIncEnemyCdSingle,
+	"dec_ally_cd_single":        castDecAllyCdSingle,
 }
 
 // ФУНКЦИЯ ПОД СОЛО ДАМАГ
@@ -188,7 +189,7 @@ func castApplyDebuff(
 		AddEffect(target, UnitEffect{
 			EffectType: cards.DamageUpdate,
 			TurnsLeft:  caster.SkillDuration,
-			Value:      caster.SkillValue,
+			Value:      -caster.SkillValue,
 		})
 	case "dot_hp":
 		AddEffect(target, UnitEffect{
@@ -292,7 +293,7 @@ func castSummonSelfCopy(
 	m.Events = append(m.Events, Event{
 		Type:             string(EventCardSkill),
 		PlayerIndex:      a.PlayerIndex,
-		SourceKind:       string(SourceCard),
+		SourceKind:       string(SourceUnit),
 		SourceInstanceID: caster.InstanceID,
 		SourceTemplateID: caster.TemplateID,
 		Targets:          targets,
@@ -353,16 +354,16 @@ func castRevealEnemyHand(
 			InstanceID: hand.InstanceID,
 			TemplateID: hand.TemplateID,
 		})
-		m.Events = append(m.Events, Event{
-			Type:                  string(EventCardSkill),
-			PlayerIndex:           a.PlayerIndex,
-			SourceKind:            string(SourceUnit),
-			SourceInstanceID:      caster.InstanceID,
-			SourceTemplateID:      caster.TemplateID,
-			Targets:               targets,
-			VisibleForPlayerIndex: &viewer,
-		})
 	}
+	m.Events = append(m.Events, Event{
+		Type:                  string(EventCardSkill),
+		PlayerIndex:           a.PlayerIndex,
+		SourceKind:            string(SourceUnit),
+		SourceInstanceID:      caster.InstanceID,
+		SourceTemplateID:      caster.TemplateID,
+		Targets:               targets,
+		VisibleForPlayerIndex: &viewer,
+	})
 	return nil
 }
 
@@ -405,7 +406,7 @@ func castIncEnemyCdAfterDeath(
 	return nil
 }
 
-// УВЕЛИЧЕНИЕ КД СОЛО КАРТЕ
+// УВЕЛИЧЕНИЕ КД СОЛО КАРТЕ ПРОТИВНИКА
 func castIncEnemyCdSingle(
 	m *MatchState, a Action,
 	caster *UnitState,
@@ -434,9 +435,9 @@ func castIncEnemyCdSingle(
 			{
 				InstanceID: target.InstanceID,
 				TemplateID: target.TemplateID,
-				Amount:     target.SkillValue,
+				Amount:     caster.SkillValue,
 				Died:       false,
-				NewHP:      0,
+				NewHP:      target.HP,
 			},
 		},
 	})
@@ -457,8 +458,28 @@ func castDecAllyCdSingle(
 		return ErrCardSkillBadTarget
 	}
 	AddEffect(target, UnitEffect{
-		
+		EffectType: cards.CoolDownUpdate,
+		TurnsLeft:  caster.SkillDuration,
+		Value:      caster.SkillValue,
 	})
+	m.Events = append(m.Events, Event{
+		Type:             string(EventCardSkill),
+		PlayerIndex:      a.PlayerIndex,
+		SourceKind:       string(SourceUnit),
+		SourceInstanceID: caster.InstanceID,
+		SourceTemplateID: caster.TemplateID,
+		TargetSlot:       slot,
+		Targets: []EventTarget{
+			{
+				InstanceID: target.InstanceID,
+				TemplateID: target.TemplateID,
+				Amount:     caster.SkillValue,
+				Died:       false,
+				NewHP:      target.HP,
+			},
+		},
+	})
+	return nil
 }
 
 func getCardSkillHandler(code string) (CardSkillHandler, error) {
