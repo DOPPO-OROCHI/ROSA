@@ -89,7 +89,7 @@ func ApplyAction(m *MatchState, a Action, r Resolvers) error {
 	if err := EnsureStartTurn(m); err != nil { //<-стартуем ход
 		return err
 	}
-	now := time.Now().Unix()                                                //<-объявляем переменную времени для отсчета дедлайна на ход
+	now := time.Now().Unix()                                                 //<-объявляем переменную времени для отсчета дедлайна на ход
 	if m.Phase == PhaseMain && m.TurnDeadline > 0 && now >= m.TurnDeadline { //<-и если время вышло, возвращаем ошибку
 		return ErrTurnTimeOut
 	}
@@ -120,6 +120,11 @@ func ApplyAction(m *MatchState, a Action, r Resolvers) error {
 		err = PlayHeroSpell(m, a, r)
 	case ActionEndTurn:
 		EndTurn(m)
+	case ActionPlayCardSkill:
+		if r.Battle == nil {
+			return errors.New("battle resolver is nil")
+		}
+		err = PlayCardSkill(m, a, r.Battle)
 	default:
 		return errors.New("unknown action type: " + string(a.Type))
 	}

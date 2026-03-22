@@ -52,4 +52,11 @@ var (
 	ErrHeroAbilityCannotAttackHero = errors.New("hero ability cannot attack hero") //<-геройская способность не может атаковать героя
 
 	ErrTurnTimeOut = errors.New("turn time out") //<-время на ход закончилось
+
+	ErrCardSkillNotFound          = errors.New("card skill not found")
+	ErrCardSkillNotActive         = errors.New("card skill is not active")
+	ErrCardSkillOnCooldown        = errors.New("card skill is on cooldown")
+	ErrCardSkillBadTarget         = errors.New("bad card skill target")
+	ErrCardSkillUnsupported       = errors.New("unsupported card skill")
+	ErrCardSkillTargetTankBlocked = errors.New("cannot use this card skill while tank exists")
 )

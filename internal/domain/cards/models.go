@@ -20,10 +20,17 @@ type BattleCardTemplate struct {
 	BuffSlot     bool   `gorm:"not null"`             //<-можно ли улучшить карту
 	MaxCopies    int    `gorm:"not null;default:1"`   //<-максимальное число копий у игрока
 	//для UI
-	Description  string `gorm:"not null"` //<-описание карты
-	ImageKey     string
-	AssetBaseKey string
-	BackPic      string `gorm:"column:back_pic"` //<-шкурка карты
+	Description     string `gorm:"not null"` //<-описание карты
+	ImageKey        string
+	AssetBaseKey    string
+	SkillName       string
+	SkillCode       string
+	SkillTrigger    string
+	SkillTarget     string
+	SkillValue      int
+	SkillDuration   int
+	SkillCooldown   int
+	SkillParamsJSON string
 }
 
 type BuffCardsTemplate struct {
@@ -40,7 +47,6 @@ type BuffCardsTemplate struct {
 	Description  string `gorm:"not null"`
 	ImageKey     string
 	AssetBaseKey string
-	BackPic      string `gorm:"column:back_pic"` //<-шкурка карты
 }
 
 /*Короче, потом надо добавить шкурки на карты*/

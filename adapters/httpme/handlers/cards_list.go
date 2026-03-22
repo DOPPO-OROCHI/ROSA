@@ -75,7 +75,6 @@ func NewCardsListHandler(d CardListHandlerDeps) http.HandlerFunc {
 				XP:           r.XP,
 				ImageKey:     t.ImageKey,
 				AssetBaseKey: t.AssetBaseKey,
-				BackKey:      t.BackPic,
 			})
 		}
 		for _, r := range buffRows {
@@ -97,7 +96,6 @@ func NewCardsListHandler(d CardListHandlerDeps) http.HandlerFunc {
 				XP:           r.XP,
 				ImageKey:     t.ImageKey,
 				AssetBaseKey: t.AssetBaseKey,
-				BackKey:      t.BackPic,
 			})
 		}
 		//после успешного заполнения всей муры, отдаем пользователю карты, в которых уже есть все необходимое

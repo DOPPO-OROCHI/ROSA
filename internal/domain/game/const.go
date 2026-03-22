@@ -57,6 +57,8 @@ const (
 	ActionPlayHeroSpell ActionType = "hero_spell"
 	//ливнуть из матча
 	ActionLeaveMatch ActionType = "leave_match"
+	//сыграть скилл карты
+	ActionPlayCardSkill ActionType = "card_skill"
 )
 
 // а эта штука нужна для UI. Здесь описывается источник анимаций. Будь то карта, баф и все такое
@@ -98,4 +100,6 @@ const (
 	EventTurn EventType = "turn"
 	//анимация атаки героя
 	EventHeroAttack EventType = "hero_attack"
+	//анимация применения скилла карты
+	EventCardSkill EventType = "card_skill"
 )

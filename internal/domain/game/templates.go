@@ -19,6 +19,14 @@ type BattleTemplate struct {
 	CanBeUpgraded bool   //<-может ли быть улучшенной
 	ImageKey      string //<-картинка
 	AssetBaseKey  string //<-набор ассетов
+	SkillName     string
+	SkillCode     string
+	SkillTrigger  string
+	SkillTarget   string
+	SkillValue    int
+	SkillDuration int
+	SkillCooldown int
+	SkillParams   string
 }
 
 //та же тема только с бафами

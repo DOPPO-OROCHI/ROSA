@@ -33,6 +33,9 @@ func StartTurn(m *MatchState, nowUnix int64) {
 		if u.Cooldown > 0 {
 			u.Cooldown--
 		}
+		if u.SkillCooldownLeft > 0 {
+			u.SkillCooldownLeft--
+		}
 	}
 	TickerEffects(p)
 	draw := 1
@@ -128,20 +131,29 @@ func PlayBattleCard(m *MatchState,
 	p.Hand = p.Hand[:last]
 	hp, atk := ScaleBattleStats(tpl.HealthPoints, tpl.Attack, c.CardLevel)
 	u := &UnitState{
-		InstanceID:     c.InstanceID,
-		TemplateID:     c.TemplateID,
-		GamerCardID:    c.GamerCardID,
-		CardLevel:      c.CardLevel,
-		HP:             hp,
-		MaxHP:          hp,
-		Attack:         atk,
-		SplashRadius:   tpl.SplashRadius,
-		CanBeUpgraded:  tpl.CanBeUpgraded,
-		Cooldown:       0,
-		IsTank:         tpl.IsTank,
-		Effects:        nil,
-		CardType:       tpl.CardType,
-		SummonedInTurn: p.Turns,
+		InstanceID:        c.InstanceID,
+		TemplateID:        c.TemplateID,
+		GamerCardID:       c.GamerCardID,
+		CardLevel:         c.CardLevel,
+		HP:                hp,
+		MaxHP:             hp,
+		Attack:            atk,
+		SplashRadius:      tpl.SplashRadius,
+		CanBeUpgraded:     tpl.CanBeUpgraded,
+		Cooldown:          0,
+		IsTank:            tpl.IsTank,
+		Effects:           nil,
+		CardType:          tpl.CardType,
+		SummonedInTurn:    p.Turns,
+		SkillName:         tpl.SkillName,
+		SkillCode:         tpl.SkillCode,
+		SkillTrigger:      tpl.SkillTrigger,
+		SkillTarget:       tpl.SkillTarget,
+		SkillValue:        tpl.SkillValue,
+		SkillDuration:     tpl.SkillDuration,
+		SkillCooldown:     tpl.SkillCooldown,
+		SkillCooldownLeft: 0,
+		SkillParamsJSON:   tpl.SkillParams,
 	}
 	p.Table[targetSlot] = u
 	m.Events = append(m.Events, Event{
@@ -198,7 +210,7 @@ func PlayBuffCard(m *MatchState,
 	if !target.CanBeUpgraded {
 		return errors.New("card cannot be upgraded")
 	}
-	if tpl.OnlyFor != "" && target.CardType != tpl.OnlyFor {
+	if tpl.OnlyFor != "" && tpl.OnlyFor != cards.All && target.CardType != tpl.OnlyFor {
 		return ErrWrongTargetType
 	}
 	if p.Mana < tpl.ManaCost {
@@ -359,6 +371,8 @@ func CardAttack(m *MatchState,
 			died := u.HP <= 0
 			newHP := u.HP
 			if died {
+				deadSnap := *u
+				_ = triggerOnDeathSkill(m, &deadSnap, 1-playerIndex)
 				defPlayer.RemoveAt(s)
 				newHP = 0
 			}
@@ -474,6 +488,8 @@ func HeroAttack(m *MatchState,
 			died := u.HP <= 0
 			newHP := u.HP
 			if died {
+				deadSnap := *u
+				_ = triggerOnDeathSkill(m, &deadSnap, 1-playerIndex)
 				defPlayer.RemoveAt(s)
 				newHP = 0
 			}
@@ -585,6 +601,67 @@ func PlayHeroSpell(m *MatchState, a Action, r Resolvers) error {
 		Targets:        targets,
 	})
 	return nil
+}
+
+// менеджер вызова определенных скилов карт
+func PlayCardSkill(m *MatchState, a Action, r BattleTemplateResolver) error {
+	if m.Finished {
+		return ErrMatchFinished
+	}
+	if a.PlayerIndex != m.ActivePlayer {
+		return ErrNotYourTurn
+	}
+	if m.Phase != PhaseMain {
+		return ErrWrongPhase
+	}
+	owner := m.Players[a.PlayerIndex]
+	enemy := m.Players[1-a.PlayerIndex]
+	if owner == nil || enemy == nil {
+		return errors.New("nil player state")
+	}
+	_, caster := owner.FindSlot(a.CardInstanceID)
+	if caster == nil || caster.SkillCode == "" {
+		return ErrCardSkillNotFound
+	}
+	if caster.SkillTrigger != cards.TriggerActive {
+		return ErrCardSkillNotActive
+	}
+	if caster.SkillCooldownLeft > 0 {
+		return ErrCardSkillOnCooldown
+	}
+	h, err := getCardSkillHandler(caster.SkillCode)
+	if err != nil {
+		return err
+	}
+	if err := h(m, a, caster, owner, enemy); err != nil {
+		return err
+	}
+	caster.SkillCooldownLeft = caster.SkillCooldown
+	return nil
+}
+
+// Хелпер для тех карт, смысл которых заключается в тригере скила при смерти
+func triggerOnDeathSkill(m *MatchState, dead *UnitState, deadOwnedIndex int) error {
+	if m == nil || dead == nil {
+		return nil
+	}
+	if dead.SkillCode == "" || dead.SkillTrigger != cards.TriggerOnDeath {
+		return nil
+	}
+	owner := m.Players[deadOwnedIndex]
+	enemy := m.Players[1-deadOwnedIndex]
+	if owner == nil || enemy == nil {
+		return nil
+	}
+	h, err := getCardSkillHandler(dead.SkillCode)
+	if err != nil {
+		return err
+	}
+	a := Action{
+		PlayerIndex:    deadOwnedIndex,
+		CardInstanceID: dead.InstanceID,
+	}
+	return h(m, a, dead, owner, enemy)
 }
 
 // логика под UI, для того, чтобы понять, какие юниты были затронуты способностью

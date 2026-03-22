@@ -33,15 +33,21 @@ func maskMatchStateForUser(st *game.MatchState, viewerUserID uint) *dto.MaskedMa
 	if st.Players[1] != nil && st.Players[1].UserID == viewerUserID {
 		viewerIndex = 1
 	}
+	events := make([]game.Event, 0, len(st.Events))
+	for _, ev := range st.Events {
+		if ev.VisibleForPlayerIndex == nil || (viewerIndex >= 0 && ev.VisibleForPlayerIndex == &viewerIndex) {
+			events = append(events, ev)
+		}
+	}
 	//формирую все то, что необходимо для того, чтобы показать игроку состояние матча (пока не противника)
 	out := dto.MaskedMatchState{
-		MatchID:        st.MatchID,                              //<-айди матча
-		Version:        st.Version,                              //<-версия хода (нужно для оптимистик локинг)
-		ActivePlayer:   st.ActivePlayer,                         //<-кто сейчас ходит
-		Phase:          st.Phase,                                //<-фаза матча (нужно для той же оптимистик локинг)
-		Finished:       st.Finished,                             //<-закончен ли матч
-		Result:         st.Result,                               //<-результат матча
-		Event:          append([]game.Event(nil), st.Events...), //<-UI ивенты
+		MatchID:        st.MatchID,      //<-айди матча
+		Version:        st.Version,      //<-версия хода (нужно для оптимистик локинг)
+		ActivePlayer:   st.ActivePlayer, //<-кто сейчас ходит
+		Phase:          st.Phase,        //<-фаза матча (нужно для той же оптимистик локинг)
+		Finished:       st.Finished,     //<-закончен ли матч
+		Result:         st.Result,       //<-результат матча
+		Event:          events,          //<-UI ивенты
 		TurnStartedAt:  st.TurnStartedAt,
 		TurnDeadlineAt: st.TurnDeadline,
 		TurnTimeSec:    st.TurnTimeSec,

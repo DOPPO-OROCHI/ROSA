@@ -55,6 +55,14 @@ func (c *ResolverCache) Reload(db *gorm.DB) error {
 			CanBeUpgraded: t.BuffSlot,
 			ImageKey:      t.ImageKey,
 			AssetBaseKey:  t.AssetBaseKey,
+			SkillName:     t.SkillName,
+			SkillCode:     t.SkillCode,
+			SkillTrigger:  t.SkillTrigger,
+			SkillTarget:   t.SkillTarget,
+			SkillValue:    t.SkillValue,
+			SkillDuration: t.SkillDuration,
+			SkillCooldown: t.SkillCooldown,
+			SkillParams:   t.SkillParamsJSON,
 		}
 		//таким образом я достал все данные из БД и положил их локально
 	}

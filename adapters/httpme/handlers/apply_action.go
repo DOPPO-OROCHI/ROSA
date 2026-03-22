@@ -140,6 +140,14 @@ func MapEngineErr(err error) int {
 		errors.Is(err, game.ErrHeroAbilityBadTarget),
 		errors.Is(err, game.ErrHeroAbilityUnknown):
 		return http.StatusBadRequest
+	//скиллы карт
+	case errors.Is(err, game.ErrCardSkillNotFound),
+		errors.Is(err, game.ErrCardSkillNotActive),
+		errors.Is(err, game.ErrCardSkillOnCooldown),
+		errors.Is(err, game.ErrCardSkillBadTarget),
+		errors.Is(err, game.ErrCardSkillUnsupported),
+		errors.Is(err, game.ErrCardSkillTargetTankBlocked):
+		return http.StatusBadRequest
 	default:
 		return http.StatusInternalServerError
 	}
