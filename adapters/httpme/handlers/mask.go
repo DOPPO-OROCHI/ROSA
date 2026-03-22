@@ -34,13 +34,14 @@ func maskMatchStateForUser(st *game.MatchState, viewerUserID uint) *dto.MaskedMa
 	}
 	//формирую все то, что необходимо для того, чтобы показать игроку состояние матча (пока не противника)
 	out := dto.MaskedMatchState{
-		MatchID:      st.MatchID,                              //<-айди матча
-		Version:      st.Version,                              //<-версия хода (нужно для оптимистик локинг)
-		ActivePlayer: st.ActivePlayer,                         //<-кто сейчас ходит
-		Phase:        st.Phase,                                //<-фаза матча (нужно для той же оптимистик локинг)
-		Finished:     st.Finished,                             //<-закончен ли матч
-		Result:       st.Result,                               //<-результат матча
-		Event:        append([]game.Event(nil), st.Events...), //<-UI ивенты
+		MatchID:          st.MatchID,                              //<-айди матча
+		Version:          st.Version,                              //<-версия хода (нужно для оптимистик локинг)
+		ActivePlayer:     st.ActivePlayer,                         //<-кто сейчас ходит
+		Phase:            st.Phase,                                //<-фаза матча (нужно для той же оптимистик локинг)
+		Finished:         st.Finished,                             //<-закончен ли матч
+		Result:           st.Result,                               //<-результат матча
+		Event:            append([]game.Event(nil), st.Events...), //<-UI ивенты
+		Turn_deadline_at: st.TurnDeadline,                         //<-таймер хода
 	}
 	/*Принимаем PlayerState, потому что мы маскируем уже готовое состояние игрока. Дело в том,
 	что в MatchState мы уже держим двух игроков в виде указателей. Чтобы не дублировать овер много

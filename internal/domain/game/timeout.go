@@ -8,7 +8,7 @@ func ForceTimeOut(m *MatchState, nowUnix int64) (bool, error) {
 	if m.Phase == PhaseStart { //<-проверяем фазу и если она на старте
 		StartTurn(m, nowUnix) //<-начинаем ход с переводом фазы на мэйн, со всеми вытекающими
 	}
-	if m.Phase != PhaseMain || m.TurnDeadLineAt <= 0 || nowUnix <= m.TurnDeadLineAt { //<-если таймаут еще не наступил
+	if m.Phase != PhaseMain || m.TurnDeadline <= 0 || nowUnix < m.TurnDeadline { //<-если таймаут еще не наступил
 		return false, nil //<-возвращаем фолс, который в смысле функции означает -не делаем ничего
 	}
 	m.Events = m.Events[:0]            //<-чистим ивентный массив, чтобы не засирать пользователя лишними анимациями

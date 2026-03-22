@@ -1,6 +1,8 @@
 package dto
 
-import "TheWar/internal/domain/game"
+import (
+	"TheWar/internal/domain/game"
+)
 
 /*А вот это самый интересный файл. Тут происходит конкретная движуха в матче. Смотри в чем
 прикол. Раньше я просто отдавал вообще все состояние, наивно, так делать не надо. Почему ?
@@ -39,15 +41,18 @@ type MaskedPlayerState struct {
 	DiscCount int                 `json:"discard_count,omitempty"`
 }
 
-/*А это маскированное состояние матча. Эта структура описывает то, что игроку нужно знать о текущем состоянии матча,
-к примеру, айдишник мачта, кто активен, фаза, и так далее*/
+/*
+А это маскированное состояние матча. Эта структура описывает то, что игроку нужно знать о текущем состоянии матча,
+к примеру, айдишник мачта, кто активен, фаза, и так далее
+*/
 type MaskedMatchState struct {
-	MatchID      uint                  `json:"match_id"`
-	Version      int64                 `json:"version"`
-	ActivePlayer int                   `json:"active_player"`
-	Phase        game.TurnPhase        `json:"phase"`
-	Finished     bool                  `json:"finished"`
-	Result       game.MatchResult      `json:"result"`
-	Players      [2]*MaskedPlayerState `json:"players"`
-	Event        []game.Event          `json:"events,omitempty"`
+	MatchID          uint                  `json:"match_id"`
+	Version          int64                 `json:"version"`
+	ActivePlayer     int                   `json:"active_player"`
+	Phase            game.TurnPhase        `json:"phase"`
+	Finished         bool                  `json:"finished"`
+	Result           game.MatchResult      `json:"result"`
+	Players          [2]*MaskedPlayerState `json:"players"`
+	Event            []game.Event          `json:"events,omitempty"`
+	Turn_deadline_at int64                 `json:"turn_deadline_at"`
 }

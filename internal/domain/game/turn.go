@@ -64,7 +64,7 @@ func StartTurn(m *MatchState, nowUnix int64) {
 		m.TurnTimeSec = 45
 	}
 	m.TurnStartedAt = nowUnix
-	m.TurnDeadLineAt = nowUnix + int64(m.TurnTimeSec)
+	m.TurnDeadline = nowUnix + int64(m.TurnTimeSec)
 	m.Phase = PhaseMain
 }
 
