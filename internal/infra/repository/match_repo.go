@@ -31,7 +31,7 @@ type Match struct {
 	State          datatypes.JSON `gorm:"type:jsonb;not null"`                              //<-состояние матча, которое складывается из JSON
 	Version        int64          `gorm:"not null;default:1"`                               //<-версия матча. Добавлен для Optimistic Lock
 	Finished       bool           `gorm:"not null;default:false"`                           //<-считается ли матч завершенным
-	TurnDeadLineAt int64          `gorm:"column:turn_deadline_at;not null;default:0;index"` //<-время дедлайна текущего хода
+	TurnDeadlineAt int64          `gorm:"column:turn_deadline_at;not null;default:0;index"` //<-время дедлайна текущего хода
 }
 
 /*
@@ -251,8 +251,7 @@ func CreateMatchTX(db *gorm.DB,
 		}
 		//после чего мы собираем матч
 		st := game.NewMatchState(row.ID, &p1, &p2)
-		timer := time.Now().Unix()
-		game.StartTurn(st, timer)
+		game.StartTurn(st, time.Now().Unix())
 		b, err := json.Marshal(st)
 		if err != nil {
 			return err
