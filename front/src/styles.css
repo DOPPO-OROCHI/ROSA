@@ -1876,35 +1876,46 @@ pre {
   flex-direction: column;
   align-items: flex-end;
   gap: 4px;
+  width: 100%;
+  position: relative;
 }
 
-.turn-timer-chip {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.35rem;
-  padding: 0.16rem 0.42rem;
+.turn-timer-line {
+  --turn-progress: 0;
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: min(78%, 320px);
+  height: 3px;
   border-radius: 999px;
-  background: rgba(10, 25, 33, 0.88);
-  border: 1px solid rgba(121, 194, 214, 0.34);
-  color: #cbeaf4;
-  font-size: 0.58rem;
-  line-height: 1;
+  background: rgba(108, 145, 158, 0.26);
+  overflow: hidden;
+  pointer-events: none;
 }
 
-.turn-timer-chip strong {
-  color: #f4f9ff;
-  font-size: 0.64rem;
-  letter-spacing: 0.02em;
+.turn-timer-line-fill {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  transform-origin: center;
+  transform: scaleX(var(--turn-progress));
+  transition: transform 0.9s linear, background-color 0.2s ease;
+  background: #66cde8;
+  box-shadow: 0 0 8px rgba(102, 205, 232, 0.34);
 }
 
-.turn-timer-chip.danger {
-  border-color: rgba(255, 97, 97, 0.52);
-  background: rgba(42, 12, 14, 0.9);
-  color: #ffd0d0;
+.turn-timer-line.my-turn .turn-timer-line-fill {
+  background: #66cde8;
 }
 
-.turn-timer-chip.danger strong {
-  color: #fff0f0;
+.turn-timer-line.enemy-turn .turn-timer-line-fill {
+  background: #5fb3c8;
+}
+
+.turn-timer-line.danger .turn-timer-line-fill {
+  background: #ff5a63;
+  box-shadow: 0 0 10px rgba(255, 90, 99, 0.44);
 }
 
 .turn-indicator,

@@ -186,6 +186,7 @@ type MatchState = {
   phase: string;
   finished: boolean;
   result: string;
+  turn_time_sec?: number;
   turn_deadline_at?: number;
   server_now?: number;
   players: [MatchPlayer | null, MatchPlayer | null];
@@ -504,9 +505,8 @@ export default function App() {
   const turnDeadlineAt = selectedMatch?.turn_deadline_at ?? 0;
   const turnSecondsLeft = turnDeadlineAt > 0 ? Math.max(0, turnDeadlineAt - syncedNowSec) : 0;
   const hasTurnTimer = Boolean(activeBattle && turnDeadlineAt > 0);
-  const turnTimerLabel = `${Math.floor(turnSecondsLeft / 60)
-    .toString()
-    .padStart(2, "0")}:${(turnSecondsLeft % 60).toString().padStart(2, "0")}`;
+  const turnTotalSec = Math.max(1, selectedMatch?.turn_time_sec ?? 45);
+  const turnProgress = hasTurnTimer ? Math.max(0, Math.min(1, turnSecondsLeft / turnTotalSec)) : 0;
   useEffect(() => {
     if (!dragAttack) {
       return;
@@ -1723,9 +1723,16 @@ export default function App() {
                   <div className="battle-midline">
                     <div className="midline-actions">
                       {hasTurnTimer && (
-                        <div className={`turn-timer-chip ${turnSecondsLeft <= 10 ? "danger" : ""}`}>
-                          <span>{isMyTurn ? "Your turn" : "Enemy turn"}</span>
-                          <strong>{turnTimerLabel}</strong>
+                        <div
+                          className={`turn-timer-line ${turnSecondsLeft <= 10 ? "danger" : ""} ${isMyTurn ? "my-turn" : "enemy-turn"}`}
+                          style={
+                            {
+                              "--turn-progress": `${turnProgress}`,
+                            } as CSSProperties
+                          }
+                          aria-label={isMyTurn ? "Your turn timer" : "Enemy turn timer"}
+                        >
+                          <span className="turn-timer-line-fill" />
                         </div>
                       )}
                       <button className="end-turn-floating" onClick={() => void runTask(handleEndTurn)}>
