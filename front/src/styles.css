@@ -1886,12 +1886,14 @@ pre {
   left: 50%;
   top: 50%;
   transform: translate(-50%, -50%);
-  width: min(78%, 320px);
-  height: 3px;
+  width: min(82%, 340px);
+  height: 4px;
   border-radius: 999px;
-  background: rgba(108, 145, 158, 0.26);
+  background: rgba(120, 180, 198, 0.45);
   overflow: hidden;
   pointer-events: none;
+  z-index: 1;
+  box-shadow: 0 0 8px rgba(57, 101, 117, 0.28);
 }
 
 .turn-timer-line-fill {
