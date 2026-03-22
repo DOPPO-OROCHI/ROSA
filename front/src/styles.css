@@ -1881,7 +1881,6 @@ pre {
 }
 
 .turn-timer-line {
-  --turn-progress: 0;
   position: absolute;
   left: 50%;
   top: 50%;
@@ -1898,13 +1897,22 @@ pre {
 
 .turn-timer-line-fill {
   position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  transform-origin: center;
-  transform: scaleX(var(--turn-progress));
-  transition: transform 0.9s linear, background-color 0.2s ease;
+  top: 0;
+  bottom: 0;
+  border-radius: 999px;
+  transition: width 0.9s linear, background-color 0.2s ease;
   background: #66cde8;
   box-shadow: 0 0 8px rgba(102, 205, 232, 0.34);
+}
+
+.turn-timer-line-fill.left {
+  right: 50%;
+  transform-origin: right center;
+}
+
+.turn-timer-line-fill.right {
+  left: 50%;
+  transform-origin: left center;
 }
 
 .turn-timer-line.my-turn .turn-timer-line-fill {

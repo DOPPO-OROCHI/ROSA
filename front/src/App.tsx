@@ -1739,14 +1739,16 @@ export default function App() {
                     <div className="midline-actions">
                       <div
                         className={`turn-timer-line ${hasTurnTimer && turnSecondsLeft <= 10 ? "danger" : ""} ${isMyTurn ? "my-turn" : "enemy-turn"}`}
-                        style={
-                          {
-                            "--turn-progress": `${turnProgress}`,
-                          } as CSSProperties
-                        }
                         aria-label={isMyTurn ? "Your turn timer" : "Enemy turn timer"}
                       >
-                        <span className="turn-timer-line-fill" />
+                        <span
+                          className="turn-timer-line-fill left"
+                          style={{ width: `${Math.max(0, Math.min(50, turnProgress * 50))}%` }}
+                        />
+                        <span
+                          className="turn-timer-line-fill right"
+                          style={{ width: `${Math.max(0, Math.min(50, turnProgress * 50))}%` }}
+                        />
                       </div>
                       <button className="end-turn-floating" onClick={() => void runTask(handleEndTurn)}>
                         End Turn
