@@ -436,6 +436,7 @@ export default function App() {
   const [ownHeroHpPeak, setOwnHeroHpPeak] = useState(0);
   const [enemyHeroHpPeak, setEnemyHeroHpPeak] = useState(0);
   const [clockTickMs, setClockTickMs] = useState(() => Date.now());
+  const [serverClockOffsetSec, setServerClockOffsetSec] = useState(0);
 
   function pushToast(message: string, tone: ToastEntry["tone"] = "info") {
     const id = toastIdRef.current++;
@@ -497,11 +498,14 @@ export default function App() {
     }, 1000);
     return () => window.clearInterval(timerId);
   }, [activeBattle]);
+  useEffect(() => {
+    if (!selectedMatch?.server_now) {
+      return;
+    }
+    const nowSec = Math.floor(Date.now() / 1000);
+    setServerClockOffsetSec(selectedMatch.server_now - nowSec);
+  }, [selectedMatch?.server_now, selectedMatch?.match_id]);
   const clientNowSec = Math.floor(clockTickMs / 1000);
-  const serverClockOffsetSec = useMemo(
-    () => (selectedMatch?.server_now ?? Math.floor(Date.now() / 1000)) - Math.floor(Date.now() / 1000),
-    [selectedMatch?.server_now, selectedMatch?.version, selectedMatch?.match_id],
-  );
   const syncedNowSec = clientNowSec + serverClockOffsetSec;
   const turnTotalSec = Math.max(1, selectedMatch?.turn_time_sec ?? 45);
   const turnDeadlineAt = (() => {
@@ -515,9 +519,9 @@ export default function App() {
     }
     return 0;
   })();
-  const turnSecondsLeft = turnDeadlineAt > 0 ? Math.max(0, turnDeadlineAt - syncedNowSec) : turnTotalSec;
-  const hasTurnTimer = Boolean(activeBattle && turnDeadlineAt > 0);
-  const turnProgress = hasTurnTimer ? Math.max(0, Math.min(1, turnSecondsLeft / turnTotalSec)) : 0;
+  const hasTurnTimer = Boolean(activeBattle && (turnDeadlineAt > 0 || selectedMatch?.phase === "MAIN"));
+  const turnSecondsLeft = turnDeadlineAt > 0 ? Math.max(0, turnDeadlineAt - syncedNowSec) : 0;
+  const turnProgress = hasTurnTimer && turnDeadlineAt > 0 ? Math.max(0, Math.min(1, turnSecondsLeft / turnTotalSec)) : 0;
   useEffect(() => {
     if (!dragAttack) {
       return;

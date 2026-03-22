@@ -46,14 +46,16 @@ type MaskedPlayerState struct {
 к примеру, айдишник мачта, кто активен, фаза, и так далее
 */
 type MaskedMatchState struct {
-	MatchID          uint                  `json:"match_id"`
-	Version          int64                 `json:"version"`
-	ActivePlayer     int                   `json:"active_player"`
-	Phase            game.TurnPhase        `json:"phase"`
-	Finished         bool                  `json:"finished"`
-	Result           game.MatchResult      `json:"result"`
-	Players          [2]*MaskedPlayerState `json:"players"`
-	Event            []game.Event          `json:"events,omitempty"`
-	Turn_deadline_at int64                 `json:"turn_deadline_at"`
-	Server_now       int64                 `json:"server_now"`
+	MatchID        uint                  `json:"match_id"`
+	Version        int64                 `json:"version"`
+	ActivePlayer   int                   `json:"active_player"`
+	Phase          game.TurnPhase        `json:"phase"`
+	Finished       bool                  `json:"finished"`
+	Result         game.MatchResult      `json:"result"`
+	Players        [2]*MaskedPlayerState `json:"players"`
+	Event          []game.Event          `json:"events,omitempty"`
+	TurnStartedAt  int64                 `json:"turn_started_at"`
+	TurnDeadlineAt int64                 `json:"turn_deadline_at"`
+	TurnTimeSec    int                   `json:"turn_time_sec"`
+	ServerNow      int64                 `json:"server_now"`
 }
