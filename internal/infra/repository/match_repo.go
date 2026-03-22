@@ -259,8 +259,9 @@ func CreateMatchTX(db *gorm.DB,
 		}
 		//после чего записываем фактическое состояние и версию в только что созданную строку матча
 		if err := tx.Model(&Match{}).Where("id = ?", row.ID).Updates(map[string]any{
-			"state":   datatypes.JSON(b),
-			"version": st.Version,
+			"state":            datatypes.JSON(b),
+			"version":          st.Version,
+			"turn_deadline_at": st.TurnDeadline,
 		}).Error; err != nil {
 			return err
 		}
