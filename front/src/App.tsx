@@ -507,6 +507,9 @@ export default function App() {
   }, [selectedMatch?.server_now, selectedMatch?.match_id]);
   const clientNowSec = Math.floor(clockTickMs / 1000);
   const syncedNowSec = clientNowSec + serverClockOffsetSec;
+  const useTempDebugTimer = true;
+  const tempTurnTotalSec = 45;
+  const tempSecondsLeft = tempTurnTotalSec - (clientNowSec % tempTurnTotalSec);
   const turnTotalSec = Math.max(1, selectedMatch?.turn_time_sec ?? 45);
   const turnDeadlineAt = (() => {
     const explicitDeadline = selectedMatch?.turn_deadline_at ?? 0;
@@ -522,6 +525,10 @@ export default function App() {
   const hasTurnTimer = Boolean(activeBattle && (turnDeadlineAt > 0 || selectedMatch?.phase === "MAIN"));
   const turnSecondsLeft = turnDeadlineAt > 0 ? Math.max(0, turnDeadlineAt - syncedNowSec) : 0;
   const turnProgress = hasTurnTimer && turnDeadlineAt > 0 ? Math.max(0, Math.min(1, turnSecondsLeft / turnTotalSec)) : 0;
+  const effectiveSecondsLeft = useTempDebugTimer ? tempSecondsLeft : turnSecondsLeft;
+  const effectiveProgress = useTempDebugTimer
+    ? Math.max(0, Math.min(1, tempSecondsLeft / tempTurnTotalSec))
+    : turnProgress;
   useEffect(() => {
     if (!dragAttack) {
       return;
@@ -1738,16 +1745,16 @@ export default function App() {
                   <div className="battle-midline">
                     <div className="midline-actions">
                       <div
-                        className={`turn-timer-line ${hasTurnTimer && turnSecondsLeft <= 10 ? "danger" : ""} ${isMyTurn ? "my-turn" : "enemy-turn"}`}
+                        className={`turn-timer-line ${effectiveSecondsLeft <= 10 ? "danger" : ""} ${isMyTurn ? "my-turn" : "enemy-turn"}`}
                         aria-label={isMyTurn ? "Your turn timer" : "Enemy turn timer"}
                       >
                         <span
                           className="turn-timer-line-fill left"
-                          style={{ width: `${Math.max(0, Math.min(50, turnProgress * 50))}%` }}
+                          style={{ width: `${Math.max(0, Math.min(50, effectiveProgress * 50))}%` }}
                         />
                         <span
                           className="turn-timer-line-fill right"
-                          style={{ width: `${Math.max(0, Math.min(50, turnProgress * 50))}%` }}
+                          style={{ width: `${Math.max(0, Math.min(50, effectiveProgress * 50))}%` }}
                         />
                       </div>
                       <button className="end-turn-floating" onClick={() => void runTask(handleEndTurn)}>
