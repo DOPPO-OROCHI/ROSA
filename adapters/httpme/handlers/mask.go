@@ -3,6 +3,7 @@ package handlers
 import (
 	"TheWar/adapters/httpme/dto"
 	"TheWar/internal/domain/game"
+	"time"
 )
 
 /*
@@ -42,6 +43,7 @@ func maskMatchStateForUser(st *game.MatchState, viewerUserID uint) *dto.MaskedMa
 		Result:           st.Result,                               //<-результат матча
 		Event:            append([]game.Event(nil), st.Events...), //<-UI ивенты
 		Turn_deadline_at: st.TurnDeadline,                         //<-таймер хода
+		Server_now:       time.Now().Unix(),                       //<-сейчас начался ход
 	}
 	/*Принимаем PlayerState, потому что мы маскируем уже готовое состояние игрока. Дело в том,
 	что в MatchState мы уже держим двух игроков в виде указателей. Чтобы не дублировать овер много

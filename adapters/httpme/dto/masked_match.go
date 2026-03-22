@@ -55,4 +55,5 @@ type MaskedMatchState struct {
 	Players          [2]*MaskedPlayerState `json:"players"`
 	Event            []game.Event          `json:"events,omitempty"`
 	Turn_deadline_at int64                 `json:"turn_deadline_at"`
+	Server_now       int64                 `json:"server_now"`
 }

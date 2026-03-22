@@ -1871,6 +1871,42 @@ pre {
   padding-right: 8px;
 }
 
+.midline-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+}
+
+.turn-timer-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.16rem 0.42rem;
+  border-radius: 999px;
+  background: rgba(10, 25, 33, 0.88);
+  border: 1px solid rgba(121, 194, 214, 0.34);
+  color: #cbeaf4;
+  font-size: 0.58rem;
+  line-height: 1;
+}
+
+.turn-timer-chip strong {
+  color: #f4f9ff;
+  font-size: 0.64rem;
+  letter-spacing: 0.02em;
+}
+
+.turn-timer-chip.danger {
+  border-color: rgba(255, 97, 97, 0.52);
+  background: rgba(42, 12, 14, 0.9);
+  color: #ffd0d0;
+}
+
+.turn-timer-chip.danger strong {
+  color: #fff0f0;
+}
+
 .turn-indicator,
 .event-feed {
   padding: 0.85rem;

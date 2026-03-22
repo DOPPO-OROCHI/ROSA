@@ -186,6 +186,8 @@ type MatchState = {
   phase: string;
   finished: boolean;
   result: string;
+  turn_deadline_at?: number;
+  server_now?: number;
   players: [MatchPlayer | null, MatchPlayer | null];
   events?: MatchEvent[];
 };
@@ -431,6 +433,7 @@ export default function App() {
   const toastIdRef = useRef(1);
   const [ownHeroHpPeak, setOwnHeroHpPeak] = useState(0);
   const [enemyHeroHpPeak, setEnemyHeroHpPeak] = useState(0);
+  const [clockTickMs, setClockTickMs] = useState(() => Date.now());
 
   function pushToast(message: string, tone: ToastEntry["tone"] = "info") {
     const id = toastIdRef.current++;
@@ -478,6 +481,32 @@ export default function App() {
     [selectedMatch, me],
   );
   const activeBattle = Boolean(selectedMatch && !selectedMatch.finished);
+  const isMyTurn = Boolean(
+    selectedMatch &&
+      myPlayer &&
+      selectedMatch.active_player === myPlayer.player_id,
+  );
+  useEffect(() => {
+    if (!activeBattle) {
+      return;
+    }
+    const timerId = window.setInterval(() => {
+      setClockTickMs(Date.now());
+    }, 1000);
+    return () => window.clearInterval(timerId);
+  }, [activeBattle]);
+  const clientNowSec = Math.floor(clockTickMs / 1000);
+  const serverClockOffsetSec = useMemo(
+    () => (selectedMatch?.server_now ?? Math.floor(Date.now() / 1000)) - Math.floor(Date.now() / 1000),
+    [selectedMatch?.server_now, selectedMatch?.version, selectedMatch?.match_id],
+  );
+  const syncedNowSec = clientNowSec + serverClockOffsetSec;
+  const turnDeadlineAt = selectedMatch?.turn_deadline_at ?? 0;
+  const turnSecondsLeft = turnDeadlineAt > 0 ? Math.max(0, turnDeadlineAt - syncedNowSec) : 0;
+  const hasTurnTimer = Boolean(activeBattle && turnDeadlineAt > 0);
+  const turnTimerLabel = `${Math.floor(turnSecondsLeft / 60)
+    .toString()
+    .padStart(2, "0")}:${(turnSecondsLeft % 60).toString().padStart(2, "0")}`;
   useEffect(() => {
     if (!dragAttack) {
       return;
@@ -1692,9 +1721,17 @@ export default function App() {
                   </div>
 
                   <div className="battle-midline">
-                    <button className="end-turn-floating" onClick={() => void runTask(handleEndTurn)}>
-                      End Turn
-                    </button>
+                    <div className="midline-actions">
+                      {hasTurnTimer && (
+                        <div className={`turn-timer-chip ${turnSecondsLeft <= 10 ? "danger" : ""}`}>
+                          <span>{isMyTurn ? "Your turn" : "Enemy turn"}</span>
+                          <strong>{turnTimerLabel}</strong>
+                        </div>
+                      )}
+                      <button className="end-turn-floating" onClick={() => void runTask(handleEndTurn)}>
+                        End Turn
+                      </button>
+                    </div>
                   </div>
 
                   <div className="ally-zone">
