@@ -91,7 +91,8 @@ func main() {
 				now := time.Now().Unix()
 				ids, err := repository.ListExpiredMatches(db.DB, now, 50)
 				if err != nil {
-					continue
+					log.Printf("ecpired scan err: %v", err)
+					log.Printf("ecpired ids: %v", ids)
 				}
 				for _, id := range ids {
 					st, changed, err := applycation.ApplyTimeOutToMatchTX(db.DB, id)
