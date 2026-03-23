@@ -1563,7 +1563,7 @@ pre {
 .attack-drag-layer {
   position: absolute;
   inset: 0;
-  z-index: 4;
+  z-index: 60;
   pointer-events: none;
   overflow: visible;
 }

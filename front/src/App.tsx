@@ -559,6 +559,7 @@ export default function App() {
   const battleBoardRef = useRef<HTMLElement | null>(null);
   const [dragAttack, setDragAttack] = useState<DragAttackState | null>(null);
   const [aimPointer, setAimPointer] = useState<{ x: number; y: number } | null>(null);
+  const [aimSourcePoint, setAimSourcePoint] = useState<{ x: number; y: number } | null>(null);
   const toastIdRef = useRef(1);
   const [ownHeroHpPeak, setOwnHeroHpPeak] = useState(0);
   const [enemyHeroHpPeak, setEnemyHeroHpPeak] = useState(0);
@@ -749,6 +750,18 @@ export default function App() {
       return null;
     }
     return { x: clientX - rect.left, y: clientY - rect.top };
+  }
+
+  function getElementCenterInBoard(el: HTMLElement): { x: number; y: number } | null {
+    const boardRect = battleBoardRef.current?.getBoundingClientRect();
+    if (!boardRect) {
+      return null;
+    }
+    const rect = el.getBoundingClientRect();
+    return {
+      x: rect.left + rect.width / 2 - boardRect.left,
+      y: rect.top + rect.height / 2 - boardRect.top,
+    };
   }
 
   function handleBattlePointerMove(event: PointerEvent<HTMLElement>) {
@@ -1135,7 +1148,7 @@ export default function App() {
     );
   }
 
-  async function startSkillCast(unit: UnitState) {
+  async function startSkillCast(unit: UnitState, sourceEl?: HTMLElement) {
     const casterId = unitInstanceId(unit);
     const meta = cardCatalogEntry(unitTemplateId(unit));
     const fallback = skillFallbackByTemplate[unitTemplateId(unit)];
@@ -1168,6 +1181,13 @@ export default function App() {
       await castSkill(casterId, casterId);
       return;
     }
+    setDragAttack(null);
+    if (sourceEl) {
+      const center = getElementCenterInBoard(sourceEl);
+      if (center) {
+        setAimSourcePoint(center);
+      }
+    }
     setHeroSpellArmed(false);
     setHeroAttackArmed(false);
     setSelectedSkillCasterId(casterId);
@@ -1183,6 +1203,8 @@ export default function App() {
     setSelectedSkillCasterId("");
     setHeroSpellArmed(false);
     setHeroAttackArmed(false);
+    setDragAttack(null);
+    setAimSourcePoint(null);
   }
 
   async function applyAction(payload: Record<string, unknown>, successText: string) {
@@ -1273,7 +1295,7 @@ export default function App() {
     await applyAction({ type: "end_turn" }, "Turn ended");
   }
 
-  async function handleHeroSpell() {
+  async function handleHeroSpell(sourceEl?: HTMLElement) {
     if (!selectedMatch || !myPlayer) {
       pushToast("No battle selected", "error");
       return;
@@ -1288,12 +1310,20 @@ export default function App() {
     }
     if (heroSpellArmed) {
       setHeroSpellArmed(false);
+      setAimSourcePoint(null);
       setActionStatus("Hero skill selection canceled");
       return;
     }
     const mode = heroSpellTargetMode(myPlayer.hero_code);
     setHeroSpellArmed(true);
     setHeroAttackArmed(false);
+    setDragAttack(null);
+    if (sourceEl) {
+      const center = getElementCenterInBoard(sourceEl);
+      if (center) {
+        setAimSourcePoint(center);
+      }
+    }
     setSelectedSkillCasterId("");
     setSelectedHandCardId("");
     setSelectedOwnUnitId("");
@@ -1309,7 +1339,7 @@ export default function App() {
     setActionStatus(hint);
   }
 
-  function handleHeroAttackToggle() {
+  function handleHeroAttackToggle(sourceEl?: HTMLElement) {
     if (!selectedMatch || !myPlayer) {
       pushToast("No battle selected", "error");
       return;
@@ -1329,10 +1359,19 @@ export default function App() {
     const next = !heroAttackArmed;
     setHeroAttackArmed(next);
     setHeroSpellArmed(false);
+    setDragAttack(null);
     setSelectedSkillCasterId("");
     setSelectedHandCardId("");
     setSelectedOwnUnitId("");
     setSelectedEnemyUnitId("");
+    if (next && sourceEl) {
+      const center = getElementCenterInBoard(sourceEl);
+      if (center) {
+        setAimSourcePoint(center);
+      }
+    } else {
+      setAimSourcePoint(null);
+    }
     setActionStatus(next ? "Hero attack armed: pick enemy unit or hero" : "Hero attack canceled");
   }
 
@@ -1374,6 +1413,10 @@ export default function App() {
     }
 
     setSelectedOwnUnitId(unitInstanceId(unit));
+    const ownPoint = centerPointInBoard(`[data-unit-id="${unitInstanceId(unit)}"][data-slot-side="own"]`);
+    if (ownPoint) {
+      setAimSourcePoint(ownPoint);
+    }
     setActionStatus(`Selected allied unit: ${resolveAssetLabel(unitTemplateId(unit))}`);
   }
 
@@ -1518,6 +1561,9 @@ export default function App() {
     if (dragAttack) {
       return { x: dragAttack.sourceX, y: dragAttack.sourceY };
     }
+    if (aimSourcePoint) {
+      return aimSourcePoint;
+    }
     if (selectedSkillCasterId) {
       return centerPointInBoard(`[data-unit-id="${selectedSkillCasterId}"][data-slot-side="own"]`);
     }
@@ -1531,7 +1577,7 @@ export default function App() {
       return centerPointInBoard(`[data-unit-id="${selectedOwnUnitId}"][data-slot-side="own"]`);
     }
     return null;
-  }, [dragAttack, selectedSkillCasterId, heroAttackArmed, heroSpellArmed, selectedOwnUnitId, selectedCard]);
+  }, [dragAttack, aimSourcePoint, selectedSkillCasterId, heroAttackArmed, heroSpellArmed, selectedOwnUnitId, selectedCard]);
 
   const targetingCurrentPoint = useMemo(() => {
     if (dragAttack) {
@@ -1625,7 +1671,7 @@ export default function App() {
                 }
                 return;
               }
-              void runTask(() => startSkillCast(unit));
+              void runTask(() => startSkillCast(unit, event.currentTarget as HTMLElement));
             }}
             title={`${skillName || "Skill"}${skillTarget ? ` • ${targetLabel(skillTarget)}` : ""}`}
             role="button"
@@ -2285,12 +2331,12 @@ export default function App() {
                     <div className="hero-anchor bottom">
                       <button
                         className={`hero-attack-mini ${heroAttackArmed ? "armed" : ""}`}
-                        onClick={handleHeroAttackToggle}
+                        onClick={(event) => handleHeroAttackToggle(event.currentTarget as HTMLElement)}
                         title={`Hero attack (${myPlayer.hero_attack_power})`}
                       >
                         HA
                       </button>
-                      <button className="hero-skill-mini" onClick={() => void runTask(handleHeroSpell)}>
+                      <button className="hero-skill-mini" onClick={(event) => void runTask(() => handleHeroSpell(event.currentTarget as HTMLElement))}>
                         HS
                         <span className="hero-skill-mana">{heroAbilityManaCost(myPlayer)}</span>
                       </button>
