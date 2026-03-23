@@ -62,6 +62,11 @@ type BattleCard = {
   xp: number;
   image_key: string;
   asset_base_key: string;
+  skill_name?: string;
+  skill_code?: string;
+  skill_trigger?: string;
+  skill_target?: string;
+  skill_cooldown?: number;
 };
 
 type BuffCard = {
@@ -102,6 +107,11 @@ type CardCatalogEntry = {
   duration?: number;
   buff_value?: number;
   buff_type?: string;
+  skill_name?: string;
+  skill_code?: string;
+  skill_trigger?: string;
+  skill_target?: string;
+  skill_cooldown?: number;
 };
 
 type DeckEntry = {
@@ -979,8 +989,12 @@ export default function App() {
 
   async function startSkillCast(unit: UnitState) {
     const casterId = unitInstanceId(unit);
-    const skillCode = unitSkillCode(unit);
-    if (!skillCode || unitSkillTrigger(unit) !== SKILL_TRIGGER_ACTIVE) {
+    const meta = cardCatalogEntry(unitTemplateId(unit));
+    const skillCode = unitSkillCode(unit) || meta?.skill_code || "";
+    const skillTrigger = unitSkillTrigger(unit) || meta?.skill_trigger || "";
+    const skillTarget = unitSkillTarget(unit) || meta?.skill_target || TARGET_NONE;
+    const skillName = unitSkillName(unit) || meta?.skill_name || skillCode;
+    if (!skillCode || skillTrigger !== SKILL_TRIGGER_ACTIVE) {
       pushToast("This unit has no active skill", "error");
       return;
     }
@@ -992,7 +1006,7 @@ export default function App() {
       pushToast(`Skill on cooldown (${unitSkillCooldownLeft(unit)})`, "error");
       return;
     }
-    const target = unitSkillTarget(unit);
+    const target = skillTarget;
     if (target === TARGET_ALLY_GRAVE_SINGLE) {
       pushToast("Grave target picker is not in UI yet", "error");
       return;
@@ -1008,8 +1022,7 @@ export default function App() {
     setSelectedSkillCasterId(casterId);
     setSelectedOwnUnitId("");
     setSelectedEnemyUnitId("");
-    const skillName = unitSkillName(unit) || resolveAssetLabel(unitTemplateId(unit));
-    setActionStatus(`Skill mode: ${skillName}. Pick ${targetLabel(target)}.`);
+    setActionStatus(`Skill mode: ${skillName || resolveAssetLabel(unitTemplateId(unit))}. Pick ${targetLabel(target)}.`);
   }
 
   function clearSelections() {
@@ -1302,10 +1315,15 @@ export default function App() {
     const isTank = unitIsTank(unit);
     const ownerTurns = side === "own" ? (myPlayer?.turns ?? -1) : (enemyPlayer?.turns ?? -1);
     const isDeployed = ownerTurns >= 0 && unitSummonedInTurn(unit) === ownerTurns;
-    const hasActiveSkill = unitSkillCode(unit) !== "" && unitSkillTrigger(unit) === SKILL_TRIGGER_ACTIVE;
+    const skillCode = unitSkillCode(unit) || meta?.skill_code || "";
+    const skillTrigger = unitSkillTrigger(unit) || meta?.skill_trigger || "";
+    const skillTarget = unitSkillTarget(unit) || meta?.skill_target || "";
+    const skillName = unitSkillName(unit) || meta?.skill_name || skillCode;
+    const hasSkill = skillCode !== "";
+    const hasActiveSkill = hasSkill && skillTrigger === SKILL_TRIGGER_ACTIVE;
     const skillLeft = unitSkillCooldownLeft(unit);
-    const skillBase = unitSkillCooldown(unit);
-    const skillDisabled = skillLeft > 0 || !isMyTurn || Boolean(selectedCard);
+    const skillBase = unitSkillCooldown(unit) || meta?.skill_cooldown || 0;
+    const skillDisabled = !hasActiveSkill || skillLeft > 0 || !isMyTurn || Boolean(selectedCard);
 
     return (
       <button
@@ -1331,18 +1349,21 @@ export default function App() {
           fallbackSrc={resolveCardFallbackSrc()}
           className="slot-media"
         />
-        {side === "own" && hasActiveSkill && (
+        {side === "own" && hasSkill && (
           <span
             className={`slot-skill-btn ${selectedBySkill ? "armed" : ""} ${skillDisabled ? "disabled" : ""}`}
             onClick={(event) => {
               event.preventDefault();
               event.stopPropagation();
               if (skillDisabled) {
+                if (!hasActiveSkill) {
+                  pushToast(`Passive skill: ${skillName || skillCode}`);
+                }
                 return;
               }
               void runTask(() => startSkillCast(unit));
             }}
-            title={unitSkillName(unit) || unitSkillCode(unit) || "Card skill"}
+            title={`${skillName || "Skill"}${skillTarget ? ` • ${targetLabel(skillTarget)}` : ""}`}
             role="button"
             tabIndex={0}
             onKeyDown={(event) => {
@@ -1356,8 +1377,8 @@ export default function App() {
               void runTask(() => startSkillCast(unit));
             }}
           >
-            {skillLeft > 0 ? `S ${skillLeft}` : "SK"}
-            {skillBase > 0 && <span className="slot-skill-cd">/{skillBase}</span>}
+            {skillName || "Skill"}
+            {skillBase > 0 && <span className="slot-skill-cd">{` ${skillLeft}/${skillBase}`}</span>}
           </span>
         )}
         <div className="slot-topline">
