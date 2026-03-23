@@ -47,7 +47,7 @@ var DefaultBattleCards = []BattleCardTemplate{
 	{
 		//пехота с пулеметами. Средняя
 		Name:            "Пулеметное отделение",
-		CodeString:      "apply_buff",
+		CodeString:      "machine_gun_crew",
 		HealthPoints:    30,
 		Attack:          25,
 		SplashRadius:    0,
