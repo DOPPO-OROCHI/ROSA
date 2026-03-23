@@ -257,6 +257,59 @@ const TARGET_ENEMY_SPLASH = "enemy_splash";
 const TARGET_ALLY_SPLASH = "ally_splash";
 const TARGET_ALLY_GRAVE_SINGLE = "ally_grave_single";
 
+type SkillMeta = {
+  name: string;
+  code: string;
+  trigger: string;
+  target: string;
+  cooldown: number;
+};
+
+const skillFallbackByTemplate: Record<string, SkillMeta> = {
+  imperial_guardian: {
+    name: "Осколочные гранаты",
+    code: "damage_splash",
+    trigger: SKILL_TRIGGER_ACTIVE,
+    target: TARGET_ENEMY_SPLASH,
+    cooldown: 2,
+  },
+  apply_buff: {
+    name: "Крупнокалиберные боеприпасы",
+    code: "apply_buff",
+    trigger: SKILL_TRIGGER_ACTIVE,
+    target: TARGET_SELF,
+    cooldown: 3,
+  },
+  snipers: {
+    name: "Устранение",
+    code: "damage_single",
+    trigger: SKILL_TRIGGER_ACTIVE,
+    target: TARGET_ENEMY_UNIT,
+    cooldown: 5,
+  },
+  cursed_pack: {
+    name: "Рваные раны",
+    code: "apply_debuff",
+    trigger: SKILL_TRIGGER_ACTIVE,
+    target: TARGET_ENEMY_UNIT,
+    cooldown: 3,
+  },
+  cyber_scout: {
+    name: "Сканирование местности",
+    code: "reveal_enemy_hand",
+    trigger: SKILL_TRIGGER_ACTIVE,
+    target: TARGET_NONE,
+    cooldown: 3,
+  },
+  succubus: {
+    name: "Ужас",
+    code: "inc_enemy_cd_single",
+    trigger: SKILL_TRIGGER_ACTIVE,
+    target: TARGET_ENEMY_UNIT,
+    cooldown: 2,
+  },
+};
+
 const defaultDeck: DeckEntry[] = [
   { kind: "battle", template_id: "imperial_guardian", count: 5 },
   { kind: "battle", template_id: "mechanical_knight", count: 3 },
@@ -990,10 +1043,11 @@ export default function App() {
   async function startSkillCast(unit: UnitState) {
     const casterId = unitInstanceId(unit);
     const meta = cardCatalogEntry(unitTemplateId(unit));
-    const skillCode = unitSkillCode(unit) || meta?.skill_code || "";
-    const skillTrigger = unitSkillTrigger(unit) || meta?.skill_trigger || "";
-    const skillTarget = unitSkillTarget(unit) || meta?.skill_target || TARGET_NONE;
-    const skillName = unitSkillName(unit) || meta?.skill_name || skillCode;
+    const fallback = skillFallbackByTemplate[unitTemplateId(unit)];
+    const skillCode = unitSkillCode(unit) || meta?.skill_code || fallback?.code || "";
+    const skillTrigger = unitSkillTrigger(unit) || meta?.skill_trigger || fallback?.trigger || "";
+    const skillTarget = unitSkillTarget(unit) || meta?.skill_target || fallback?.target || TARGET_NONE;
+    const skillName = unitSkillName(unit) || meta?.skill_name || fallback?.name || skillCode;
     if (!skillCode || skillTrigger !== SKILL_TRIGGER_ACTIVE) {
       pushToast("This unit has no active skill", "error");
       return;
@@ -1306,6 +1360,7 @@ export default function App() {
     );
     const tone = getAssetTone(unitTemplateId(unit));
     const meta = cardCatalogEntry(unitTemplateId(unit));
+    const fallbackSkill = skillFallbackByTemplate[unitTemplateId(unit)];
     const cooldownLeft = unitCooldown(unit);
     const baseCooldown =
       meta && "cooldown" in meta && typeof meta.cooldown === "number"
@@ -1315,14 +1370,14 @@ export default function App() {
     const isTank = unitIsTank(unit);
     const ownerTurns = side === "own" ? (myPlayer?.turns ?? -1) : (enemyPlayer?.turns ?? -1);
     const isDeployed = ownerTurns >= 0 && unitSummonedInTurn(unit) === ownerTurns;
-    const skillCode = unitSkillCode(unit) || meta?.skill_code || "";
-    const skillTrigger = unitSkillTrigger(unit) || meta?.skill_trigger || "";
-    const skillTarget = unitSkillTarget(unit) || meta?.skill_target || "";
-    const skillName = unitSkillName(unit) || meta?.skill_name || skillCode;
+    const skillCode = unitSkillCode(unit) || meta?.skill_code || fallbackSkill?.code || "";
+    const skillTrigger = unitSkillTrigger(unit) || meta?.skill_trigger || fallbackSkill?.trigger || "";
+    const skillTarget = unitSkillTarget(unit) || meta?.skill_target || fallbackSkill?.target || "";
+    const skillName = unitSkillName(unit) || meta?.skill_name || fallbackSkill?.name || skillCode;
     const hasSkill = skillCode !== "";
     const hasActiveSkill = hasSkill && skillTrigger === SKILL_TRIGGER_ACTIVE;
     const skillLeft = unitSkillCooldownLeft(unit);
-    const skillBase = unitSkillCooldown(unit) || meta?.skill_cooldown || 0;
+    const skillBase = unitSkillCooldown(unit) || meta?.skill_cooldown || fallbackSkill?.cooldown || 0;
     const skillDisabled = !hasActiveSkill || skillLeft > 0 || !isMyTurn || Boolean(selectedCard);
 
     return (
