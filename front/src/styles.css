@@ -837,61 +837,28 @@ pre {
 
 .asset-top-stats {
   position: absolute;
-  top: 4px;
-  left: 4px;
-  right: 4px;
+  top: 0;
+  left: 0;
+  right: 0;
   z-index: 3;
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 0.16rem;
-  pointer-events: none;
-}
-
-.asset-stat-chip {
-  display: inline-flex;
+  display: flex;
   align-items: center;
   justify-content: center;
-  gap: 0.12rem;
-  min-height: 16px;
-  padding: 0.04rem 0.12rem;
-  border-radius: 999px;
-  border: 1px solid rgba(231, 219, 192, 0.14);
-  background: rgba(7, 10, 13, 0.72);
+  gap: 0.2rem;
+  min-height: 18px;
+  padding: 0.08rem 0.24rem;
+  background: rgba(2, 4, 8, 0.9);
+  border-bottom: 1px solid rgba(231, 219, 192, 0.12);
   color: #efe7d6;
-  font-size: 0.48rem;
+  font-size: 0.5rem;
   font-weight: 700;
   line-height: 1;
   letter-spacing: 0.01em;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.28);
+  pointer-events: none;
 }
 
-.asset-stat-icon {
-  font-size: 0.5rem;
-  line-height: 1;
-}
-
-.asset-stat-chip.mana {
-  border-color: rgba(197, 151, 73, 0.28);
-  background: linear-gradient(135deg, rgba(197, 151, 73, 0.24), rgba(66, 37, 10, 0.72));
-  color: #ffe6b4;
-}
-
-.asset-stat-chip.attack {
-  border-color: rgba(199, 124, 63, 0.28);
-  background: linear-gradient(135deg, rgba(199, 124, 63, 0.24), rgba(83, 36, 14, 0.72));
-  color: #ffd7bf;
-}
-
-.asset-stat-chip.hp {
-  border-color: rgba(196, 72, 89, 0.28);
-  background: linear-gradient(135deg, rgba(196, 72, 89, 0.24), rgba(73, 20, 29, 0.72));
-  color: #ffd1d9;
-}
-
-.asset-stat-chip.cooldown {
-  border-color: rgba(100, 170, 201, 0.28);
-  background: linear-gradient(135deg, rgba(100, 170, 201, 0.2), rgba(28, 58, 76, 0.72));
-  color: #d5effb;
+.asset-top-stats-sep {
+  opacity: 0.72;
 }
 
 .asset-add {
