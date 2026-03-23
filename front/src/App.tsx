@@ -1184,7 +1184,8 @@ export default function App() {
     setDragAttack(null);
     setAimSourcePoint(null);
     if (sourceEl) {
-      const center = getElementCenterInBoard(sourceEl);
+      const slotSource = sourceEl.closest<HTMLElement>('[data-unit-id][data-slot-side="own"]') ?? sourceEl;
+      const center = getElementCenterInBoard(slotSource);
       if (center) {
         setAimSourcePoint(center);
       }
@@ -1320,8 +1321,11 @@ export default function App() {
     setHeroAttackArmed(false);
     setDragAttack(null);
     setAimSourcePoint(null);
-    if (sourceEl) {
-      const center = getElementCenterInBoard(sourceEl);
+    const heroSource = sourceEl?.closest<HTMLElement>(".hero-anchor.bottom")?.querySelector<HTMLElement>(".hero-center-wrap")
+      ?? sourceEl
+      ?? null;
+    if (heroSource) {
+      const center = getElementCenterInBoard(heroSource);
       if (center) {
         setAimSourcePoint(center);
       }
@@ -1367,8 +1371,11 @@ export default function App() {
     setSelectedOwnUnitId("");
     setSelectedEnemyUnitId("");
     setAimSourcePoint(null);
-    if (next && sourceEl) {
-      const center = getElementCenterInBoard(sourceEl);
+    const heroSource = sourceEl?.closest<HTMLElement>(".hero-anchor.bottom")?.querySelector<HTMLElement>(".hero-center-wrap")
+      ?? sourceEl
+      ?? null;
+    if (next && heroSource) {
+      const center = getElementCenterInBoard(heroSource);
       if (center) {
         setAimSourcePoint(center);
       }
@@ -1523,12 +1530,12 @@ export default function App() {
     setActionStatus("Enemy hero selected");
   }
 
-  function startUnitDrag(unit: UnitState, clientX: number, clientY: number) {
+  function startUnitDrag(unit: UnitState, sourceEl: HTMLElement | null, clientX: number, clientY: number) {
     if (selectedCard || selectedSkillCaster || heroSpellArmed || heroAttackArmed || !selectedMatch || !myPlayer) {
       return;
     }
     setSelectedOwnUnitId(unitInstanceId(unit));
-    const sourcePoint = getBoardRelativePoint(clientX, clientY);
+    const sourcePoint = sourceEl ? getElementCenterInBoard(sourceEl) : getBoardRelativePoint(clientX, clientY);
     if (!sourcePoint) {
       return;
     }
@@ -1563,10 +1570,10 @@ export default function App() {
       return { x: dragAttack.sourceX, y: dragAttack.sourceY };
     }
     if (heroAttackArmed) {
-      return centerPointInBoard(".hero-attack-mini") ?? aimSourcePoint;
+      return centerPointInBoard(".ally-zone .hero-center-wrap") ?? aimSourcePoint;
     }
     if (heroSpellArmed) {
-      return centerPointInBoard(".hero-skill-mini") ?? aimSourcePoint;
+      return centerPointInBoard(".ally-zone .hero-center-wrap") ?? aimSourcePoint;
     }
     if (selectedSkillCasterId) {
       return centerPointInBoard(`[data-unit-id="${selectedSkillCasterId}"][data-slot-side="own"]`) ?? aimSourcePoint;
@@ -1649,7 +1656,7 @@ export default function App() {
           side === "own"
             ? (event) => {
                 event.preventDefault();
-                startUnitDrag(unit, event.clientX, event.clientY);
+                startUnitDrag(unit, event.currentTarget as HTMLElement, event.clientX, event.clientY);
               }
             : undefined
         }
