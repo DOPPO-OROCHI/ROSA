@@ -1,4 +1,4 @@
-import { type CSSProperties, type MouseEvent, type PointerEvent, useEffect, useMemo, useRef, useState } from "react";
+import { type CSSProperties, type MouseEvent, useEffect, useMemo, useRef, useState } from "react";
 import {
   getAssetTone,
   resolveAssetLabel,
@@ -558,8 +558,6 @@ export default function App() {
   const streamRef = useRef<EventSource | null>(null);
   const battleBoardRef = useRef<HTMLElement | null>(null);
   const [dragAttack, setDragAttack] = useState<DragAttackState | null>(null);
-  const [aimPointer, setAimPointer] = useState<{ x: number; y: number } | null>(null);
-  const [aimSourcePoint, setAimSourcePoint] = useState<{ x: number; y: number } | null>(null);
   const toastIdRef = useRef(1);
   const [ownHeroHpPeak, setOwnHeroHpPeak] = useState(0);
   const [enemyHeroHpPeak, setEnemyHeroHpPeak] = useState(0);
@@ -762,21 +760,6 @@ export default function App() {
       x: rect.left + rect.width / 2 - boardRect.left,
       y: rect.top + rect.height / 2 - boardRect.top,
     };
-  }
-
-  function handleBattlePointerMove(event: PointerEvent<HTMLElement>) {
-    const point = getBoardRelativePoint(event.clientX, event.clientY);
-    if (!point) {
-      return;
-    }
-    setAimPointer(point);
-  }
-
-  function handleBattlePointerLeave() {
-    if (dragAttack) {
-      return;
-    }
-    setAimPointer(null);
   }
 
   const cardCatalog = useMemo(() => {
@@ -1148,7 +1131,7 @@ export default function App() {
     );
   }
 
-  async function startSkillCast(unit: UnitState, sourceEl?: HTMLElement) {
+  async function startSkillCast(unit: UnitState) {
     const casterId = unitInstanceId(unit);
     const meta = cardCatalogEntry(unitTemplateId(unit));
     const fallback = skillFallbackByTemplate[unitTemplateId(unit)];
@@ -1182,14 +1165,6 @@ export default function App() {
       return;
     }
     setDragAttack(null);
-    setAimSourcePoint(null);
-    if (sourceEl) {
-      const slotSource = sourceEl.closest<HTMLElement>('[data-unit-id][data-slot-side="own"]') ?? sourceEl;
-      const center = getElementCenterInBoard(slotSource);
-      if (center) {
-        setAimSourcePoint(center);
-      }
-    }
     setHeroSpellArmed(false);
     setHeroAttackArmed(false);
     setSelectedSkillCasterId(casterId);
@@ -1206,7 +1181,6 @@ export default function App() {
     setHeroSpellArmed(false);
     setHeroAttackArmed(false);
     setDragAttack(null);
-    setAimSourcePoint(null);
   }
 
   async function applyAction(payload: Record<string, unknown>, successText: string) {
@@ -1297,7 +1271,7 @@ export default function App() {
     await applyAction({ type: "end_turn" }, "Turn ended");
   }
 
-  async function handleHeroSpell(sourceEl?: HTMLElement) {
+  async function handleHeroSpell() {
     if (!selectedMatch || !myPlayer) {
       pushToast("No battle selected", "error");
       return;
@@ -1312,7 +1286,6 @@ export default function App() {
     }
     if (heroSpellArmed) {
       setHeroSpellArmed(false);
-      setAimSourcePoint(null);
       setActionStatus("Hero skill selection canceled");
       return;
     }
@@ -1320,16 +1293,6 @@ export default function App() {
     setHeroSpellArmed(true);
     setHeroAttackArmed(false);
     setDragAttack(null);
-    setAimSourcePoint(null);
-    const heroSource = sourceEl?.closest<HTMLElement>(".hero-anchor.bottom")?.querySelector<HTMLElement>(".hero-center-wrap")
-      ?? sourceEl
-      ?? null;
-    if (heroSource) {
-      const center = getElementCenterInBoard(heroSource);
-      if (center) {
-        setAimSourcePoint(center);
-      }
-    }
     setSelectedSkillCasterId("");
     setSelectedHandCardId("");
     setSelectedOwnUnitId("");
@@ -1345,7 +1308,7 @@ export default function App() {
     setActionStatus(hint);
   }
 
-  function handleHeroAttackToggle(sourceEl?: HTMLElement) {
+  function handleHeroAttackToggle() {
     if (!selectedMatch || !myPlayer) {
       pushToast("No battle selected", "error");
       return;
@@ -1370,16 +1333,6 @@ export default function App() {
     setSelectedHandCardId("");
     setSelectedOwnUnitId("");
     setSelectedEnemyUnitId("");
-    setAimSourcePoint(null);
-    const heroSource = sourceEl?.closest<HTMLElement>(".hero-anchor.bottom")?.querySelector<HTMLElement>(".hero-center-wrap")
-      ?? sourceEl
-      ?? null;
-    if (next && heroSource) {
-      const center = getElementCenterInBoard(heroSource);
-      if (center) {
-        setAimSourcePoint(center);
-      }
-    }
     setActionStatus(next ? "Hero attack armed: pick enemy unit or hero" : "Hero attack canceled");
   }
 
@@ -1421,10 +1374,6 @@ export default function App() {
     }
 
     setSelectedOwnUnitId(unitInstanceId(unit));
-    const ownPoint = centerPointInBoard(`[data-unit-id="${unitInstanceId(unit)}"][data-slot-side="own"]`);
-    if (ownPoint) {
-      setAimSourcePoint(ownPoint);
-    }
     setActionStatus(`Selected allied unit: ${resolveAssetLabel(unitTemplateId(unit))}`);
   }
 
@@ -1565,35 +1514,6 @@ export default function App() {
     };
   }
 
-  const targetingSourcePoint = useMemo(() => {
-    if (dragAttack) {
-      return { x: dragAttack.sourceX, y: dragAttack.sourceY };
-    }
-    if (heroAttackArmed) {
-      return centerPointInBoard(".ally-zone .hero-center-wrap") ?? aimSourcePoint;
-    }
-    if (heroSpellArmed) {
-      return centerPointInBoard(".ally-zone .hero-center-wrap") ?? aimSourcePoint;
-    }
-    if (selectedSkillCasterId) {
-      return centerPointInBoard(`[data-unit-id="${selectedSkillCasterId}"][data-slot-side="own"]`) ?? aimSourcePoint;
-    }
-    if (aimSourcePoint) {
-      return aimSourcePoint;
-    }
-    if (selectedOwnUnitId && !selectedCard) {
-      return centerPointInBoard(`[data-unit-id="${selectedOwnUnitId}"][data-slot-side="own"]`);
-    }
-    return null;
-  }, [dragAttack, aimSourcePoint, selectedSkillCasterId, heroAttackArmed, heroSpellArmed, selectedOwnUnitId, selectedCard]);
-
-  const targetingCurrentPoint = useMemo(() => {
-    if (dragAttack) {
-      return { x: dragAttack.currentX, y: dragAttack.currentY };
-    }
-    return aimPointer;
-  }, [dragAttack, aimPointer]);
-
   function renderHeroGlyph(heroCode: string, imageKey: string | undefined, size: "small" | "large") {
     const tone = getAssetTone(heroCode);
     const label = resolveAssetLabel(imageKey || heroCode || "hero");
@@ -1679,7 +1599,7 @@ export default function App() {
                 }
                 return;
               }
-              void runTask(() => startSkillCast(unit, event.currentTarget as HTMLElement));
+              void runTask(() => startSkillCast(unit));
             }}
             title={`${skillName || "Skill"}${skillTarget ? ` • ${targetLabel(skillTarget)}` : ""}`}
             role="button"
@@ -2249,8 +2169,6 @@ export default function App() {
               className="battle-board panel"
               ref={battleBoardRef}
               onClick={handleBattleBoardEmptyClick}
-              onPointerMove={handleBattlePointerMove}
-              onPointerLeave={handleBattlePointerLeave}
             >
               <button className="ghost-button leave-inline in-board" onClick={() => void runTask(handleLeaveMatch)}>
                 Leave Match
@@ -2259,23 +2177,6 @@ export default function App() {
                 className="battle-board-background"
                 style={{ backgroundImage: `url(${resolveBoardBackgroundSrc()})` }}
               />
-              {targetingSourcePoint && targetingCurrentPoint && (
-                <svg className="attack-drag-layer" viewBox="0 0 100 100" preserveAspectRatio="none">
-                  <defs>
-                    <marker id="attack-arrowhead" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
-                      <polygon points="0 0, 6 3, 0 6" fill="#79c2d6" />
-                    </marker>
-                  </defs>
-                  <line
-                    x1={`${(targetingSourcePoint.x / Math.max(1, battleBoardRef.current?.clientWidth ?? 1)) * 100}`}
-                    y1={`${(targetingSourcePoint.y / Math.max(1, battleBoardRef.current?.clientHeight ?? 1)) * 100}`}
-                    x2={`${(targetingCurrentPoint.x / Math.max(1, battleBoardRef.current?.clientWidth ?? 1)) * 100}`}
-                    y2={`${(targetingCurrentPoint.y / Math.max(1, battleBoardRef.current?.clientHeight ?? 1)) * 100}`}
-                    className="attack-drag-line"
-                    markerEnd="url(#attack-arrowhead)"
-                  />
-                </svg>
-              )}
               {!selectedMatch || !myPlayer || !enemyPlayer ? (
                 <div className="empty-battle">
                   <h2>No active battle selected</h2>
@@ -2339,12 +2240,12 @@ export default function App() {
                     <div className="hero-anchor bottom">
                       <button
                         className={`hero-attack-mini ${heroAttackArmed ? "armed" : ""}`}
-                        onClick={(event) => handleHeroAttackToggle(event.currentTarget as HTMLElement)}
+                        onClick={handleHeroAttackToggle}
                         title={`Hero attack (${myPlayer.hero_attack_power})`}
                       >
                         HA
                       </button>
-                      <button className="hero-skill-mini" onClick={(event) => void runTask(() => handleHeroSpell(event.currentTarget as HTMLElement))}>
+                      <button className="hero-skill-mini" onClick={() => void runTask(handleHeroSpell)}>
                         HS
                         <span className="hero-skill-mana">{heroAbilityManaCost(myPlayer)}</span>
                       </button>
