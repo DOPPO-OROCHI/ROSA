@@ -1182,6 +1182,7 @@ export default function App() {
       return;
     }
     setDragAttack(null);
+    setAimSourcePoint(null);
     if (sourceEl) {
       const center = getElementCenterInBoard(sourceEl);
       if (center) {
@@ -1318,6 +1319,7 @@ export default function App() {
     setHeroSpellArmed(true);
     setHeroAttackArmed(false);
     setDragAttack(null);
+    setAimSourcePoint(null);
     if (sourceEl) {
       const center = getElementCenterInBoard(sourceEl);
       if (center) {
@@ -1364,13 +1366,12 @@ export default function App() {
     setSelectedHandCardId("");
     setSelectedOwnUnitId("");
     setSelectedEnemyUnitId("");
+    setAimSourcePoint(null);
     if (next && sourceEl) {
       const center = getElementCenterInBoard(sourceEl);
       if (center) {
         setAimSourcePoint(center);
       }
-    } else {
-      setAimSourcePoint(null);
     }
     setActionStatus(next ? "Hero attack armed: pick enemy unit or hero" : "Hero attack canceled");
   }
@@ -1561,17 +1562,17 @@ export default function App() {
     if (dragAttack) {
       return { x: dragAttack.sourceX, y: dragAttack.sourceY };
     }
-    if (aimSourcePoint) {
-      return aimSourcePoint;
-    }
-    if (selectedSkillCasterId) {
-      return centerPointInBoard(`[data-unit-id="${selectedSkillCasterId}"][data-slot-side="own"]`);
-    }
     if (heroAttackArmed) {
-      return centerPointInBoard(".hero-attack-mini");
+      return centerPointInBoard(".hero-attack-mini") ?? aimSourcePoint;
     }
     if (heroSpellArmed) {
-      return centerPointInBoard(".hero-skill-mini");
+      return centerPointInBoard(".hero-skill-mini") ?? aimSourcePoint;
+    }
+    if (selectedSkillCasterId) {
+      return centerPointInBoard(`[data-unit-id="${selectedSkillCasterId}"][data-slot-side="own"]`) ?? aimSourcePoint;
+    }
+    if (aimSourcePoint) {
+      return aimSourcePoint;
     }
     if (selectedOwnUnitId && !selectedCard) {
       return centerPointInBoard(`[data-unit-id="${selectedOwnUnitId}"][data-slot-side="own"]`);
