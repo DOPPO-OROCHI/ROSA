@@ -43,6 +43,14 @@ func SeedBattleCardTemplate(db *gorm.DB) error {
 			"description",
 			"image_key",
 			"asset_base_key",
+			"skill_name",
+			"skill_code",
+			"skill_trigger",
+			"skill_target",
+			"skill_value",
+			"skill_duration",
+			"skill_cooldown",
+			"skill_params_json",
 		}),
 	}).CreateInBatches(&cards.DefaultBattleCards, 200).Error //<-вот это тоже интересно, до сих пор не виданно
 	/*Здесь стоит представить, что такое массовый сидинг данных внутрь БД. По сути, отдельный сид = отдельный SQL
