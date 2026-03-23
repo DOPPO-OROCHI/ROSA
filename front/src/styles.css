@@ -2002,18 +2002,39 @@ pre {
     inset 0 0 22px rgba(0, 0, 0, 0.34);
   pointer-events: none;
   z-index: 8;
-  animation: draw-card-to-hand 480ms ease-out forwards;
+  will-change: transform, opacity, filter;
+  animation: draw-card-to-hand 620ms cubic-bezier(0.2, 0.82, 0.22, 1) forwards;
 }
 
 @keyframes draw-card-to-hand {
   0% {
     opacity: 0.96;
-    transform: translate(0, 0) rotate(8deg) scale(0.95);
+    transform: translate(0, 0) rotate(9deg) scale(0.95);
+    filter: brightness(1) saturate(1);
+  }
+
+  22% {
+    opacity: 1;
+    transform: translate(-34px, -30px) rotate(1deg) scale(0.98);
+    filter: brightness(1.12) saturate(1.06);
+  }
+
+  58% {
+    opacity: 0.92;
+    transform: translate(-106px, -8px) rotate(-12deg) scale(0.9);
+    filter: brightness(1.06) saturate(1.02);
+  }
+
+  84% {
+    opacity: 0.38;
+    transform: translate(-152px, 10px) rotate(-16deg) scale(0.79);
+    filter: brightness(0.96) saturate(0.98);
   }
 
   100% {
     opacity: 0;
-    transform: translate(-170px, 6px) rotate(-10deg) scale(0.72);
+    transform: translate(-182px, 18px) rotate(-18deg) scale(0.72);
+    filter: brightness(0.88) saturate(0.94);
   }
 }
 
