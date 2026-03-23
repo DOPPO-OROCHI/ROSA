@@ -1,4 +1,4 @@
-import { type CSSProperties, type MouseEvent, useEffect, useMemo, useRef, useState } from "react";
+import { type CSSProperties, type MouseEvent, type PointerEvent, useEffect, useMemo, useRef, useState } from "react";
 import {
   getAssetTone,
   resolveAssetLabel,
@@ -218,6 +218,8 @@ type MatchState = {
 
 type DragAttackState = {
   sourceId: string;
+  sourceX: number;
+  sourceY: number;
   currentX: number;
   currentY: number;
 };
@@ -556,6 +558,7 @@ export default function App() {
   const streamRef = useRef<EventSource | null>(null);
   const battleBoardRef = useRef<HTMLElement | null>(null);
   const [dragAttack, setDragAttack] = useState<DragAttackState | null>(null);
+  const [aimPointer, setAimPointer] = useState<{ x: number; y: number } | null>(null);
   const toastIdRef = useRef(1);
   const [ownHeroHpPeak, setOwnHeroHpPeak] = useState(0);
   const [enemyHeroHpPeak, setEnemyHeroHpPeak] = useState(0);
@@ -739,6 +742,29 @@ export default function App() {
       window.removeEventListener("pointercancel", handlePointerCancel);
     };
   }, [dragAttack, enemyPlayer]);
+
+  function getBoardRelativePoint(clientX: number, clientY: number): { x: number; y: number } | null {
+    const rect = battleBoardRef.current?.getBoundingClientRect();
+    if (!rect) {
+      return null;
+    }
+    return { x: clientX - rect.left, y: clientY - rect.top };
+  }
+
+  function handleBattlePointerMove(event: PointerEvent<HTMLElement>) {
+    const point = getBoardRelativePoint(event.clientX, event.clientY);
+    if (!point) {
+      return;
+    }
+    setAimPointer(point);
+  }
+
+  function handleBattlePointerLeave() {
+    if (dragAttack) {
+      return;
+    }
+    setAimPointer(null);
+  }
 
   const cardCatalog = useMemo(() => {
     const next = new Map<string, CardCatalogEntry>();
@@ -1457,36 +1483,62 @@ export default function App() {
     if (selectedCard || selectedSkillCaster || heroSpellArmed || heroAttackArmed || !selectedMatch || !myPlayer) {
       return;
     }
-    const rect = battleBoardRef.current?.getBoundingClientRect();
-    if (!rect) {
+    setSelectedOwnUnitId(unitInstanceId(unit));
+    const sourcePoint = getBoardRelativePoint(clientX, clientY);
+    if (!sourcePoint) {
       return;
     }
-    setSelectedOwnUnitId(unitInstanceId(unit));
     setDragAttack({
       sourceId: unitInstanceId(unit),
-      currentX: clientX - rect.left,
-      currentY: clientY - rect.top,
+      sourceX: sourcePoint.x,
+      sourceY: sourcePoint.y,
+      currentX: sourcePoint.x,
+      currentY: sourcePoint.y,
     });
     setActionStatus(`Attack vector: ${resolveAssetLabel(unitTemplateId(unit))}`);
   }
 
-  function dragSourcePoint() {
-    if (!dragAttack || !battleBoardRef.current) {
+  function centerPointInBoard(selector: string): { x: number; y: number } | null {
+    if (!battleBoardRef.current) {
       return null;
     }
-    const sourceNode = battleBoardRef.current.querySelector<HTMLElement>(
-      `[data-unit-id="${dragAttack.sourceId}"][data-slot-side="own"]`,
-    );
-    if (!sourceNode) {
+    const node = battleBoardRef.current.querySelector<HTMLElement>(selector);
+    if (!node) {
       return null;
     }
     const boardRect = battleBoardRef.current.getBoundingClientRect();
-    const sourceRect = sourceNode.getBoundingClientRect();
+    const rect = node.getBoundingClientRect();
     return {
-      x: sourceRect.left + sourceRect.width / 2 - boardRect.left,
-      y: sourceRect.top + sourceRect.height / 2 - boardRect.top,
+      x: rect.left + rect.width / 2 - boardRect.left,
+      y: rect.top + rect.height / 2 - boardRect.top,
     };
   }
+
+  const targetingSourcePoint = useMemo(() => {
+    if (dragAttack) {
+      return { x: dragAttack.sourceX, y: dragAttack.sourceY };
+    }
+    if (selectedSkillCasterId) {
+      return centerPointInBoard(`[data-unit-id="${selectedSkillCasterId}"][data-slot-side="own"]`);
+    }
+    if (heroAttackArmed) {
+      return centerPointInBoard(".hero-attack-mini");
+    }
+    if (heroSpellArmed) {
+      return centerPointInBoard(".hero-skill-mini");
+    }
+    if (selectedOwnUnitId && !selectedCard) {
+      return centerPointInBoard(`[data-unit-id="${selectedOwnUnitId}"][data-slot-side="own"]`);
+    }
+    return null;
+  }, [dragAttack, selectedSkillCasterId, heroAttackArmed, heroSpellArmed, selectedOwnUnitId, selectedCard]);
+
+  const targetingCurrentPoint = useMemo(() => {
+    if (dragAttack) {
+      return { x: dragAttack.currentX, y: dragAttack.currentY };
+    }
+    return aimPointer;
+  }, [dragAttack, aimPointer]);
 
   function renderHeroGlyph(heroCode: string, imageKey: string | undefined, size: "small" | "large") {
     const tone = getAssetTone(heroCode);
@@ -2143,6 +2195,8 @@ export default function App() {
               className="battle-board panel"
               ref={battleBoardRef}
               onClick={handleBattleBoardEmptyClick}
+              onPointerMove={handleBattlePointerMove}
+              onPointerLeave={handleBattlePointerLeave}
             >
               <button className="ghost-button leave-inline in-board" onClick={() => void runTask(handleLeaveMatch)}>
                 Leave Match
@@ -2151,29 +2205,21 @@ export default function App() {
                 className="battle-board-background"
                 style={{ backgroundImage: `url(${resolveBoardBackgroundSrc()})` }}
               />
-              {dragAttack && dragSourcePoint() && (
+              {targetingSourcePoint && targetingCurrentPoint && (
                 <svg className="attack-drag-layer" viewBox="0 0 100 100" preserveAspectRatio="none">
                   <defs>
                     <marker id="attack-arrowhead" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
                       <polygon points="0 0, 6 3, 0 6" fill="#79c2d6" />
                     </marker>
                   </defs>
-                  {(() => {
-                    const source = dragSourcePoint();
-                    if (!source) {
-                      return null;
-                    }
-                    return (
                   <line
-                    x1={`${(source.x / Math.max(1, battleBoardRef.current?.clientWidth ?? 1)) * 100}`}
-                    y1={`${(source.y / Math.max(1, battleBoardRef.current?.clientHeight ?? 1)) * 100}`}
-                    x2={`${(dragAttack.currentX / Math.max(1, battleBoardRef.current?.clientWidth ?? 1)) * 100}`}
-                    y2={`${(dragAttack.currentY / Math.max(1, battleBoardRef.current?.clientHeight ?? 1)) * 100}`}
+                    x1={`${(targetingSourcePoint.x / Math.max(1, battleBoardRef.current?.clientWidth ?? 1)) * 100}`}
+                    y1={`${(targetingSourcePoint.y / Math.max(1, battleBoardRef.current?.clientHeight ?? 1)) * 100}`}
+                    x2={`${(targetingCurrentPoint.x / Math.max(1, battleBoardRef.current?.clientWidth ?? 1)) * 100}`}
+                    y2={`${(targetingCurrentPoint.y / Math.max(1, battleBoardRef.current?.clientHeight ?? 1)) * 100}`}
                     className="attack-drag-line"
                     markerEnd="url(#attack-arrowhead)"
                   />
-                    );
-                  })()}
                 </svg>
               )}
               {!selectedMatch || !myPlayer || !enemyPlayer ? (
