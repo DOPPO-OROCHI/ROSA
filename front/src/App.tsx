@@ -1626,13 +1626,13 @@ export default function App() {
                         />
                         {card.kind === "battle" && (
                           <div className="asset-top-stats" aria-label="Card stats">
-                            <span>M {card.mana_cost}</span>
+                            <span className="asset-top-stat-token">{`M${card.mana_cost}`}</span>
                             <span className="asset-top-stats-sep">|</span>
-                            <span>ATK {card.attack}</span>
+                            <span className="asset-top-stat-token">{`A${card.attack}`}</span>
                             <span className="asset-top-stats-sep">|</span>
-                            <span>HP {card.health_points}</span>
+                            <span className="asset-top-stat-token">{`H${card.health_points}`}</span>
                             <span className="asset-top-stats-sep">|</span>
-                            <span>CD {card.cooldown}</span>
+                            <span className="asset-top-stat-token">{`C${card.cooldown}`}</span>
                           </div>
                         )}
                         <button
