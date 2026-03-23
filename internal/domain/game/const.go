@@ -102,4 +102,6 @@ const (
 	EventHeroAttack EventType = "hero_attack"
 	//анимация применения скилла карты
 	EventCardSkill EventType = "card_skill"
+	//анимация воскрешения
+	EventResurrect EventType = "resurrect"
 )

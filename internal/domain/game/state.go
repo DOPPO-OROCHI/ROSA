@@ -46,6 +46,8 @@ type PlayerState struct {
 	Hand                    []CardsInMatch        //<-что у персонажа в руке
 	Discard                 []CardsInMatch        //<-сколько карт игрок уже проебал
 	Table                   [TableSize]*UnitState //<-что у игрока не столе
+	GraveYard               []GraveEntry
+	PendingRes              []PendingResurrected
 }
 
 /*Карты внутри матча. Или с какими картами пришел игрок в матч.*/
@@ -82,6 +84,7 @@ type UnitState struct {
 	SkillCooldown     int
 	SkillCooldownLeft int
 	SkillParamsJSON   string
+	ResurrectedUsed   bool
 }
 
 // эффект, или баф, который можно наложить на карту
@@ -131,6 +134,17 @@ type Action struct {
 	AttackHero       bool       `json:"attack_hero,omitempty"`        //<-отражает истинность намерений типа -мы ебем персонажа или нет ?
 	ExpectedVersion  int64      `json:"expected_version"`             //<-защита от повторов или устаревших действий. Игрок не сможет дважды атаковать одной и той же картой за ход
 	TargetSlot       int        `json:"target_slot,omitempty"`        //<-новая механика, которая позволяет в добавок ко всему пиздить соседние карты сплешем
+}
+
+// ГЛОБАЛЬНЫЙ ПАТЧ. Внедрение механики возраждения после смерти
+type GraveEntry struct {
+	Unit       UnitState
+	DiedAtTurn int
+}
+
+type PendingResurrected struct {
+	InstanceID string
+	DueTurn    int
 }
 
 /*

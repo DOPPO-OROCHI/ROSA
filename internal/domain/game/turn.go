@@ -25,6 +25,7 @@ func StartTurn(m *MatchState, nowUnix int64) {
 	if p.HeroAbilityCooldown > 0 {
 		p.HeroAbilityCooldown--
 	}
+	_ = processPendingResurections(m, m.ActivePlayer)
 	for i := range p.Table {
 		u := p.Table[i]
 		if u == nil {
@@ -37,7 +38,17 @@ func StartTurn(m *MatchState, nowUnix int64) {
 			u.SkillCooldownLeft--
 		}
 	}
-	TickerEffects(p)
+	TickerEffects(m, m.ActivePlayer)
+	for i := 0; i < TableSize; i++ {
+		u := p.Table[i]
+		if u == nil {
+			continue
+		}
+		_ = triggerCardSkillByTrigger(m, m.ActivePlayer, u, cards.TriggerTurnStart, Action{
+			PlayerIndex:    m.ActivePlayer,
+			CardInstanceID: u.InstanceID,
+		})
+	}
 	draw := 1
 	if len(p.Deck) < draw {
 		draw = len(p.Deck)
@@ -154,6 +165,7 @@ func PlayBattleCard(m *MatchState,
 		SkillCooldown:     tpl.SkillCooldown,
 		SkillCooldownLeft: 0,
 		SkillParamsJSON:   tpl.SkillParams,
+		ResurrectedUsed:   false,
 	}
 	p.Table[targetSlot] = u
 	m.Events = append(m.Events, Event{
@@ -165,6 +177,11 @@ func PlayBattleCard(m *MatchState,
 		VFXKey:           BuildVFXKey(tpl.AssetBaseKey, "summon"),
 		SFXKey:           BuildSFXKey(tpl.AssetBaseKey, "summon"),
 		TargetSlot:       targetSlot,
+	})
+	_ = triggerCardSkillByTrigger(m, playerIndex, u, cards.TriggerOnPlay, Action{
+		PlayerIndex:    playerIndex,
+		CardInstanceID: u.InstanceID,
+		TargetSlot:     targetSlot,
 	})
 	return nil
 }
@@ -371,9 +388,9 @@ func CardAttack(m *MatchState,
 			died := u.HP <= 0
 			newHP := u.HP
 			if died {
-				deadSnap := *u
-				_ = triggerOnDeathSkill(m, &deadSnap, 1-playerIndex)
-				defPlayer.RemoveAt(s)
+				if err := killUnitAt(m, 1-playerIndex, s); err != nil {
+					return err
+				}
 				newHP = 0
 			}
 			targets = append(targets, EventTarget{
@@ -400,6 +417,15 @@ func CardAttack(m *MatchState,
 		SFXKey:           BuildSFXKey(tpl.AssetBaseKey, "attack"),
 		Targets:          targets,
 	})
+	_, aliveAttacker := atkPlayer.FindSlot(attackerInstanceID)
+	if aliveAttacker != nil {
+		_ = triggerCardSkillByTrigger(m, playerIndex, aliveAttacker, cards.TriggerOnAttack, Action{
+			PlayerIndex:      playerIndex,
+			CardInstanceID:   aliveAttacker.InstanceID,
+			TargetInstanceID: defenderInstanceID,
+			AttackHero:       attackHero,
+		})
+	}
 	if defPlayer.HeroHP <= 0 {
 		m.Finished = true
 		if playerIndex == 0 {
@@ -488,9 +514,9 @@ func HeroAttack(m *MatchState,
 			died := u.HP <= 0
 			newHP := u.HP
 			if died {
-				deadSnap := *u
-				_ = triggerOnDeathSkill(m, &deadSnap, 1-playerIndex)
-				defPlayer.RemoveAt(s)
+				if err := killUnitAt(m, 1-playerIndex, s); err != nil {
+					return err
+				}
 				newHP = 0
 			}
 			targets = append(targets, EventTarget{
@@ -587,7 +613,7 @@ func PlayHeroSpell(m *MatchState, a Action, r Resolvers) error {
 		return err
 	}
 	p.Mana -= spec.ManaCost
-	p.HeroAbilityCooldown = spec.CoolDown // <-- фикс
+	p.HeroAbilityCooldown = spec.CoolDown
 	targets := buildHeroSpellTargetsAfter(m, spec, snaps)
 	heroBase := HeroBaseKey(p.HeroCode)
 	m.Events = append(m.Events, Event{
@@ -898,4 +924,137 @@ func findTargetSlotForHeroSpell(m *MatchState, a Action, spec heroes.AbilitySpec
 	default:
 		return -1
 	}
+}
+
+// ХЕЛПЕР СМЕРТИ
+func killUnitAt(m *MatchState, ownerIdx int, slot int) error {
+	if m == nil {
+		return errors.New("nil match state")
+	}
+	if ownerIdx < 0 || ownerIdx > 1 {
+		return errors.New("bad owner index")
+	}
+	if slot < 0 || slot >= TableSize {
+		return errors.New("bad slot target")
+	}
+	owner := m.Players[ownerIdx]
+	if owner == nil {
+		return errors.New("nil owner state")
+	}
+	u := owner.Table[slot]
+	if u == nil {
+		return nil
+	}
+	dead := *u
+	if dead.SkillCode == cards.SkillResurrectNextTurn && dead.SkillTrigger == cards.TriggerOnDeath && !dead.ResurrectedUsed {
+		owner.PendingRes = append(owner.PendingRes, PendingResurrected{
+			InstanceID: dead.InstanceID,
+			DueTurn:    owner.Turns + 1,
+		})
+	}
+	owner.GraveYard = append(owner.GraveYard, GraveEntry{
+		Unit:       dead,
+		DiedAtTurn: owner.Turns,
+	})
+	_ = triggerOnDeathSkill(m, &dead, ownerIdx)
+	owner.RemoveAt(slot)
+	m.Events = append(m.Events, Event{
+		Type:             string(EventDeath),
+		SourceKind:       string(SourceUnit),
+		SourceInstanceID: dead.InstanceID,
+		SourceTemplateID: dead.TemplateID,
+		TargetSlot:       slot,
+	})
+	return nil
+}
+
+// ФУНККЦИЯ ОБРАБОТКИ СМЕРТИ (ПАССИВКА, ПОДНИМАЕТ КАРТЫ ИЗ МОГИЛЫ НА СЛЕДУЮЩИЙ ХОД)
+func processPendingResurections(m *MatchState, ownerIdx int) error {
+	if m == nil {
+		return errors.New("nil match state")
+	}
+	if ownerIdx < 0 || ownerIdx > 1 {
+		return errors.New("bad owner index")
+	}
+	owner := m.Players[ownerIdx]
+	if owner == nil {
+		return errors.New("bad owner")
+	}
+	nextPending := make([]PendingResurrected, 0, len(owner.PendingRes))
+	for i := range owner.PendingRes {
+		pr := owner.PendingRes[i]
+		if pr.DueTurn > owner.Turns {
+			nextPending = append(nextPending, pr)
+			continue
+		}
+		graveIdx := -1
+		for j := range owner.GraveYard {
+			if owner.GraveYard[j].Unit.InstanceID == pr.InstanceID {
+				graveIdx = j
+				break
+			}
+		}
+		if graveIdx < 0 {
+			continue
+		}
+		slot := firstFreeSlot(owner)
+		if slot < 0 {
+			nextPending = append(nextPending, pr)
+			continue
+		}
+		revived := owner.GraveYard[graveIdx].Unit
+		revived.HP /= 2
+		revived.ResurrectedUsed = true
+		revived.SummonedInTurn = owner.Turns
+		owner.Table[slot] = &revived
+		last := len(owner.GraveYard) - 1
+		owner.GraveYard[graveIdx] = owner.GraveYard[last]
+		owner.GraveYard = owner.GraveYard[:last]
+		m.Events = append(m.Events, Event{
+			Type:             string(EventResurrect),
+			PlayerIndex:      ownerIdx,
+			SourceKind:       string(SourceUnit),
+			SourceInstanceID: revived.InstanceID,
+			SourceTemplateID: revived.TemplateID,
+			TargetSlot:       slot,
+			Targets: []EventTarget{
+				{
+					InstanceID: revived.InstanceID,
+					TemplateID: revived.TemplateID,
+					Died:       false,
+					NewHP:      revived.HP,
+				},
+			},
+		})
+	}
+	owner.PendingRes = nextPending
+	return nil
+}
+
+func triggerCardSkillByTrigger(m *MatchState, ownerIdx int, caster *UnitState, trigger string, a Action) error {
+	if m == nil {
+		return nil
+	}
+	if caster == nil {
+		return nil
+	}
+	if caster.SkillCode == "" || caster.SkillTrigger != trigger {
+		return nil
+	}
+	owner := m.Players[ownerIdx]
+	enemy := m.Players[1-ownerIdx]
+	if owner == nil || enemy == nil {
+		return nil
+	}
+	if a.PlayerIndex != ownerIdx {
+		a.PlayerIndex = ownerIdx
+	}
+	if a.CardInstanceID == "" {
+		a.CardInstanceID = caster.InstanceID
+	}
+	h, err := getCardSkillHandler(caster.SkillCode)
+	if err != nil {
+		return nil
+	}
+	return h(m, a, caster, owner, enemy)
 }

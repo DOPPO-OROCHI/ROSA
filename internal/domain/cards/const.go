@@ -22,8 +22,8 @@ const (
 	MakeTankUpdate     = "make_tank"
 )
 
-//ГЛОБАЛЬНЫЙ ПАТЧ
-//триггеры карт. Типа когда срабатывают скилы ?
+// ГЛОБАЛЬНЫЙ ПАТЧ
+// триггеры карт. Типа когда срабатывают скилы ?
 const (
 	TriggerOnPlay    = "on_play"   //срабатывает скил при поставлении карты на стол
 	TriggerOnAttack  = "on_attack" //срабатывает, когда карта совершает атаку
@@ -32,32 +32,45 @@ const (
 	TriggerActive    = "active"    //активный скилл карты
 )
 
-//на кого срабатывают карты ?
+// на кого срабатывают карты ?
 const (
-	TargetNone        = "none"         //цели не требуется, например когда карта умирает она бьет всех
-	TargetSelf        = "self"         //на себя
-	TargetAllyUnit    = "ally_unit"    //на союзную карту
-	TargetEnemyUnit   = "enemy_unit"   //на вражескую карту
-	TargetAllyAll     = "ally_all"     //весь союзный стол
-	TargetEnemyAll    = "enemy_all"    //весь вражеский стол
-	TargetBothAll     = "both_all"     //вообще весь стол
-	TargetEnemySplash = "enemy_splash" //сплеш по противникам
-	TargetAllySplash  = "ally_splash"  //сплеш по своим
+	TargetNone            = "none"         //цели не требуется, например когда карта умирает она бьет всех
+	TargetSelf            = "self"         //на себя
+	TargetAllyUnit        = "ally_unit"    //на союзную карту
+	TargetEnemyUnit       = "enemy_unit"   //на вражескую карту
+	TargetAllyAll         = "ally_all"     //весь союзный стол
+	TargetEnemyAll        = "enemy_all"    //весь вражеский стол
+	TargetBothAll         = "both_all"     //вообще весь стол
+	TargetEnemySplash     = "enemy_splash" //сплеш по противникам
+	TargetAllySplash      = "ally_splash"  //сплеш по своим
+	TargetAllyGraveSingle = "ally_grave_single"
 )
 
-//коды скиллов карт
+// коды скиллов карт
 const (
-	SkillDamageSingle         = "damage_single"             //бьем точечно в одну карту done
-	SkillDamageSplash         = "damage_splash"             //бем по сплешу done
-	SkillApplyDebuff          = "apply_debuff"              //накладываем дебаф при атаке, или просто по использованию
-	SkillApplyBuff            = "apply_buff"                //накладываем бафф
-	SkillSummonSelfCopy       = "summon_self_copy"          //призывает копии себя же
-	SkillBanishUnit           = "banish_unit"               //убирает карту со стола
-	SkillRevealEnemyHand      = "reveal_enemy_hand"         //смотрим в руку противника
-	SkillIncEnemyCdAllOnDeath = "inc_enemy_cd_all_on_death" //после смерти карты увеличиваем кд всего вражеского стола
-	SkillIncEnemyCdSingle     = "inc_enemy_cd_single"       //точечно увеличиваем кд вражеской карты
-	SkillDecAllyCdSingle      = "dec_ally_cd_single"        //снимаем/уменьшаем кд союзной карты
-	SkillResurrectFromGrave   = "resurrect_from_grave"      //воскрешает карту
-	SkillResurrectNextTurn    = "resurrect_next_turn"       //карта воскресает на следующий ход после смерти
-	SkillDeathAoe             = "death_aoe"                 //при уничтожении бьет по столу
+	SkillDamageSingle             = "damage_single"               //бьем точечно в одну карту done
+	SkillDamageSplash             = "damage_splash"               //бем по сплешу done
+	SkillApplyDebuff              = "apply_debuff"                //накладываем дебаф при атаке, или просто по использованию
+	SkillApplyBuff                = "apply_buff"                  //накладываем бафф
+	SkillSummonSelfCopy           = "summon_self_copy"            //призывает копии себя же
+	SkillBanishUnit               = "banish_unit"                 //убирает карту со стола
+	SkillRevealEnemyHand          = "reveal_enemy_hand"           //смотрим в руку противника
+	SkillIncEnemyCdAllOnDeath     = "inc_enemy_cd_all_on_death"   //после смерти карты увеличиваем кд всего вражеского стола
+	SkillIncEnemyCdSingle         = "inc_enemy_cd_single"         //точечно увеличиваем кд вражеской карты
+	SkillDecAllyCdSingle          = "dec_ally_cd_single"          //снимаем/уменьшаем кд союзной карты
+	SkillResurrectTargetFromGrave = "resurrect_target_from_grave" //воскрешает карту
+	SkillResurrectNextTurn        = "resurrect_next_turn"         //карта воскресает на следующий ход после смерти
+	SkillDeathAoe                 = "death_aoe"                   //при уничтожении бьет по столу
+)
+
+// Для JSON скиллов карт
+const (
+	IgnoreTankTrue = "ignore_tank=true"
+)
+
+// Негативные эффекты на скилы
+const (
+	DotHPUpdate       = "dot_hp_update"
+	DotAttackUpdate   = "dot_attack_update"
+	DotCooldownUpdate = "dot_cooldown_update"
 )

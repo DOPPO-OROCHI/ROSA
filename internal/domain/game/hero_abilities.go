@@ -188,7 +188,9 @@ func (ab SupremeLiderAbilitySpec) Apply(st *MatchState, a Action) error {
 	}
 	u.HP -= dmg
 	if u.HP <= 0 {
-		def.RemoveAt(slot)
+		if err := killUnitAt(st, 1-a.PlayerIndex, slot); err != nil {
+			return err
+		}
 	}
 	return nil
 }
@@ -233,14 +235,16 @@ func (ab TheSystemAbilitySpec) Apply(st *MatchState, a Action) error {
 	if right < TableSize && def.Table[right] != nil {
 		targetSlot = append(targetSlot, right)
 	}
-	for _, r := range targetSlot {
-		u := def.Table[r]
+	for _, s := range targetSlot {
+		u := def.Table[s]
 		if u == nil {
 			continue
 		}
 		u.HP -= dmg
 		if u.HP <= 0 {
-			def.RemoveAt(r)
+			if err := killUnitAt(st, 1-a.PlayerIndex, s); err != nil {
+				return err
+			}
 		}
 	}
 	return nil

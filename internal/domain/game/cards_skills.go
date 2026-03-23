@@ -13,17 +13,23 @@ type CardSkillHandler func(m *MatchState,
 	a Action, caster *UnitState, owner *PlayerState,
 	enemy *PlayerState) error
 
-var CardSkillHandlers = map[string]CardSkillHandler{
-	"damage_splash":             castDamageSplash,
-	"damage_single":             castDamageSingle,
-	"apply_buff":                castBuffSelf,
-	"apply_debuff":              castApplyDebuff,
-	"summon_self_copy":          castSummonSelfCopy,
-	"banish_unit":               castBanishUnit,
-	"reveal_enemy_hand":         castRevealEnemyHand,
-	"inc_enemy_cd_all_on_death": castIncEnemyCdAfterDeath,
-	"inc_enemy_cd_single":       castIncEnemyCdSingle,
-	"dec_ally_cd_single":        castDecAllyCdSingle,
+var CardSkillHandlers map[string]CardSkillHandler
+
+func init() {
+	CardSkillHandlers = map[string]CardSkillHandler{
+		cards.SkillDamageSplash:             castDamageSplash,
+		cards.SkillDamageSingle:             castDamageSingle,
+		cards.SkillApplyBuff:                castBuffSelf,
+		cards.SkillApplyDebuff:              castApplyDebuff,
+		cards.SkillSummonSelfCopy:           castSummonSelfCopy,
+		cards.SkillBanishUnit:               castBanishUnit,
+		cards.SkillRevealEnemyHand:          castRevealEnemyHand,
+		cards.SkillIncEnemyCdAllOnDeath:     castIncEnemyCdAfterDeath,
+		cards.SkillIncEnemyCdSingle:         castIncEnemyCdSingle,
+		cards.SkillDecAllyCdSingle:          castDecAllyCdSingle,
+		cards.SkillDeathAoe:                 castDeathAoe,
+		cards.SkillResurrectTargetFromGrave: castResurrectTargetFromGrave,
+	}
 }
 
 // ФУНКЦИЯ ПОД СОЛО ДАМАГ
@@ -50,7 +56,8 @@ func castDamageSingle(
 			break
 		}
 	}
-	if hasTank && !target.IsTank {
+	ignoreTank := caster.SkillParamsJSON == cards.IgnoreTankTrue
+	if !ignoreTank && hasTank && !target.IsTank {
 		return ErrCardSkillTargetTankBlocked
 	}
 	dmg := caster.SkillValue
@@ -58,7 +65,9 @@ func castDamageSingle(
 	died := target.HP <= 0
 	newHP := target.HP
 	if died {
-		enemy.RemoveAt(slot)
+		if err := killUnitAt(m, 1-a.PlayerIndex, slot); err != nil {
+			return err
+		}
 		newHP = 0
 	}
 	m.Events = append(m.Events, Event{
@@ -111,7 +120,9 @@ func castDamageSplash(
 		died := u.HP <= 0
 		newHP := u.HP
 		if died {
-			enemy.RemoveAt(s)
+			if err := killUnitAt(m, 1-a.PlayerIndex, s); err != nil {
+				return err
+			}
 			newHP = 0
 		}
 		targets = append(targets, EventTarget{
@@ -182,29 +193,26 @@ func castApplyDebuff(
 	}
 	mode := caster.SkillParamsJSON
 	if mode == "" {
-		mode = "atk_down"
+		mode = cards.DotHPUpdate
 	}
 	switch mode {
-	case "atk_down":
+	case cards.DotAttackUpdate:
 		AddEffect(target, UnitEffect{
-			EffectType: cards.DamageUpdate,
-			TurnsLeft:  caster.SkillDuration,
-			Value:      -caster.SkillValue,
-		})
-	case "dot_hp":
-		AddEffect(target, UnitEffect{
-			EffectType: cards.HealthPointsUpdate,
+			EffectType: cards.DotAttackUpdate,
 			TurnsLeft:  caster.SkillDuration,
 			Value:      caster.SkillValue,
 		})
-		if target.HP <= 0 {
-			enemy.RemoveAt(slot)
-		}
-	case "cd_up":
+	case cards.DotHPUpdate:
 		AddEffect(target, UnitEffect{
-			EffectType: cards.CoolDownUpdate,
+			EffectType: cards.DotHPUpdate,
 			TurnsLeft:  caster.SkillDuration,
-			Value:      -caster.SkillValue,
+			Value:      caster.SkillValue,
+		})
+	case cards.DotCooldownUpdate:
+		AddEffect(target, UnitEffect{
+			EffectType: cards.DotCooldownUpdate,
+			TurnsLeft:  caster.SkillDuration,
+			Value:      caster.SkillValue,
 		})
 	default:
 		return ErrCardSkillUnsupported
@@ -317,7 +325,9 @@ func castBanishUnit(
 	if target == nil || slot < 0 {
 		return ErrCardSkillBadTarget
 	}
-	enemy.RemoveAt(slot)
+	if err := killUnitAt(m, 1-a.PlayerIndex, slot); err != nil {
+		return err
+	}
 	m.Events = append(m.Events, Event{
 		Type:             string(EventCardSkill),
 		PlayerIndex:      a.PlayerIndex,
@@ -483,9 +493,102 @@ func castDecAllyCdSingle(
 }
 
 // СКИЛЛ ПОД РАЗЪЕБ ВСЕГО СТОЛА ПРИ СМЕРТИ (либо вражеского, либо вообще всего, зависит от таргета)
-func cast()
+func castDeathAoe(
+	m *MatchState, a Action,
+	caster *UnitState,
+	_ *PlayerState,
+	_ *PlayerState) error {
+	if m == nil || caster == nil {
+		return errors.New("nil state from castDeathAoe")
+	}
+	targets, err := collectAoeUnits(m, a.PlayerIndex, caster.SkillTarget)
+	if err != nil {
+		return err
+	}
+	if len(targets) == 0 {
+		return nil
+	}
+	outEvent := make([]EventTarget, 0, len(targets))
+	for _, v := range targets {
+		u := v.unit
+		if u.InstanceID == caster.InstanceID {
+			continue
+		}
+		u.HP -= caster.SkillValue
+		died := u.HP <= 0
+		newHP := u.HP
+		if died {
+			if err := killUnitAt(m, v.ownerIndex, v.slot); err != nil {
+				return err
+			}
+			newHP = 0
+		}
+		outEvent = append(outEvent, EventTarget{
+			InstanceID: u.InstanceID,
+			TemplateID: u.TemplateID,
+			Amount:     caster.SkillValue,
+			Died:       died,
+			NewHP:      newHP,
+		})
+	}
+	m.Events = append(m.Events, Event{
+		Type:             string(EventCardSkill),
+		PlayerIndex:      a.PlayerIndex,
+		SourceKind:       string(SourceUnit),
+		SourceInstanceID: caster.InstanceID,
+		SourceTemplateID: caster.TemplateID,
+		Targets:          outEvent,
+	})
+	return nil
+}
 
-func collectAoeUnits(m *MatchState, )
+// СТРУКТУРА ВЫБОРА ЦЕЛИ ДЛЯ АОЕ СКИЛЛА
+type aoeTarget struct {
+	ownerIndex int
+	slot       int
+	unit       *UnitState
+}
+
+// ФУНКЦИЯ ВОЗВРАЩАЮЩАЯ ЦЕЛИ ДЛЯ АОЕ УРОНА
+func collectAoeUnits(m *MatchState,
+	playerIndex int, skillTarget string) ([]aoeTarget, error) {
+	if m == nil || skillTarget == "" {
+		return nil, errors.New("bad input in collectAoeUnits")
+	}
+	if playerIndex < 0 || playerIndex > 1 {
+		return nil, errors.New("bad player index")
+	}
+	out := make([]aoeTarget, 0, TableSize*2)
+	collect := func(ownerIdx int) {
+		p := m.Players[ownerIdx]
+		if p == nil {
+			return
+		}
+		for s := 0; s < TableSize; s++ {
+			u := p.Table[s]
+			if u == nil {
+				continue
+			}
+			out = append(out, aoeTarget{
+				ownerIndex: ownerIdx,
+				slot:       s,
+				unit:       u,
+			})
+		}
+	}
+	switch skillTarget {
+	case cards.TargetEnemyAll:
+		collect(1 - playerIndex)
+	case cards.TargetAllyAll:
+		collect(playerIndex)
+	case cards.TargetBothAll:
+		collect(playerIndex)
+		collect(1 - playerIndex)
+	default:
+		return nil, ErrCardSkillBadTarget
+	}
+	return out, nil
+}
 
 func getCardSkillHandler(code string) (CardSkillHandler, error) {
 	h, ok := CardSkillHandlers[code]
@@ -502,4 +605,55 @@ func firstFreeSlot(p *PlayerState) int {
 		}
 	}
 	return -1
+}
+
+// ФУНКЦИЯ ПОДНЯТИЯ КАРТЫ ИЗ МОГИЛЫ КОНКРЕТНОЙ КАРТОЙ
+func castResurrectTargetFromGrave(
+	m *MatchState, a Action,
+	caster *UnitState,
+	owner *PlayerState,
+	_ *PlayerState) error {
+	if m == nil || caster == nil || owner == nil {
+		return errors.New("bad input in castResurrectTargetFromGrave")
+	}
+	for i := range owner.GraveYard {
+		if owner.GraveYard[i].Unit.InstanceID != a.TargetInstanceID {
+			continue
+		}
+		slot := firstFreeSlot(owner)
+		if slot < 0 {
+			return ErrTablesFull
+		}
+		revived := owner.GraveYard[i].Unit
+		if revived.HP <= 0 {
+			revived.HP = caster.HP / 2
+			if revived.HP < 1 {
+				revived.HP = 1
+			}
+		}
+		revived.SummonedInTurn = owner.Turns
+		revived.ResurrectedUsed = true
+		owner.Table[slot] = &revived
+		last := len(owner.GraveYard) - 1
+		owner.GraveYard[i] = owner.GraveYard[last]
+		owner.GraveYard = owner.GraveYard[:last]
+		m.Events = append(m.Events, Event{
+			Type:             string(EventResurrect),
+			PlayerIndex:      a.PlayerIndex,
+			SourceKind:       string(SourceUnit),
+			SourceInstanceID: caster.InstanceID,
+			SourceTemplateID: caster.TemplateID,
+			TargetSlot:       slot,
+			Targets: []EventTarget{
+				{
+					InstanceID: revived.InstanceID,
+					TemplateID: revived.TemplateID,
+					Died:       false,
+					NewHP:      revived.HP,
+				},
+			},
+		})
+		return nil
+	}
+	return ErrCardSkillBadTarget
 }

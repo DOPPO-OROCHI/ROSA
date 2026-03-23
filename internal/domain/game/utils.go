@@ -13,29 +13,56 @@ import (
 (в основном) вещь временная, должен быть механизм, который снимает эффекты по истечению определенного времени.
 Во входящих аргументах принимаем состояние плеера, откуда и будем брать инфу о количестве ходов.
 */
-func TickerEffects(p *PlayerState) {
-	if p == nil { //<-избегаем паник
+func TickerEffects(m *MatchState, ownerIdx int) {
+	if m == nil || ownerIdx < 0 || ownerIdx > 1 {
 		return
 	}
-	for i := 0; i < TableSize; i++ { //<-проходимся по длине всего стола
-		u := p.Table[i] //<-а это конкретный экземпляр карты
-		if u == nil {   //<-если слот пустой
-			continue //<-похуй
+	p := m.Players[ownerIdx]
+	if p == nil {
+		return
+	}
+	for i := 0; i < TableSize; i++ {
+		u := p.Table[i]
+		if u == nil {
+			continue
 		}
-		out := u.Effects[:0]          //<-а это переменная, которая отвечает за те эффекты, которые остаются активными
-		for _, e := range u.Effects { //<-проходимся по длине всех эффектов (поскольку их может быть несколько)
-			if e.TurnsLeft == 0 { //<-если эффект перманентный (вспоминаем)
-				out = append(out, e) //<-то мы просто добавляем его в аут
+		out := u.Effects[:0]
+		unitDied := false
+		for _, e := range u.Effects {
+			if e.TurnsLeft == 0 {
+				out = append(out, e)
 				continue
 			}
-			e.TurnsLeft--         //<-а если нет, то уменьшаем TurnsLeft. По сути, уменьшаем длительность эффекта
-			if e.TurnsLeft <= 0 { //<-если время уже истекло
-				RemoveEffect(u, e) //<-то просто нахуй удаляем эффект с юнита
+			switch e.EffectType {
+			case cards.DotHPUpdate:
+				u.HP -= e.Value
+			case cards.DotAttackUpdate:
+				u.Attack -= e.Value
+			case cards.DotCooldownUpdate:
+				u.Cooldown += e.Value
+				if u.Cooldown < 0 {
+					u.Cooldown = 0
+				}
+			}
+			if u.HP <= 0 {
+				_ = killUnitAt(m, ownerIdx, i)
+				unitDied = true
+				break
+			}
+			e.TurnsLeft--
+			if e.TurnsLeft <= 0 {
+				switch e.EffectType {
+				case cards.DamageUpdate, cards.HealthPointsUpdate, cards.CoolDownUpdate, cards.MakeTankUpdate:
+					RemoveEffect(u, e)
+				}
 				continue
 			}
-			out = append(out, e) //<-а если эффект еще жив, то просто сохраняем его в новый список
+			out = append(out, e)
 		}
-		u.Effects = out //<-добавляем в эффекты юнита аут из бафов, которые накинул игрок
+		if unitDied {
+			continue
+		}
+		u.Effects = out
 	}
 }
 
@@ -69,6 +96,8 @@ func RemoveEffect(u *UnitState, e UnitEffect) {
 		u.Cooldown += e.Value //<-а тут тоже весело, просто добавляем кд к карте.
 	case cards.MakeTankUpdate:
 		u.IsTank = false //<-снимаем маркер танка с карты
+	case cards.DotAttackUpdate, cards.DotHPUpdate, cards.DotCooldownUpdate:
+		//заглушка
 	}
 }
 
@@ -92,6 +121,8 @@ func ApplyEffect(u *UnitState, buff UnitEffect) error {
 			return errors.New("card is tank type already") //<-это мы и обрабатываем
 		}
 		u.IsTank = true //<-а если все круто, делаем из карты танка
+	case cards.DotAttackUpdate, cards.DotHPUpdate, cards.DotCooldownUpdate:
+		//заглушка
 	}
 	return nil
 }
