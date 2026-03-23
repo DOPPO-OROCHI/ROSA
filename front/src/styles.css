@@ -2091,7 +2091,7 @@ pre {
   flex: 0 0 auto;
   font-size: 0.56rem;
   position: relative;
-  overflow: hidden;
+  overflow: visible;
   padding: 0.22rem;
 }
 
@@ -2173,7 +2173,7 @@ pre {
 .slot-skill-btn {
   position: absolute;
   left: 50%;
-  top: 3px;
+  top: -16px;
   transform: translateX(-50%);
   z-index: 4;
   max-width: calc(100% - 10px);

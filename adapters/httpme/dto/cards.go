@@ -49,6 +49,14 @@ type OwnedBattleCardsDTO struct {
 	ImageKey     string `json:"image_key"`
 	AssetBaseKey string `json:"asset_base_key"`
 	BackKey      string `json:"back_key,omitempty"`
+
+	SkillName     string `json:"skill_name,omitempty"`
+	SkillCode     string `json:"skill_code,omitempty"`
+	SkillTrigger  string `json:"skill_trigger,omitempty"`
+	SkillTarget   string `json:"skill_target,omitempty"`
+	SkillValue    int    `json:"skill_value,omitempty"`
+	SkillDuration int    `json:"skill_duration,omitempty"`
+	SkillCooldown int    `json:"skill_cooldown,omitempty"`
 }
 
 /*
