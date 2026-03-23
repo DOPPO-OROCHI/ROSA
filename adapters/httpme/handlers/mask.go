@@ -33,9 +33,12 @@ func maskMatchStateForUser(st *game.MatchState, viewerUserID uint) *dto.MaskedMa
 	if st.Players[1] != nil && st.Players[1].UserID == viewerUserID {
 		viewerIndex = 1
 	}
+	if viewerIndex == -1 {
+		return nil
+	}
 	events := make([]game.Event, 0, len(st.Events))
 	for _, ev := range st.Events {
-		if ev.VisibleForPlayerIndex == nil || (viewerIndex >= 0 && ev.VisibleForPlayerIndex == &viewerIndex) {
+		if ev.VisibleForPlayerIndex == nil || (viewerIndex >= 0 && *ev.VisibleForPlayerIndex == viewerIndex) {
 			events = append(events, ev)
 		}
 	}

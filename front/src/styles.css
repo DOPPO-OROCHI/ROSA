@@ -2161,6 +2161,55 @@ pre {
   transform: translateY(-2px);
 }
 
+.slot.skill-caster {
+  outline-color: rgba(120, 214, 255, 0.88);
+}
+
+.slot.skill-targetable {
+  outline: 2px dashed rgba(112, 220, 255, 0.88);
+  outline-offset: 1px;
+}
+
+.slot-skill-btn {
+  position: absolute;
+  right: 4px;
+  top: 22px;
+  z-index: 4;
+  min-width: 24px;
+  height: 18px;
+  padding: 0 0.18rem;
+  border-radius: 7px;
+  background: linear-gradient(135deg, rgba(14, 45, 64, 0.9), rgba(7, 20, 31, 0.9));
+  border: 1px solid rgba(123, 216, 245, 0.42);
+  color: #d9f6ff;
+  font-size: 0.45rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.03rem;
+  cursor: pointer;
+  user-select: none;
+  box-shadow: 0 2px 10px rgba(6, 14, 22, 0.5);
+}
+
+.slot-skill-btn.armed {
+  background: linear-gradient(135deg, rgba(31, 83, 117, 0.94), rgba(11, 33, 47, 0.94));
+  border-color: rgba(151, 236, 255, 0.76);
+  color: #f1fdff;
+}
+
+.slot-skill-btn.disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.slot-skill-cd {
+  opacity: 0.8;
+  font-size: 0.42rem;
+}
+
 .hand-card {
   width: 76px;
   min-width: 76px;

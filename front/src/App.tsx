@@ -134,6 +134,12 @@ type UnitState = {
   Cooldown?: number;
   IsTank?: boolean;
   SummonedInTurn?: number;
+  SkillName?: string;
+  SkillCode?: string;
+  SkillTrigger?: string;
+  SkillTarget?: string;
+  SkillCooldown?: number;
+  SkillCooldownLeft?: number;
   Effects?: Array<{ EffectType?: string; TurnsLeft?: number; Value?: number }>;
   instance_id?: string;
   template_id?: string;
@@ -143,6 +149,12 @@ type UnitState = {
   cooldown?: number;
   is_tank?: boolean;
   summoned_in_turn?: number;
+  skill_name?: string;
+  skill_code?: string;
+  skill_trigger?: string;
+  skill_target?: string;
+  skill_cooldown?: number;
+  skill_cooldown_left?: number;
   effects?: Array<{ effect_type?: string; turns_left?: number; value?: number }>;
 };
 
@@ -222,6 +234,18 @@ type CardPreview = {
   buffValue?: number;
   duration?: number;
 };
+
+const SKILL_TRIGGER_ACTIVE = "active";
+const TARGET_NONE = "none";
+const TARGET_SELF = "self";
+const TARGET_ALLY_UNIT = "ally_unit";
+const TARGET_ENEMY_UNIT = "enemy_unit";
+const TARGET_ALLY_ALL = "ally_all";
+const TARGET_ENEMY_ALL = "enemy_all";
+const TARGET_BOTH_ALL = "both_all";
+const TARGET_ENEMY_SPLASH = "enemy_splash";
+const TARGET_ALLY_SPLASH = "ally_splash";
+const TARGET_ALLY_GRAVE_SINGLE = "ally_grave_single";
 
 const defaultDeck: DeckEntry[] = [
   { kind: "battle", template_id: "imperial_guardian", count: 5 },
@@ -353,6 +377,30 @@ function unitSummonedInTurn(unit: UnitState): number {
   return unit.summoned_in_turn ?? unit.SummonedInTurn ?? -1;
 }
 
+function unitSkillName(unit: UnitState): string {
+  return unit.skill_name ?? unit.SkillName ?? "";
+}
+
+function unitSkillCode(unit: UnitState): string {
+  return unit.skill_code ?? unit.SkillCode ?? "";
+}
+
+function unitSkillTrigger(unit: UnitState): string {
+  return unit.skill_trigger ?? unit.SkillTrigger ?? "";
+}
+
+function unitSkillTarget(unit: UnitState): string {
+  return unit.skill_target ?? unit.SkillTarget ?? "";
+}
+
+function unitSkillCooldown(unit: UnitState): number {
+  return unit.skill_cooldown ?? unit.SkillCooldown ?? 0;
+}
+
+function unitSkillCooldownLeft(unit: UnitState): number {
+  return unit.skill_cooldown_left ?? unit.SkillCooldownLeft ?? 0;
+}
+
 function heroAbilityManaCost(player: MatchPlayer): number {
   return player.hero_ability_mana_cost ?? player.HeroAbilityManaCost ?? 0;
 }
@@ -428,6 +476,7 @@ export default function App() {
   const [selectedHandCardId, setSelectedHandCardId] = useState("");
   const [selectedOwnUnitId, setSelectedOwnUnitId] = useState("");
   const [selectedEnemyUnitId, setSelectedEnemyUnitId] = useState("");
+  const [selectedSkillCasterId, setSelectedSkillCasterId] = useState("");
 
   const streamRef = useRef<EventSource | null>(null);
   const battleBoardRef = useRef<HTMLElement | null>(null);
@@ -489,6 +538,23 @@ export default function App() {
       myPlayer &&
       selectedMatch.active_player === myPlayer.player_id,
   );
+  const selectedSkillCaster = useMemo(() => {
+    if (!myPlayer || !selectedSkillCasterId) {
+      return null;
+    }
+    return (
+      myPlayer.table.find((entry) => entry && unitInstanceId(entry) === selectedSkillCasterId) ??
+      null
+    );
+  }, [myPlayer, selectedSkillCasterId]);
+  useEffect(() => {
+    if (!selectedSkillCasterId) {
+      return;
+    }
+    if (!selectedSkillCaster) {
+      setSelectedSkillCasterId("");
+    }
+  }, [selectedSkillCasterId, selectedSkillCaster]);
   useEffect(() => {
     if (!activeBattle) {
       return;
@@ -863,10 +929,94 @@ export default function App() {
     pushToast(`Battle #${match.match_id} deployed`);
   }
 
+  function targetLabel(target: string): string {
+    switch (target) {
+      case TARGET_SELF:
+        return "self";
+      case TARGET_ALLY_UNIT:
+        return "ally unit";
+      case TARGET_ENEMY_UNIT:
+        return "enemy unit";
+      case TARGET_ALLY_ALL:
+        return "all allies";
+      case TARGET_ENEMY_ALL:
+        return "all enemies";
+      case TARGET_BOTH_ALL:
+        return "all units";
+      case TARGET_ENEMY_SPLASH:
+        return "enemy splash center";
+      case TARGET_ALLY_SPLASH:
+        return "ally splash center";
+      case TARGET_ALLY_GRAVE_SINGLE:
+        return "ally grave card";
+      case TARGET_NONE:
+      default:
+        return "no target";
+    }
+  }
+
+  function canSelectUnitAsSkillTarget(caster: UnitState, side: "own" | "enemy", unit: UnitState): boolean {
+    const target = unitSkillTarget(caster);
+    if (side === "own") {
+      if (target === TARGET_SELF) {
+        return unitInstanceId(unit) === unitInstanceId(caster);
+      }
+      return target === TARGET_ALLY_UNIT || target === TARGET_ALLY_SPLASH;
+    }
+    return target === TARGET_ENEMY_UNIT || target === TARGET_ENEMY_SPLASH;
+  }
+
+  async function castSkill(casterId: string, targetInstanceId = "") {
+    await applyAction(
+      {
+        type: "card_skill",
+        card_instance_id: casterId,
+        target_instance_id: targetInstanceId,
+      },
+      "Card skill activated",
+    );
+  }
+
+  async function startSkillCast(unit: UnitState) {
+    const casterId = unitInstanceId(unit);
+    const skillCode = unitSkillCode(unit);
+    if (!skillCode || unitSkillTrigger(unit) !== SKILL_TRIGGER_ACTIVE) {
+      pushToast("This unit has no active skill", "error");
+      return;
+    }
+    if (!isMyTurn) {
+      pushToast("Wait for your turn", "error");
+      return;
+    }
+    if (unitSkillCooldownLeft(unit) > 0) {
+      pushToast(`Skill on cooldown (${unitSkillCooldownLeft(unit)})`, "error");
+      return;
+    }
+    const target = unitSkillTarget(unit);
+    if (target === TARGET_ALLY_GRAVE_SINGLE) {
+      pushToast("Grave target picker is not in UI yet", "error");
+      return;
+    }
+    if (target === TARGET_NONE || target === TARGET_ALLY_ALL || target === TARGET_ENEMY_ALL || target === TARGET_BOTH_ALL) {
+      await castSkill(casterId);
+      return;
+    }
+    if (target === TARGET_SELF) {
+      await castSkill(casterId, casterId);
+      return;
+    }
+    setSelectedSkillCasterId(casterId);
+    setSelectedOwnUnitId("");
+    setSelectedEnemyUnitId("");
+    const skillName = unitSkillName(unit) || resolveAssetLabel(unitTemplateId(unit));
+    setActionStatus(`Skill mode: ${skillName}. Pick ${targetLabel(target)}.`);
+  }
+
   function clearSelections() {
     setSelectedHandCardId("");
     setSelectedOwnUnitId("");
     setSelectedEnemyUnitId("");
+    setSelectedSkillCasterId("");
   }
 
   async function applyAction(payload: Record<string, unknown>, successText: string) {
@@ -1000,6 +1150,15 @@ export default function App() {
   }
 
   async function handleOwnUnitClick(unit: UnitState) {
+    if (selectedSkillCaster) {
+      if (!canSelectUnitAsSkillTarget(selectedSkillCaster, "own", unit)) {
+        setActionStatus(`Invalid target for ${targetLabel(unitSkillTarget(selectedSkillCaster))}`);
+        return;
+      }
+      await castSkill(unitInstanceId(selectedSkillCaster), unitInstanceId(unit));
+      return;
+    }
+
     if (selectedCard && cardKind(selectedCard) === "buff") {
       await applyAction(
         {
@@ -1017,6 +1176,15 @@ export default function App() {
   }
 
   async function handleEnemyUnitClick(unit: UnitState) {
+    if (selectedSkillCaster) {
+      if (!canSelectUnitAsSkillTarget(selectedSkillCaster, "enemy", unit)) {
+        setActionStatus(`Invalid target for ${targetLabel(unitSkillTarget(selectedSkillCaster))}`);
+        return;
+      }
+      await castSkill(unitInstanceId(selectedSkillCaster), unitInstanceId(unit));
+      return;
+    }
+
     if (selectedCard) {
       setSelectedEnemyUnitId(unitInstanceId(unit));
       setActionStatus("Enemy unit marked");
@@ -1040,6 +1208,11 @@ export default function App() {
   }
 
   async function handleEnemyHeroClick() {
+    if (selectedSkillCaster) {
+      pushToast("This card skill does not target hero in current UI", "error");
+      return;
+    }
+
     if (selectedOwnUnitId) {
       await applyAction(
         {
@@ -1057,7 +1230,7 @@ export default function App() {
   }
 
   function startUnitDrag(unit: UnitState, clientX: number, clientY: number) {
-    if (selectedCard || !selectedMatch || !myPlayer) {
+    if (selectedCard || selectedSkillCaster || !selectedMatch || !myPlayer) {
       return;
     }
     const rect = battleBoardRef.current?.getBoundingClientRect();
@@ -1111,7 +1284,13 @@ export default function App() {
       return <button className="slot empty" onClick={() => handlePlaySelectedCard(slot)}>+</button>;
     }
 
-    const selected = side === "own" ? selectedOwnUnitId === unitInstanceId(unit) : selectedEnemyUnitId === unitInstanceId(unit);
+    const selectedByClicks = side === "own" ? selectedOwnUnitId === unitInstanceId(unit) : selectedEnemyUnitId === unitInstanceId(unit);
+    const selectedBySkill = side === "own" && selectedSkillCasterId === unitInstanceId(unit);
+    const selected = selectedByClicks || selectedBySkill;
+    const skillTargetable = Boolean(
+      selectedSkillCaster &&
+        canSelectUnitAsSkillTarget(selectedSkillCaster, side, unit),
+    );
     const tone = getAssetTone(unitTemplateId(unit));
     const meta = cardCatalogEntry(unitTemplateId(unit));
     const cooldownLeft = unitCooldown(unit);
@@ -1123,10 +1302,14 @@ export default function App() {
     const isTank = unitIsTank(unit);
     const ownerTurns = side === "own" ? (myPlayer?.turns ?? -1) : (enemyPlayer?.turns ?? -1);
     const isDeployed = ownerTurns >= 0 && unitSummonedInTurn(unit) === ownerTurns;
+    const hasActiveSkill = unitSkillCode(unit) !== "" && unitSkillTrigger(unit) === SKILL_TRIGGER_ACTIVE;
+    const skillLeft = unitSkillCooldownLeft(unit);
+    const skillBase = unitSkillCooldown(unit);
+    const skillDisabled = skillLeft > 0 || !isMyTurn || Boolean(selectedCard);
 
     return (
       <button
-        className={`slot tone-${tone} ${selected ? "selected" : ""}`}
+        className={`slot tone-${tone} ${selected ? "selected" : ""} ${skillTargetable ? "skill-targetable" : ""} ${selectedBySkill ? "skill-caster" : ""}`}
         data-unit-id={unitInstanceId(unit)}
         data-slot-side={side}
         data-attack-target={side === "enemy" ? "enemy-unit" : undefined}
@@ -1148,6 +1331,35 @@ export default function App() {
           fallbackSrc={resolveCardFallbackSrc()}
           className="slot-media"
         />
+        {side === "own" && hasActiveSkill && (
+          <span
+            className={`slot-skill-btn ${selectedBySkill ? "armed" : ""} ${skillDisabled ? "disabled" : ""}`}
+            onClick={(event) => {
+              event.preventDefault();
+              event.stopPropagation();
+              if (skillDisabled) {
+                return;
+              }
+              void runTask(() => startSkillCast(unit));
+            }}
+            title={unitSkillName(unit) || unitSkillCode(unit) || "Card skill"}
+            role="button"
+            tabIndex={0}
+            onKeyDown={(event) => {
+              if (event.key !== "Enter" && event.key !== " ") {
+                return;
+              }
+              event.preventDefault();
+              if (skillDisabled) {
+                return;
+              }
+              void runTask(() => startSkillCast(unit));
+            }}
+          >
+            {skillLeft > 0 ? `S ${skillLeft}` : "SK"}
+            {skillBase > 0 && <span className="slot-skill-cd">/{skillBase}</span>}
+          </span>
+        )}
         <div className="slot-topline">
           <span className="card-chip mana">{meta?.mana_cost ?? 0}</span>
           <span className="slot-tags">
