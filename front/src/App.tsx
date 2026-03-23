@@ -1624,6 +1624,26 @@ export default function App() {
                           fallbackSrc={resolveCardFallbackSrc()}
                           className="asset-frame-media"
                         />
+                        {card.kind === "battle" && (
+                          <div className="asset-top-stats" aria-label="Card stats">
+                            <span className="asset-stat-chip mana" title="Mana">
+                              <span className="asset-stat-icon">◈</span>
+                              {card.mana_cost}
+                            </span>
+                            <span className="asset-stat-chip attack" title="Attack">
+                              <span className="asset-stat-icon">⚔</span>
+                              {card.attack}
+                            </span>
+                            <span className="asset-stat-chip hp" title="Health">
+                              <span className="asset-stat-icon">❤</span>
+                              {card.health_points}
+                            </span>
+                            <span className="asset-stat-chip cooldown" title="Cooldown">
+                              <span className="asset-stat-icon">⏱</span>
+                              {card.cooldown}
+                            </span>
+                          </div>
+                        )}
                         <button
                           className="asset-add"
                           disabled={exhausted}
