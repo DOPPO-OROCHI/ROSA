@@ -1626,18 +1626,18 @@ export default function App() {
                         />
                         {card.kind === "battle" && (
                           <div className="asset-top-stats" aria-label="Card stats">
-                            <div className="asset-top-stats-labels">
-                              <span className="asset-top-stat-label">M</span>
-                              <span className="asset-top-stat-label">ATK</span>
-                              <span className="asset-top-stat-label">HP</span>
-                              <span className="asset-top-stat-label">CD</span>
-                            </div>
-                            <div className="asset-top-stats-values">
+                            <span className="asset-top-stat-item">
+                              <span className="asset-top-stat-icon mana" aria-hidden="true" />
                               <span className="asset-top-stat-value">{card.mana_cost}</span>
+                            </span>
+                            <span className="asset-top-stat-item">
+                              <span className="asset-top-stat-icon attack" aria-hidden="true" />
                               <span className="asset-top-stat-value">{card.attack}</span>
+                            </span>
+                            <span className="asset-top-stat-item">
+                              <span className="asset-top-stat-icon health" aria-hidden="true" />
                               <span className="asset-top-stat-value">{card.health_points}</span>
-                              <span className="asset-top-stat-value">{card.cooldown}</span>
-                            </div>
+                            </span>
                           </div>
                         )}
                         <button
