@@ -561,6 +561,8 @@ export default function App() {
   const [enemyHeroHpPeak, setEnemyHeroHpPeak] = useState(0);
   const [clockTickMs, setClockTickMs] = useState(() => Date.now());
   const [serverClockOffsetSec, setServerClockOffsetSec] = useState(0);
+  const [drawFxTick, setDrawFxTick] = useState(0);
+  const prevHandCountRef = useRef<number | null>(null);
 
   function pushToast(message: string, tone: ToastEntry["tone"] = "info") {
     const id = toastIdRef.current++;
@@ -613,6 +615,7 @@ export default function App() {
       myPlayer &&
       selectedMatch.active_player === myPlayer.player_id,
   );
+  const myHandCount = myPlayer?.hand?.length ?? myPlayer?.hand_count ?? 0;
   const selectedSkillCaster = useMemo(() => {
     if (!myPlayer || !selectedSkillCasterId) {
       return null;
@@ -646,6 +649,21 @@ export default function App() {
     const nowSec = Math.floor(Date.now() / 1000);
     setServerClockOffsetSec(selectedMatch.server_now - nowSec);
   }, [selectedMatch?.server_now, selectedMatch?.match_id]);
+  useEffect(() => {
+    if (!activeBattle || !myPlayer) {
+      prevHandCountRef.current = null;
+      return;
+    }
+    const prev = prevHandCountRef.current;
+    if (prev === null) {
+      prevHandCountRef.current = myHandCount;
+      return;
+    }
+    if (myHandCount > prev) {
+      setDrawFxTick((value) => value + 1);
+    }
+    prevHandCountRef.current = myHandCount;
+  }, [activeBattle, myPlayer, myHandCount]);
   const clientNowSec = Math.floor(clockTickMs / 1000);
   const syncedNowSec = clientNowSec + serverClockOffsetSec;
   const turnTotalSec = Math.max(1, selectedMatch?.turn_time_sec ?? 45);
@@ -1575,13 +1593,11 @@ export default function App() {
             {skillBase > 0 && <span className="slot-skill-cd">{` ${skillLeft}/${skillBase}`}</span>}
           </span>
         )}
-        <div className="slot-topline">
-          <span className="card-chip mana">{meta?.mana_cost ?? 0}</span>
-          <span className="slot-tags">
-            {isTank && <span className="card-chip tank">TANK</span>}
-            <span className="card-chip side">{side === "own" ? "ALLY" : "HOSTILE"}</span>
-          </span>
-        </div>
+        {isTank && (
+          <div className="slot-topline">
+            <span className="card-chip tank">TANK</span>
+          </div>
+        )}
         {isDeployed && <div className="slot-deployed-label">-Deployed-</div>}
         {isOnCooldown && <div className="slot-cooldown-label">-CoolDown-</div>}
         <div className="slot-stats">
@@ -2279,13 +2295,10 @@ export default function App() {
                     </div>
                   </div>
                   <div className="battle-deck-anchor" aria-label="Deck">
-                    <div className="battle-deck-stack">
-                      <span className="battle-deck-card back-3" />
-                      <span className="battle-deck-card back-2" />
-                      <span className="battle-deck-card back-1" />
-                    </div>
+                    <span className="battle-deck-peek" />
                     <span className="battle-deck-count">{displayedDeckCount}</span>
                   </div>
+                  {drawFxTick > 0 && <span key={drawFxTick} className="draw-card-fx" aria-hidden="true" />}
                 </>
               )}
             </section>

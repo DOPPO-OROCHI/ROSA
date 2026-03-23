@@ -1929,25 +1929,21 @@ pre {
 
 .battle-deck-anchor {
   position: absolute;
-  right: 8px;
-  bottom: -18px;
+  right: -24px;
+  bottom: 82px;
   z-index: 6;
-  width: 72px;
-  height: 104px;
+  width: 56px;
+  height: 84px;
   pointer-events: none;
 }
 
-.battle-deck-stack {
+.battle-deck-peek {
   position: absolute;
-  inset: 0;
-}
-
-.battle-deck-card {
-  position: absolute;
-  left: 50%;
-  width: 64px;
-  height: 96px;
-  border-radius: 13px;
+  left: 10px;
+  top: -2px;
+  width: 54px;
+  height: 80px;
+  border-radius: 12px;
   border: 1px solid rgba(231, 219, 192, 0.2);
   background:
     linear-gradient(180deg, rgba(72, 21, 19, 0.9), rgba(11, 15, 22, 0.95)),
@@ -1961,27 +1957,14 @@ pre {
   box-shadow:
     0 16px 30px rgba(0, 0, 0, 0.44),
     inset 0 0 22px rgba(0, 0, 0, 0.34);
-  transform-origin: center bottom;
-}
-
-.battle-deck-card.back-3 {
-  transform: translateX(-50%) rotate(-8deg);
-  opacity: 0.72;
-}
-
-.battle-deck-card.back-2 {
-  transform: translateX(-50%) rotate(-2deg);
-  opacity: 0.86;
-}
-
-.battle-deck-card.back-1 {
-  transform: translateX(-50%) rotate(5deg);
+  transform: rotate(8deg);
+  opacity: 0.92;
 }
 
 .battle-deck-count {
   position: absolute;
-  right: -6px;
-  bottom: 28px;
+  left: -8px;
+  bottom: 2px;
   min-width: 28px;
   height: 28px;
   border-radius: 999px;
@@ -1995,6 +1978,43 @@ pre {
   background: linear-gradient(135deg, rgba(20, 82, 107, 0.96), rgba(10, 35, 49, 0.96));
   border: 1px solid rgba(121, 194, 214, 0.4);
   box-shadow: 0 8px 18px rgba(0, 0, 0, 0.36);
+}
+
+.draw-card-fx {
+  position: absolute;
+  right: -20px;
+  bottom: 82px;
+  width: 54px;
+  height: 80px;
+  border-radius: 12px;
+  border: 1px solid rgba(231, 219, 192, 0.24);
+  background:
+    linear-gradient(180deg, rgba(72, 21, 19, 0.9), rgba(11, 15, 22, 0.95)),
+    repeating-linear-gradient(
+      35deg,
+      rgba(197, 151, 73, 0.1),
+      rgba(197, 151, 73, 0.1) 6px,
+      transparent 6px,
+      transparent 12px
+    );
+  box-shadow:
+    0 16px 30px rgba(0, 0, 0, 0.44),
+    inset 0 0 22px rgba(0, 0, 0, 0.34);
+  pointer-events: none;
+  z-index: 8;
+  animation: draw-card-to-hand 480ms ease-out forwards;
+}
+
+@keyframes draw-card-to-hand {
+  0% {
+    opacity: 0.96;
+    transform: translate(0, 0) rotate(8deg) scale(0.95);
+  }
+
+  100% {
+    opacity: 0;
+    transform: translate(-170px, 6px) rotate(-10deg) scale(0.72);
+  }
 }
 
 .battle-midline {
@@ -2463,6 +2483,7 @@ pre {
   left: 4px;
   right: 4px;
   z-index: 2;
+  justify-content: flex-end;
 }
 
 .slot-topline .card-chip {
