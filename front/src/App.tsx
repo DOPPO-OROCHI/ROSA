@@ -1,4 +1,4 @@
-﻿import { type CSSProperties, useEffect, useMemo, useRef, useState } from "react";
+import { type CSSProperties, type MouseEvent, useEffect, useMemo, useRef, useState } from "react";
 import {
   getAssetTone,
   resolveAssetLabel,
@@ -1153,6 +1153,11 @@ export default function App() {
 
   async function handlePlaySelectedCard(slot: number) {
     if (!selectedCard) {
+      if (selectedHandCardId || selectedOwnUnitId || selectedEnemyUnitId || selectedSkillCasterId) {
+        clearSelections();
+        setActionStatus("Selection cleared");
+        return;
+      }
       pushToast("Select a card from hand first", "error");
       return;
     }
@@ -1461,6 +1466,21 @@ export default function App() {
     );
   }
 
+  function handleBattleBoardEmptyClick(event: MouseEvent<HTMLElement>) {
+    const target = event.target as HTMLElement;
+    if (
+      target.closest(
+        ".slot, .hand-card, .hero-orb-button, .hero-skill-mini, .end-turn-floating, .ghost-button, .slot-skill-btn, .battle-deck-anchor",
+      )
+    ) {
+      return;
+    }
+    if (selectedHandCardId || selectedOwnUnitId || selectedEnemyUnitId || selectedSkillCasterId) {
+      clearSelections();
+      setActionStatus("Selection cleared");
+    }
+  }
+
   function polarToCartesian(cx: number, cy: number, r: number, angleDeg: number) {
     const rad = (angleDeg * Math.PI) / 180;
     return {
@@ -1739,7 +1759,7 @@ export default function App() {
           <section className="screen-grid">
             <div className="inventory-back-row">
               <button className="ghost-button" onClick={() => setTab("home")}>
-                ← Back
+                {"<"} Back
               </button>
             </div>
             <div className="panel inventory-panel">
@@ -1957,7 +1977,7 @@ export default function App() {
                   onClick={() => setCatalogPage((prev) => Math.max(0, prev - 1))}
                   disabled={catalogPage === 0}
                 >
-                  ←
+                  {"<"}
                 </button>
                 <span>
                   {catalogPage + 1} / {catalogPages}
@@ -1967,7 +1987,7 @@ export default function App() {
                   onClick={() => setCatalogPage((prev) => Math.min(catalogPages - 1, prev + 1))}
                   disabled={catalogPage >= catalogPages - 1}
                 >
-                  →
+                  {">"}
                 </button>
               </div>
             </div>
@@ -1979,6 +1999,7 @@ export default function App() {
             <section
               className="battle-board panel"
               ref={battleBoardRef}
+              onClick={handleBattleBoardEmptyClick}
             >
               <button className="ghost-button leave-inline in-board" onClick={() => void runTask(handleLeaveMatch)}>
                 Leave Match
