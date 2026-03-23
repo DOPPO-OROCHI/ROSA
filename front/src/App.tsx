@@ -280,6 +280,13 @@ const skillFallbackByTemplate: Record<string, SkillMeta> = {
     target: TARGET_SELF,
     cooldown: 3,
   },
+  machine_gun_crew: {
+    name: "Крупнокалиберные боеприпасы",
+    code: "apply_buff",
+    trigger: SKILL_TRIGGER_ACTIVE,
+    target: TARGET_SELF,
+    cooldown: 3,
+  },
   snipers: {
     name: "Устранение",
     code: "damage_single",
