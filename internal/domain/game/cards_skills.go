@@ -41,11 +41,7 @@ func castDamageSingle(
 	if m == nil || caster == nil || owner == nil || enemy == nil {
 		return errors.New("nil state")
 	}
-	if a.TargetInstanceID == "" {
-		return ErrCardSkillBadTarget
-	}
-	slot, target := enemy.FindSlot(a.TargetInstanceID)
-	if slot < 0 || target == nil {
+	if !a.AttackHero && a.TargetInstanceID == "" {
 		return ErrCardSkillBadTarget
 	}
 	hasTank := false
@@ -57,10 +53,43 @@ func castDamageSingle(
 		}
 	}
 	ignoreTank := caster.SkillParamsJSON == cards.IgnoreTankTrue
+	dmg := caster.SkillValue
+	if a.AttackHero {
+		if !ignoreTank && hasTank {
+			return ErrCardSkillTargetTankBlocked
+		}
+		enemy.HeroHP -= dmg
+		heroID := fmt.Sprintf("hero:p%d", 1-a.PlayerIndex)
+		m.Events = append(m.Events, Event{
+			Type:             string(EventCardSkill),
+			PlayerIndex:      a.PlayerIndex,
+			SourceKind:       string(SourceUnit),
+			SourceInstanceID: caster.InstanceID,
+			SourceTemplateID: caster.TemplateID,
+			Targets: []EventTarget{{
+				InstanceID: heroID,
+				Amount:     dmg,
+				Died:       enemy.HeroHP <= 0,
+				NewHP:      enemy.HeroHP,
+			}},
+		})
+		if enemy.HeroHP <= 0 {
+			m.Finished = true
+			if a.PlayerIndex == 0 {
+				m.Result = MatchWinP1
+			} else {
+				m.Result = MatchWinP2
+			}
+		}
+		return nil
+	}
+	slot, target := enemy.FindSlot(a.TargetInstanceID)
+	if slot < 0 || target == nil {
+		return ErrCardSkillBadTarget
+	}
 	if !ignoreTank && hasTank && !target.IsTank {
 		return ErrCardSkillTargetTankBlocked
 	}
-	dmg := caster.SkillValue
 	target.HP -= dmg
 	died := target.HP <= 0
 	newHP := target.HP

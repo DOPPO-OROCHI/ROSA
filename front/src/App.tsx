@@ -256,6 +256,9 @@ const TARGET_BOTH_ALL = "both_all";
 const TARGET_ENEMY_SPLASH = "enemy_splash";
 const TARGET_ALLY_SPLASH = "ally_splash";
 const TARGET_ALLY_GRAVE_SINGLE = "ally_grave_single";
+const SKILL_DAMAGE_SINGLE = "damage_single";
+
+type HeroSpellTargetMode = "own-unit" | "enemy-unit" | "enemy-any" | "enemy-hero-only";
 
 type SkillMeta = {
   name: string;
@@ -547,6 +550,8 @@ export default function App() {
   const [selectedOwnUnitId, setSelectedOwnUnitId] = useState("");
   const [selectedEnemyUnitId, setSelectedEnemyUnitId] = useState("");
   const [selectedSkillCasterId, setSelectedSkillCasterId] = useState("");
+  const [heroSpellArmed, setHeroSpellArmed] = useState(false);
+  const [heroAttackArmed, setHeroAttackArmed] = useState(false);
 
   const streamRef = useRef<EventSource | null>(null);
   const battleBoardRef = useRef<HTMLElement | null>(null);
@@ -1025,6 +1030,44 @@ export default function App() {
     }
   }
 
+  function heroSpellTargetMode(heroCode: string): HeroSpellTargetMode {
+    if (heroCode === "imperial_commander" || heroCode === "black_cell" || heroCode === "karn" || heroCode === "slavic_priest") {
+      return "own-unit";
+    }
+    if (heroCode === "the_system") {
+      return "enemy-unit";
+    }
+    if (heroCode === "suprime_lider") {
+      return "enemy-any";
+    }
+    return "enemy-hero-only";
+  }
+
+  function canSelectUnitAsHeroSpellTarget(side: "own" | "enemy"): boolean {
+    if (!heroSpellArmed || !myPlayer) {
+      return false;
+    }
+    const mode = heroSpellTargetMode(myPlayer.hero_code);
+    if (side === "own") {
+      return mode === "own-unit";
+    }
+    return mode === "enemy-unit" || mode === "enemy-any";
+  }
+
+  function canSelectEnemyHeroAsHeroSpellTarget(): boolean {
+    if (!heroSpellArmed || !myPlayer) {
+      return false;
+    }
+    const mode = heroSpellTargetMode(myPlayer.hero_code);
+    return mode === "enemy-any" || mode === "enemy-hero-only";
+  }
+
+  function canCardSkillTargetEnemyHero(caster: UnitState): boolean {
+    const target = unitSkillTarget(caster);
+    const code = unitSkillCode(caster);
+    return target === TARGET_ENEMY_UNIT && code === SKILL_DAMAGE_SINGLE;
+  }
+
   function canSelectUnitAsSkillTarget(caster: UnitState, side: "own" | "enemy", unit: UnitState): boolean {
     const target = unitSkillTarget(caster);
     if (side === "own") {
@@ -1036,12 +1079,13 @@ export default function App() {
     return target === TARGET_ENEMY_UNIT || target === TARGET_ENEMY_SPLASH;
   }
 
-  async function castSkill(casterId: string, targetInstanceId = "") {
+  async function castSkill(casterId: string, targetInstanceId = "", attackHero = false) {
     await applyAction(
       {
         type: "card_skill",
         card_instance_id: casterId,
         target_instance_id: targetInstanceId,
+        attack_hero: attackHero,
       },
       "Card skill activated",
     );
@@ -1080,6 +1124,8 @@ export default function App() {
       await castSkill(casterId, casterId);
       return;
     }
+    setHeroSpellArmed(false);
+    setHeroAttackArmed(false);
     setSelectedSkillCasterId(casterId);
     setSelectedOwnUnitId("");
     setSelectedEnemyUnitId("");
@@ -1091,6 +1137,8 @@ export default function App() {
     setSelectedOwnUnitId("");
     setSelectedEnemyUnitId("");
     setSelectedSkillCasterId("");
+    setHeroSpellArmed(false);
+    setHeroAttackArmed(false);
   }
 
   async function applyAction(payload: Record<string, unknown>, successText: string) {
@@ -1153,7 +1201,7 @@ export default function App() {
 
   async function handlePlaySelectedCard(slot: number) {
     if (!selectedCard) {
-      if (selectedHandCardId || selectedOwnUnitId || selectedEnemyUnitId || selectedSkillCasterId) {
+      if (selectedHandCardId || selectedOwnUnitId || selectedEnemyUnitId || selectedSkillCasterId || heroSpellArmed || heroAttackArmed) {
         clearSelections();
         setActionStatus("Selection cleared");
         return;
@@ -1186,42 +1234,62 @@ export default function App() {
       pushToast("No battle selected", "error");
       return;
     }
-    const heroCode = myPlayer.hero_code;
-    let payload: Record<string, unknown>;
-
-    if (heroCode === "imperial_commander" || heroCode === "black_cell" || heroCode === "karn" || heroCode === "slavic_priest") {
-      if (!selectedOwnUnitId) {
-        pushToast("Select your unit for this hero ability", "error");
-        return;
-      }
-      payload = {
-        type: "hero_spell",
-        target_instance_id: selectedOwnUnitId,
-      };
-    } else if (heroCode === "the_system") {
-      if (!selectedEnemyUnitId) {
-        pushToast("Select an enemy unit for this hero ability", "error");
-        return;
-      }
-      payload = {
-        type: "hero_spell",
-        target_instance_id: selectedEnemyUnitId,
-      };
-    } else if (heroCode === "suprime_lider") {
-      payload = selectedEnemyUnitId
-        ? {
-            type: "hero_spell",
-            target_instance_id: selectedEnemyUnitId,
-          }
-        : {
-            type: "hero_spell",
-            attack_hero: true,
-          };
-    } else {
-      payload = { type: "hero_spell", attack_hero: true };
+    if (!isMyTurn) {
+      pushToast("Wait for your turn", "error");
+      return;
     }
+    if (myPlayer.hero_ability_cooldown > 0) {
+      pushToast(`Hero skill on cooldown (${myPlayer.hero_ability_cooldown})`, "error");
+      return;
+    }
+    if (heroSpellArmed) {
+      setHeroSpellArmed(false);
+      setActionStatus("Hero skill selection canceled");
+      return;
+    }
+    const mode = heroSpellTargetMode(myPlayer.hero_code);
+    setHeroSpellArmed(true);
+    setHeroAttackArmed(false);
+    setSelectedSkillCasterId("");
+    setSelectedHandCardId("");
+    setSelectedOwnUnitId("");
+    setSelectedEnemyUnitId("");
+    const hint =
+      mode === "own-unit"
+        ? "Hero skill armed: pick your unit"
+        : mode === "enemy-unit"
+          ? "Hero skill armed: pick enemy unit"
+          : mode === "enemy-any"
+            ? "Hero skill armed: pick enemy unit or enemy hero"
+            : "Hero skill armed: pick enemy hero";
+    setActionStatus(hint);
+  }
 
-    await applyAction(payload, "Hero ability activated");
+  function handleHeroAttackToggle() {
+    if (!selectedMatch || !myPlayer) {
+      pushToast("No battle selected", "error");
+      return;
+    }
+    if (!isMyTurn) {
+      pushToast("Wait for your turn", "error");
+      return;
+    }
+    if (myPlayer.hero_attack_cooldown > 0) {
+      pushToast(`Hero attack on cooldown (${myPlayer.hero_attack_cooldown})`, "error");
+      return;
+    }
+    if (myPlayer.hero_attack_power <= 0) {
+      pushToast("Hero attack is not available", "error");
+      return;
+    }
+    const next = !heroAttackArmed;
+    setHeroAttackArmed(next);
+    setHeroSpellArmed(false);
+    setSelectedSkillCasterId("");
+    setSelectedHandCardId("");
+    setSelectedOwnUnitId("");
+    setSelectedEnemyUnitId("");
+    setActionStatus(next ? "Hero attack armed: pick enemy unit or hero" : "Hero attack canceled");
   }
 
   async function handleLeaveMatch() {
@@ -1229,6 +1297,17 @@ export default function App() {
   }
 
   async function handleOwnUnitClick(unit: UnitState) {
+    if (heroSpellArmed && canSelectUnitAsHeroSpellTarget("own")) {
+      await applyAction(
+        {
+          type: "hero_spell",
+          target_instance_id: unitInstanceId(unit),
+        },
+        "Hero ability activated",
+      );
+      return;
+    }
+
     if (selectedSkillCaster) {
       if (!canSelectUnitAsSkillTarget(selectedSkillCaster, "own", unit)) {
         setActionStatus(`Invalid target for ${targetLabel(unitSkillTarget(selectedSkillCaster))}`);
@@ -1255,6 +1334,28 @@ export default function App() {
   }
 
   async function handleEnemyUnitClick(unit: UnitState) {
+    if (heroAttackArmed) {
+      await applyAction(
+        {
+          type: "hero_attack",
+          target_instance_id: unitInstanceId(unit),
+        },
+        "Hero attacked enemy unit",
+      );
+      return;
+    }
+
+    if (heroSpellArmed && canSelectUnitAsHeroSpellTarget("enemy")) {
+      await applyAction(
+        {
+          type: "hero_spell",
+          target_instance_id: unitInstanceId(unit),
+        },
+        "Hero ability activated",
+      );
+      return;
+    }
+
     if (selectedSkillCaster) {
       if (!canSelectUnitAsSkillTarget(selectedSkillCaster, "enemy", unit)) {
         setActionStatus(`Invalid target for ${targetLabel(unitSkillTarget(selectedSkillCaster))}`);
@@ -1287,8 +1388,34 @@ export default function App() {
   }
 
   async function handleEnemyHeroClick() {
+    if (heroAttackArmed) {
+      await applyAction(
+        {
+          type: "hero_attack",
+          attack_hero: true,
+        },
+        "Hero attacked enemy hero",
+      );
+      return;
+    }
+
+    if (heroSpellArmed && canSelectEnemyHeroAsHeroSpellTarget()) {
+      await applyAction(
+        {
+          type: "hero_spell",
+          attack_hero: true,
+        },
+        "Hero ability activated",
+      );
+      return;
+    }
+
     if (selectedSkillCaster) {
-      pushToast("This card skill does not target hero in current UI", "error");
+      if (!canCardSkillTargetEnemyHero(selectedSkillCaster)) {
+        pushToast("This card skill cannot target hero", "error");
+        return;
+      }
+      await castSkill(unitInstanceId(selectedSkillCaster), "", true);
       return;
     }
 
@@ -1309,7 +1436,7 @@ export default function App() {
   }
 
   function startUnitDrag(unit: UnitState, clientX: number, clientY: number) {
-    if (selectedCard || selectedSkillCaster || !selectedMatch || !myPlayer) {
+    if (selectedCard || selectedSkillCaster || heroSpellArmed || heroAttackArmed || !selectedMatch || !myPlayer) {
       return;
     }
     const rect = battleBoardRef.current?.getBoundingClientRect();
@@ -1367,8 +1494,8 @@ export default function App() {
     const selectedBySkill = side === "own" && selectedSkillCasterId === unitInstanceId(unit);
     const selected = selectedByClicks || selectedBySkill;
     const skillTargetable = Boolean(
-      selectedSkillCaster &&
-        canSelectUnitAsSkillTarget(selectedSkillCaster, side, unit),
+      (selectedSkillCaster && canSelectUnitAsSkillTarget(selectedSkillCaster, side, unit)) ||
+        (heroSpellArmed && canSelectUnitAsHeroSpellTarget(side)),
     );
     const tone = getAssetTone(unitTemplateId(unit));
     const meta = cardCatalogEntry(unitTemplateId(unit));
@@ -1470,12 +1597,12 @@ export default function App() {
     const target = event.target as HTMLElement;
     if (
       target.closest(
-        ".slot, .hand-card, .hero-orb-button, .hero-skill-mini, .end-turn-floating, .ghost-button, .slot-skill-btn, .battle-deck-anchor",
+        ".slot, .hand-card, .hero-orb-button, .hero-skill-mini, .hero-attack-mini, .end-turn-floating, .ghost-button, .slot-skill-btn, .battle-deck-anchor",
       )
     ) {
       return;
     }
-    if (selectedHandCardId || selectedOwnUnitId || selectedEnemyUnitId || selectedSkillCasterId) {
+    if (selectedHandCardId || selectedOwnUnitId || selectedEnemyUnitId || selectedSkillCasterId || heroSpellArmed || heroAttackArmed) {
       clearSelections();
       setActionStatus("Selection cleared");
     }
@@ -2055,7 +2182,11 @@ export default function App() {
                       })}
                     </div>
                     <div className="hero-anchor top">
-                      <button className="hero-orb-button" onClick={() => void runTask(handleEnemyHeroClick)} data-attack-target="enemy-hero">
+                      <button
+                        className={`hero-orb-button ${canSelectEnemyHeroAsHeroSpellTarget() || heroAttackArmed || selectedOwnUnitId ? "hero-targetable" : ""}`}
+                        onClick={() => void runTask(handleEnemyHeroClick)}
+                        data-attack-target="enemy-hero"
+                      >
                         {renderHeroHud(enemyPlayer, enemyHeroHpPeak, true)}
                       </button>
                     </div>
@@ -2090,6 +2221,13 @@ export default function App() {
                       {myPlayer.table.map((unit, index) => renderUnitSlot(unit, "own", index))}
                     </div>
                     <div className="hero-anchor bottom">
+                      <button
+                        className={`hero-attack-mini ${heroAttackArmed ? "armed" : ""}`}
+                        onClick={handleHeroAttackToggle}
+                        title={`Hero attack (${myPlayer.hero_attack_power})`}
+                      >
+                        HA
+                      </button>
                       <button className="hero-skill-mini" onClick={() => void runTask(handleHeroSpell)}>
                         HS
                         <span className="hero-skill-mana">{heroAbilityManaCost(myPlayer)}</span>

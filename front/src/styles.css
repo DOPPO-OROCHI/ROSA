@@ -1774,6 +1774,28 @@ pre {
   font-weight: 700;
 }
 
+.hero-attack-mini {
+  position: absolute;
+  left: calc(50% - 112px);
+  top: 52%;
+  transform: translateY(-50%);
+  width: 46px;
+  height: 46px;
+  min-height: 46px;
+  padding: 0;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #4b1e2a, #812f45);
+  color: #ffeff4;
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+.hero-attack-mini.armed {
+  box-shadow:
+    0 0 0 2px rgba(255, 121, 149, 0.7),
+    0 0 14px rgba(255, 82, 129, 0.5);
+}
+
 .hero-skill-mana {
   position: absolute;
   right: -2px;
@@ -1812,6 +1834,10 @@ pre {
   border: 0;
   background: transparent;
   border-radius: 999px;
+}
+
+.hero-orb-button.hero-targetable .hero-orb {
+  filter: drop-shadow(0 0 10px rgba(112, 220, 255, 0.36));
 }
 
 .hero-orb.active-turn::before {
