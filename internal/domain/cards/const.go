@@ -79,7 +79,7 @@ const (
 // Пассивные умения карт
 // Триггеры. Когда срабатывают пассивки ?
 const (
-	PassiveTriggerContinious  = "continious"
+	PassiveTriggerContinuous  = "continuous"
 	PassiveTriggerTurnStart   = "turn_start"
 	PassiveTriggerTurnEnd     = "turn_end"
 	PassiveTriggerOnPlay      = "on_play"
@@ -87,6 +87,7 @@ const (
 	PassiveTriggerOnDeath     = "on_death"
 	PassiveTriggerOnAllyDead  = "on_ally_dead"
 	PassiveTriggerOnEnemyDead = "on_enemy_dead"
+	PassiveTriggerHitMe       = "on_hit_me"
 )
 
 // Таргеты. Кто получает эффекты пассивки ?
@@ -96,6 +97,8 @@ const (
 	PassiveTargetEnemyAll      = "enemy_all"
 	PassiveTargetBothAll       = "both_all"
 	PassiveTargetAllyLeftRight = "ally_left_right"
+	PassiveTargetRandomEnemy   = "random_enemy_unit"
+	PassiveTargetRandomAlly    = "random_ally_unit"
 
 	PassiveTargetAllyTypeDemonical  = "ally_type_demonical"
 	PassiveTargetAllyTypeMechanical = "ally_type_mechanical"
@@ -112,9 +115,10 @@ const (
 const (
 	PassiveEffectDamageUp          = "damage_up"
 	PassiveEffectHPUp              = "hp_up"
-	PassiveEffectCoolDownDown      = "coolwodn_down"
+	PassiveEffectCoolDownDown      = "cooldown_down"
 	PassiveEffectSkillDamageUp     = "skill_damage_up"
 	PassiveEffectSkillCooldownDown = "skill_cooldown_down"
+	PassiveEffectDamage            = "damage"
 )
 
 // Когда действует пассивка ?
@@ -126,7 +130,7 @@ const (
 	PassiveConditionHealerOnTable     = "healer_on_table"
 
 	//если на столе определенное количество карт
-	PassiveConditionCountAtLeats = "count_at_least" //<-если карт больше N
+	PassiveConditionCountAtLeast = "count_at_least" //<-если карт больше N
 	PassiveConditionCountAtMost  = "count_at_most"  //<-если карт меньше или ровно N
 	PassiveConditionExact        = "count_exact"    //<-если карт ровно N
 )
@@ -141,5 +145,5 @@ const (
 // Как считать бонусы ?
 const (
 	PassiveScaleFlat     = "flat"      //<- просто добавляем Х
-	PassiveSaclePerCount = "per_count" //<- за каждого +Х
+	PassiveScalePerCount = "per_count" //<- за каждого +Х
 )

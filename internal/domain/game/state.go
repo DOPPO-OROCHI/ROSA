@@ -61,31 +61,45 @@ type CardsInMatch struct {
 
 /*Состояние отдельно взятой карты внутри матча*/
 type UnitState struct {
-	InstanceID        string       //<-рандомносгенерированный айди
-	TemplateID        string       //<-чертеж карты
-	GamerCardID       uint         //<-айдишник карты с владения
-	CardLevel         int          //<-уровень карты владения
-	HP                int          //<-это копия статки карты, на момент выхода на стол
-	Attack            int          //<-это копия статки карты, на момент выхода на стол
-	SplashRadius      int          //<-радиус атаки
-	CanBeUpgraded     bool         //<-тонкий момент, этот параметр копируется из шаблона, а дальше используется для бафов
-	Cooldown          int          //<-кд карты
-	IsTank            bool         //<-является ли карта танком
-	SummonedInTurn    int          //<-этот параметр равен ходу, в который была призвана карта, чтобы она не могла
-	MaxHP             int          //<-максимальное кличество ХП
-	Effects           []UnitEffect //<-эффекты на карте. Используется в последствии. Ни одна карта в начале не имеет эффектов
-	CardType          string       //<-тип карты. Используется для апгрейдов
-	SkillImageKey     string
-	SkillName         string
-	SkillCode         string
-	SkillTrigger      string
-	SkillTarget       string
-	SkillValue        int
-	SkillDuration     int
-	SkillCooldown     int
-	SkillCooldownLeft int
-	SkillParamsJSON   string
-	ResurrectedUsed   bool
+	InstanceID            string       //<-рандомносгенерированный айди
+	TemplateID            string       //<-чертеж карты
+	GamerCardID           uint         //<-айдишник карты с владения
+	CardLevel             int          //<-уровень карты владения
+	HP                    int          //<-это копия статки карты, на момент выхода на стол
+	Attack                int          //<-это копия статки карты, на момент выхода на стол
+	SplashRadius          int          //<-радиус атаки
+	CanBeUpgraded         bool         //<-тонкий момент, этот параметр копируется из шаблона, а дальше используется для бафов
+	Cooldown              int          //<-кд карты
+	IsTank                bool         //<-является ли карта танком
+	SummonedInTurn        int          //<-этот параметр равен ходу, в который была призвана карта, чтобы она не могла
+	MaxHP                 int          //<-максимальное кличество ХП
+	Effects               []UnitEffect //<-эффекты на карте. Используется в последствии. Ни одна карта в начале не имеет эффектов
+	CardType              string       //<-тип карты. Используется для апгрейдов
+	SkillImageKey         string
+	SkillName             string
+	SkillCode             string
+	SkillTrigger          string
+	SkillTarget           string
+	SkillValue            int
+	SkillDuration         int
+	SkillCooldown         int
+	SkillCooldownLeft     int
+	SkillParamsJSON       string
+	ResurrectedUsed       bool
+	PassiveImageKey       string
+	PassiveName           string
+	PassiveCode           string
+	PassiveTrigger        string
+	PassiveTarget         string
+	PassiveEffect         string
+	PassiveCondition      string
+	PassiveValue          int
+	PassiveDuration       int
+	PassiveScale          string
+	PassiveCountOwner     string
+	PassiveConditionCount int
+	PassiveCountType      string
+	PassiveCountCode      string
 }
 
 // эффект, или баф, который можно наложить на карту

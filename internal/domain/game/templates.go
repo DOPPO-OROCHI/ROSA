@@ -8,26 +8,40 @@ package game
 компонент из DTO, в который мы мапим нужные для двигла поля, чтобы доменная часть оставалась чистой.*/
 
 type BattleTemplate struct {
-	TemplateID    string //<-айдишник чертежа
-	HealthPoints  int    //<-хп карты
-	Attack        int    //<-сила атаки карты
-	SplashRadius  int    //<-радиус сплеша (если 0-сплеша нет, если 1-бьет по одной цели справа и слева)
-	Cooldown      int    //<-кд карты
-	Manacost      int    //<-стоимость в мане
-	IsTank        bool   //<-является ли танком
-	CardType      string //<-тип карты
-	CanBeUpgraded bool   //<-может ли быть улучшенной
-	ImageKey      string //<-картинка
-	AssetBaseKey  string //<-набор ассетов
-	SkillImageKey string
-	SkillName     string
-	SkillCode     string
-	SkillTrigger  string
-	SkillTarget   string
-	SkillValue    int
-	SkillDuration int
-	SkillCooldown int
-	SkillParams   string
+	TemplateID            string //<-айдишник чертежа
+	HealthPoints          int    //<-хп карты
+	Attack                int    //<-сила атаки карты
+	SplashRadius          int    //<-радиус сплеша (если 0-сплеша нет, если 1-бьет по одной цели справа и слева)
+	Cooldown              int    //<-кд карты
+	Manacost              int    //<-стоимость в мане
+	IsTank                bool   //<-является ли танком
+	CardType              string //<-тип карты
+	CanBeUpgraded         bool   //<-может ли быть улучшенной
+	ImageKey              string //<-картинка
+	AssetBaseKey          string //<-набор ассетов
+	SkillImageKey         string
+	SkillName             string
+	SkillCode             string
+	SkillTrigger          string
+	SkillTarget           string
+	SkillValue            int
+	SkillDuration         int
+	SkillCooldown         int
+	SkillParamsJSON           string
+	PassiveImageKey       string
+	PassiveName           string
+	PassiveCode           string
+	PassiveTrigger        string
+	PassiveTarget         string
+	PassiveEffect         string
+	PassiveCondition      string
+	PassiveValue          int
+	PassiveDuration       int
+	PassiveScale          string
+	PassiveCountOwner     string
+	PassiveConditionCount int
+	PassiveCountType      string
+	PassiveCountCode      string
 }
 
 // та же тема только с бафами
