@@ -46,9 +46,10 @@ type OwnedBattleCardsDTO struct {
 	Level       int  `json:"level"`
 	XP          int  `json:"xp"`
 
-	ImageKey     string `json:"image_key"`
-	AssetBaseKey string `json:"asset_base_key"`
-	BackKey      string `json:"back_key,omitempty"`
+	ImageKey      string `json:"image_key"`
+	AssetBaseKey  string `json:"asset_base_key"`
+	BackKey       string `json:"back_key,omitempty"`
+	SkillImageKey string `json:"skill_image_key"`
 
 	SkillName     string `json:"skill_name,omitempty"`
 	SkillCode     string `json:"skill_code,omitempty"`

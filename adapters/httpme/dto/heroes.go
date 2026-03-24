@@ -16,6 +16,8 @@ type OwnedHeroDTO struct {
 	Description    string `json:"description"`
 	ImageKey       string `json:"image_key"`
 	AssetBaseKey   string `json:"asset_base_key"`
+	SkillImageKey  string `json:"skill_image_key"`
+	AttackImageKey string `json:"attack_image_key"`
 }
 
 /*Но кое что объяснить все таки важно, как в целях обучения, так и в целях объяснения механик. Зачем

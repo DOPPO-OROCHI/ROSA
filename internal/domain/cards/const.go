@@ -23,6 +23,7 @@ const (
 )
 
 // ГЛОБАЛЬНЫЙ ПАТЧ
+// активные умения карт, либо активный скилл тогда, когда что то произойдет
 // триггеры карт. Типа когда срабатывают скилы ?
 const (
 	TriggerOnPlay    = "on_play"   //срабатывает скил при поставлении карты на стол
@@ -73,4 +74,72 @@ const (
 	DotHPUpdate       = "dot_hp_update"
 	DotAttackUpdate   = "dot_attack_update"
 	DotCooldownUpdate = "dot_cooldown_update"
+)
+
+// Пассивные умения карт
+// Триггеры. Когда срабатывают пассивки ?
+const (
+	PassiveTriggerContinious  = "continious"
+	PassiveTriggerTurnStart   = "turn_start"
+	PassiveTriggerTurnEnd     = "turn_end"
+	PassiveTriggerOnPlay      = "on_play"
+	PassiveTriggerOnAttack    = "on_attack"
+	PassiveTriggerOnDeath     = "on_death"
+	PassiveTriggerOnAllyDead  = "on_ally_dead"
+	PassiveTriggerOnEnemyDead = "on_enemy_dead"
+)
+
+// Таргеты. Кто получает эффекты пассивки ?
+const (
+	PassiveTargetSelf          = "self"
+	PassiveTargetAllyAll       = "ally_all"
+	PassiveTargetEnemyAll      = "enemy_all"
+	PassiveTargetBothAll       = "both_all"
+	PassiveTargetAllyLeftRight = "ally_left_right"
+
+	PassiveTargetAllyTypeDemonical  = "ally_type_demonical"
+	PassiveTargetAllyTypeMechanical = "ally_type_mechanical"
+	PassiveTargetAllyTypeOrganical  = "ally_type_organical"
+	PassiveTargetAllyTypeHealer     = "ally_type_healer"
+
+	PassiveTargetEnemyTypeDemonical  = "enemy_type_demonical"
+	PassiveTargetEnemyTypeMechanical = "enemy_type_mechanical"
+	PassiveTargetEnemyTypeOrganical  = "enemy_type_organical"
+	PassiveTargetEnemyTypeHealer     = "enemy_type_healer"
+)
+
+// Эффект от пассивок. Что произойдет ?
+const (
+	PassiveEffectDamageUp          = "damage_up"
+	PassiveEffectHPUp              = "hp_up"
+	PassiveEffectCoolDownDown      = "coolwodn_down"
+	PassiveEffectSkillDamageUp     = "skill_damage_up"
+	PassiveEffectSkillCooldownDown = "skill_cooldown_down"
+)
+
+// Когда действует пассивка ?
+const (
+	PassiveConditionAlways            = "always"
+	PassiveConditionDemonicalOnTable  = "demonical_on_table"
+	PassiveConditionOrganicalOnTable  = "organical_on_table"
+	PassiveConditionMechanicalOnTable = "mechanical_on_table"
+	PassiveConditionHealerOnTable     = "healer_on_table"
+
+	//если на столе определенное количество карт
+	PassiveConditionCountAtLeats = "count_at_least" //<-если карт больше N
+	PassiveConditionCountAtMost  = "count_at_most"  //<-если карт меньше или ровно N
+	PassiveConditionExact        = "count_exact"    //<-если карт ровно N
+)
+
+// Где считать карты для активации пассивок ?
+const (
+	PassiveCountOwnerAlly  = "ally"
+	PassiveCountOwnerEnemy = "enemy"
+	PassiveCountOwnerBoth  = "both"
+)
+
+// Как считать бонусы ?
+const (
+	PassiveScaleFlat     = "flat"      //<- просто добавляем Х
+	PassiveSaclePerCount = "per_count" //<- за каждого +Х
 )

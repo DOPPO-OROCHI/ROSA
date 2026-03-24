@@ -55,6 +55,7 @@ func (c *ResolverCache) Reload(db *gorm.DB) error {
 			CanBeUpgraded: t.BuffSlot,
 			ImageKey:      t.ImageKey,
 			AssetBaseKey:  t.AssetBaseKey,
+			SkillImageKey: t.SkillImageKey,
 			SkillName:     t.SkillName,
 			SkillCode:     t.SkillCode,
 			SkillTrigger:  t.SkillTrigger,

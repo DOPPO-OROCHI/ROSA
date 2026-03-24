@@ -74,6 +74,7 @@ func NewCardsListHandler(d CardListHandlerDeps) http.HandlerFunc {
 				Level:         r.Level,
 				XP:            r.XP,
 				ImageKey:      t.ImageKey,
+				SkillImageKey: t.SkillImageKey,
 				AssetBaseKey:  t.AssetBaseKey,
 				SkillName:     t.SkillName,
 				SkillCode:     t.SkillCode,

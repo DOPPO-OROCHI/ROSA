@@ -54,6 +54,14 @@ func ImageKey(base string) string {
 	return buildKey(base, "image")
 }
 
+func SkillImageKey(base string) string {
+	return buildKey(base, "skill_image")
+}
+
+func AttackImageKeyHero(base string) string {
+	return buildKey(base, "attack_image")
+}
+
 func BuildVFXKey(base, action string) string {
 	return buildKey(base, "vfx", action)
 }

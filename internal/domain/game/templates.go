@@ -19,6 +19,7 @@ type BattleTemplate struct {
 	CanBeUpgraded bool   //<-может ли быть улучшенной
 	ImageKey      string //<-картинка
 	AssetBaseKey  string //<-набор ассетов
+	SkillImageKey string
 	SkillName     string
 	SkillCode     string
 	SkillTrigger  string
@@ -29,7 +30,7 @@ type BattleTemplate struct {
 	SkillParams   string
 }
 
-//та же тема только с бафами
+// та же тема только с бафами
 type BuffTemplate struct {
 	TemplateID   string //<-понятно
 	ManaCost     int    //<-тоже понятно

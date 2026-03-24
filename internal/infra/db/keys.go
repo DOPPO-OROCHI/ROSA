@@ -27,6 +27,9 @@ func FillBattleKeys(ts []cards.BattleCardTemplate) {
 		if ts[i].ImageKey == "" {
 			ts[i].ImageKey = game.ImageKey(ts[i].AssetBaseKey)
 		}
+		if ts[i].SkillImageKey == "" {
+			ts[i].SkillImageKey = game.SkillImageKey(ts[i].AssetBaseKey)
+		}
 	}
 }
 
@@ -50,6 +53,12 @@ func FillHeroKeys(ts []heroes.CharacterTemplate) {
 		}
 		if ts[i].ImageKey == "" {
 			ts[i].ImageKey = game.ImageKey(ts[i].AssetBaseKey)
+		}
+		if ts[i].SkillImageKey == "" {
+			ts[i].SkillImageKey = game.SkillImageKey(ts[i].AssetBaseKey)
+		}
+		if ts[i].AttackImageKey == "" {
+			ts[i].AttackImageKey = game.AttackImageKeyHero(ts[i].AssetBaseKey)
 		}
 	}
 }

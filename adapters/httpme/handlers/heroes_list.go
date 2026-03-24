@@ -57,6 +57,8 @@ func NewHeroesListHandler(d HeroListHandler) http.HandlerFunc {
 				Description:    t.Description,
 				ImageKey:       t.ImageKey,
 				AssetBaseKey:   t.AssetBaseKey,
+				SkillImageKey:  t.SkillImageKey,
+				AttackImageKey: t.AttackImageKey,
 			})
 		}
 		//отдаем челику ответ на его запрос

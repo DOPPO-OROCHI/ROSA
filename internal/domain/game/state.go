@@ -75,6 +75,7 @@ type UnitState struct {
 	MaxHP             int          //<-максимальное кличество ХП
 	Effects           []UnitEffect //<-эффекты на карте. Используется в последствии. Ни одна карта в начале не имеет эффектов
 	CardType          string       //<-тип карты. Используется для апгрейдов
+	SkillImageKey     string
 	SkillName         string
 	SkillCode         string
 	SkillTrigger      string

@@ -16,6 +16,8 @@ type CharacterTemplate struct {
 	Description    string      `gorm:"text;not null"`                    //<-описание для UI
 	ImageKey       string      //<-картинка
 	AssetBaseKey   string      //<-набор эффектов
+	SkillImageKey  string      `gorm:"column:skill_image_key"`  //<-ключ картинки скилла
+	AttackImageKey string      `gorm:"column:attack_image_key"` //<-ключ картинки атаки героя
 }
 
 //а это абилити персонажа, уникальны

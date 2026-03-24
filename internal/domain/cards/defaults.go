@@ -94,7 +94,7 @@ var DefaultBattleCards = []BattleCardTemplate{
 		CodeString:      "mortar_crew",
 		HealthPoints:    25,
 		Attack:          20,
-		SplashRadius:    1,
+		SplashRadius:    0,
 		IsTank:          false,
 		CardType:        OrganicalCard,
 		CoolDown:        1,

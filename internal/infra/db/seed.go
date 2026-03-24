@@ -43,6 +43,7 @@ func SeedBattleCardTemplate(db *gorm.DB) error {
 			"description",
 			"image_key",
 			"asset_base_key",
+			"skill_image_key",
 			"skill_name",
 			"skill_code",
 			"skill_trigger",
@@ -106,6 +107,8 @@ func SeedCharacterTemplate(db *gorm.DB) error {
 			"description",
 			"image_key",
 			"asset_base_key",
+			"skill_image_key",
+			"attack_image_key",
 		}),
 	}).CreateInBatches(&heroes.DefaultHeroTemplate, 200).Error
 }
