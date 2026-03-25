@@ -39,6 +39,7 @@ func StartTurn(m *MatchState, nowUnix int64) {
 		}
 	}
 	TickerEffects(m, m.ActivePlayer)
+	_ = DispathContinuousPassives(m)
 	_ = DispathPassives(m, m.ActivePlayer, cards.PassiveTriggerTurnStart, PassiveTriggerContext{
 		SourceOwnerIdx: m.ActivePlayer,
 	})
@@ -205,6 +206,7 @@ func PlayBattleCard(m *MatchState,
 		TargetOwnerIdx:   playerIndex,
 		TargetSlot:       targetSlot,
 	})
+	_ = DispathContinuousPassives(m)
 	_ = triggerCardSkillByTrigger(m, playerIndex, u, cards.TriggerOnPlay, Action{
 		PlayerIndex:    playerIndex,
 		CardInstanceID: u.InstanceID,
@@ -725,16 +727,39 @@ func PlayCardSkill(m *MatchState, a Action, r BattleTemplateResolver) error {
 	return nil
 }
 
-func DispathPassives(m *MatchState, ownerIdx int, trigger string, ctx PassiveTriggerContext) error {
-	if m == nil || ownerIdx > 1 || ownerIdx < 0 || trigger == "" {
+func DispathContinuousPassives(m *MatchState) error {
+	if m == nil {
 		return nil
 	}
-	owner := m.Players[ownerIdx]
-	if owner == nil {
+	clearContinuousPassiveEffects(m)
+	for playerIdx := 0; playerIdx < 2; playerIdx++ {
+		p := m.Players[playerIdx]
+		if p == nil {
+			continue
+		}
+		for i := 0; i < TableSize; i++ {
+			u := p.Table[i]
+			if u == nil {
+				continue
+			}
+			if err := triggerContinuousPassive(m, playerIdx, u); err != nil {
+				return err
+			}
+		}
+	}
+	return nil
+}
+
+func DispathPassives(m *MatchState, ownerIdx int, trigger string, ctx PassiveTriggerContext) error {
+	if m == nil || ownerIdx < 0 || ownerIdx > 1 || trigger == "" {
+		return nil
+	}
+	p := m.Players[ownerIdx]
+	if p == nil {
 		return nil
 	}
 	for i := 0; i < TableSize; i++ {
-		u := owner.Table[i]
+		u := p.Table[i]
 		if u == nil {
 			continue
 		}
@@ -797,6 +822,7 @@ func killUnitAt(m *MatchState, ownerIdx int, slot int) error {
 		TargetOwnerIdx: ownerIdx,
 		TargetSlot:     slot,
 	})
+	_ = DispathContinuousPassives(m)
 	m.Events = append(m.Events, Event{
 		Type:             string(EventDeath),
 		SourceKind:       string(SourceUnit),
