@@ -14,15 +14,17 @@ const (
 	DemonicalCard  = "demonical"
 	HealerCard     = "healer"
 	All            = "all"
-
-	//улучшения для карт, которые можно засунуть в матче
-	CoolDownUpdate     = "cooldown_update"
-	HealthPointsUpdate = "health_points_update"
-	DamageUpdate       = "damage_update"
-	MakeTankUpdate     = "make_tank"
 )
 
-// ГЛОБАЛЬНЫЙ ПАТЧ
+const (
+	CoolDownUpdate        = "cooldown_update"
+	HealthPointsUpdate    = "health_points_update"
+	MaxHealthPointsUpdate = "max_health_points_update"
+	DamageUpdate          = "damage_update"
+	MakeTankUpdate        = "make_tank"
+	SkillDamageUpdate     = "skill_damage_update"
+	SkillCooldownUpdate   = "skill_cooldown_update"
+)
 
 /*
 Коды скиллов карт. Здесь описывает то, что скилл умеет делать вообще. В дальнейшем сюда будут добавться
@@ -201,6 +203,18 @@ const (
 const (
 	PassiveScaleFlat     = "flat"      //<- просто добавляем Х
 	PassiveScalePerCount = "per_count" //<- за каждого +Х
+)
+
+/*
+Далее постоянные эффекты от аур
+Важно отметить то, что ауры могут действовать как на союзников, так и на противников
+*/
+const (
+	AuraDamageUpdate          = "aura_damage_update"            //<-поднимаем атаку
+	AuraMaxHealthPointsUpdate = "aura_max_health_points_update" //<-операции с максимальным ХП
+	AuraCooldownUpdate        = "aura_cooldown_update"          //<-операции над КД
+	AuraSkillDamageUpdate     = "aura_skill_damage_update"      //<-над дамагом скилла
+	AuraSkillCooldownUpdate   = "aura_skill_cooldown_update"    //<-тоже со скилами только с КД
 )
 
 /*Таким образом реализован такой ебанутый коктейль из возможных вариаций скиллов+пассивок что это пиздец

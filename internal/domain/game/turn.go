@@ -340,6 +340,13 @@ func CardAttack(m *MatchState,
 			TargetOwnerIdx:     playerIndex,
 			TargetSlot:         ti,
 		})
+		_ = triggerCardSkillByTrigger(m, playerIndex, atk, cards.TriggerOnAttack, Action{
+			PlayerIndex:      playerIndex,
+			CardInstanceID:   atk.InstanceID,
+			TargetInstanceID: tu.InstanceID,
+			TargetSlot:       ti,
+			AttackHero:       false,
+		})
 		tu.HP += heal
 		if tu.HP > tu.MaxHP {
 			tu.HP = tu.MaxHP
@@ -777,13 +784,6 @@ func killUnitAt(m *MatchState, ownerIdx int, slot int) error {
 	})
 	enemyIdx := 1 - ownerIdx
 	_ = triggerOnDeathSkill(m, &dead, ownerIdx)
-	m.Events = append(m.Events, Event{
-		Type:             string(EventDeath),
-		SourceKind:       string(SourceUnit),
-		SourceInstanceID: dead.InstanceID,
-		SourceTemplateID: dead.TemplateID,
-		TargetSlot:       slot,
-	})
 	owner.RemoveAt(slot)
 	_ = DispathPassives(m, ownerIdx, cards.PassiveTriggerOnAllyDead, PassiveTriggerContext{
 		DeadInstanceID: dead.InstanceID,

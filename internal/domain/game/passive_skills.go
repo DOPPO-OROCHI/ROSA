@@ -72,7 +72,7 @@ func passiveGenericDamageUp(m *MatchState,
 	if !ok {
 		return nil
 	}
-	applyPassiveAttackBuff(prep.targets, prep.value)
+	applyPassiveAttackBuff(prep.targets, source.PassiveDuration, prep.value)
 	return nil
 }
 
@@ -83,7 +83,7 @@ func passiveGenericHPUp(m *MatchState,
 	if !ok {
 		return nil
 	}
-	applyPassiveHPBuff(prep.targets, prep.value)
+	applyPassiveHPBuff(prep.targets, source.PassiveDuration, prep.value)
 	return nil
 }
 
@@ -94,7 +94,7 @@ func passiveGenericCooldownDown(m *MatchState,
 	if !ok {
 		return nil
 	}
-	applyPassiveAttackCooldownDown(prep.targets, prep.value)
+	applyPassiveAttackCooldownDown(prep.targets, source.PassiveDuration, prep.value)
 	return nil
 }
 
@@ -105,7 +105,7 @@ func passiveGenericSkillDamageUp(m *MatchState,
 	if !ok {
 		return nil
 	}
-	applyPassiveSkillDamageBuff(prep.targets, prep.value)
+	applyPassiveSkillDamageBuff(prep.targets, source.PassiveDuration, prep.value)
 	return nil
 }
 
@@ -116,7 +116,7 @@ func passiveGenericSkillCooldownDown(m *MatchState,
 	if !ok {
 		return nil
 	}
-	applyPassiveSkillCooldownDown(prep.targets, prep.value)
+	applyPassiveSkillCooldownDown(prep.targets, source.PassiveDuration, prep.value)
 	return nil
 }
 
@@ -439,23 +439,30 @@ func calcPassiveFinalValue(source *UnitState, matchedCount int) int {
 */
 
 // БАФФ НА АТАКУ
-func applyPassiveAttackBuff(targets []*UnitState, value int) {
+func applyPassiveAttackBuff(targets []*UnitState, duration int, value int) {
 	for _, t := range targets {
 		if t == nil {
 			continue
 		}
-		t.Attack += value
+		AddEffect(t, UnitEffect{
+			EffectType: cards.DamageUpdate,
+			TurnsLeft:  duration,
+			Value:      value,
+		})
 	}
 }
 
 // БАФФ НА ПОДНЯТИЕ ХП И ХИЛЛ
-func applyPassiveHPBuff(targets []*UnitState, value int) {
+func applyPassiveHPBuff(targets []*UnitState, duration int, value int) {
 	for _, t := range targets {
 		if t == nil {
 			continue
 		}
-		t.HP += value
-		t.MaxHP += value
+		AddEffect(t, UnitEffect{
+			EffectType: cards.MaxHealthPointsUpdate,
+			TurnsLeft:  duration,
+			Value:      value,
+		})
 	}
 }
 
@@ -473,42 +480,48 @@ func applyPassiveHeal(targets []*UnitState, value int) {
 }
 
 // БАФФ НА СНИЖЕНИЕ КД ОСНОВНОЙ АТАКИ КАРТЫ
-func applyPassiveAttackCooldownDown(targets []*UnitState, value int) {
+func applyPassiveAttackCooldownDown(targets []*UnitState, duration int, value int) {
 	for _, t := range targets {
 		if t == nil {
 			continue
 		}
-		t.Cooldown -= value
-		if t.Cooldown < 0 {
-			t.Cooldown = 0
-		}
+		AddEffect(t, UnitEffect{
+			EffectType: cards.CoolDownUpdate,
+			TurnsLeft:  duration,
+			Value:      value,
+		})
 	}
 }
 
 // БАФФ НА СИЛУ СКИЛА КАРТЫ
-func applyPassiveSkillDamageBuff(targets []*UnitState, value int) {
+func applyPassiveSkillDamageBuff(targets []*UnitState, duration int, value int) {
 	for _, t := range targets {
 		if t == nil {
 			continue
 		}
-		t.SkillValue += value
+		AddEffect(t, UnitEffect{
+			EffectType: cards.SkillDamageUpdate,
+			TurnsLeft:  duration,
+			Value:      value,
+		})
 	}
 }
 
 // БАФФ НА ОТКАТ КД СКИЛА КАРТЫ
-func applyPassiveSkillCooldownDown(targets []*UnitState, value int) {
+func applyPassiveSkillCooldownDown(targets []*UnitState, duration int, value int) {
 	for _, t := range targets {
 		if t == nil {
 			continue
 		}
-		t.SkillCooldownLeft -= value
-		if t.SkillCooldownLeft < 0 {
-			t.SkillCooldownLeft = 0
-		}
+		AddEffect(t, UnitEffect{
+			EffectType: cards.SkillCooldownUpdate,
+			TurnsLeft:  duration,
+			Value:      value,
+		})
 	}
 }
 
-// БАФФ
+// УРОН ПРИ ТРИГГЕРЕ
 func applyPassiveDamage(m *MatchState, ownerIdx int, targets []*UnitState, value int) error {
 	if m == nil || ownerIdx < 0 || ownerIdx > 1 {
 		return nil

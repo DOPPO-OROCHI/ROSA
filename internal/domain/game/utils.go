@@ -52,7 +52,13 @@ func TickerEffects(m *MatchState, ownerIdx int) {
 			e.TurnsLeft--
 			if e.TurnsLeft <= 0 {
 				switch e.EffectType {
-				case cards.DamageUpdate, cards.HealthPointsUpdate, cards.CoolDownUpdate, cards.MakeTankUpdate:
+				case cards.DamageUpdate,
+					cards.HealthPointsUpdate,
+					cards.MaxHealthPointsUpdate,
+					cards.CoolDownUpdate,
+					cards.MakeTankUpdate,
+					cards.SkillDamageUpdate,
+					cards.SkillCooldownUpdate:
 					RemoveEffect(u, e)
 				}
 				continue
@@ -85,6 +91,28 @@ func RemoveEffect(u *UnitState, e UnitEffect) {
 		return
 	}
 	switch e.EffectType { //<-свичим тип эффекта, который есть уже на карте
+	case cards.AuraDamageUpdate:
+		u.Attack -= e.Value
+	case cards.AuraMaxHealthPointsUpdate:
+		u.MaxHP -= e.Value
+		if u.HP > u.MaxHP {
+			u.HP = u.MaxHP
+		}
+	case cards.AuraCooldownUpdate:
+		u.Cooldown += e.Value
+		if u.Cooldown < 0 {
+			u.Cooldown = 0
+		}
+	case cards.AuraSkillDamageUpdate:
+		u.SkillValue -= e.Value
+		if u.SkillValue < 0 {
+			u.SkillValue = 0
+		}
+	case cards.AuraSkillCooldownUpdate:
+		u.SkillCooldown += e.Value
+		if u.SkillCooldownLeft > u.SkillCooldown {
+			u.SkillCooldownLeft = u.SkillCooldown
+		}
 	case cards.DamageUpdate: //<-кейс с апдейтом дамага
 		u.Attack -= e.Value //<-и здесь просто минусуем то, что прибавляли ранее
 	case cards.HealthPointsUpdate:
@@ -92,8 +120,23 @@ func RemoveEffect(u *UnitState, e UnitEffect) {
 		if u.HP < 0 {
 			u.HP = 0 //<-и да, обработка чтобы не уйти в минус
 		}
+	case cards.MaxHealthPointsUpdate:
+		u.MaxHP -= e.Value
+		if u.MaxHP < 1 {
+			u.MaxHP = 1
+		}
+		if u.HP > u.MaxHP {
+			u.HP = u.MaxHP
+		}
 	case cards.CoolDownUpdate:
 		u.Cooldown += e.Value //<-а тут тоже весело, просто добавляем кд к карте.
+	case cards.SkillDamageUpdate:
+		u.SkillValue -= e.Value
+		if u.SkillValue < 0 {
+			u.SkillValue = 0
+		}
+	case cards.SkillCooldownUpdate:
+		u.SkillCooldown += e.Value
 	case cards.MakeTankUpdate:
 		u.IsTank = false //<-снимаем маркер танка с карты
 	case cards.DotAttackUpdate, cards.DotHPUpdate, cards.DotCooldownUpdate:
@@ -107,14 +150,50 @@ func ApplyEffect(u *UnitState, buff UnitEffect) error {
 		return errors.New("nil unit state")
 	}
 	switch buff.EffectType { //<-свичим тип бафа
+	case cards.AuraDamageUpdate:
+		u.Attack += buff.Value
+	case cards.AuraMaxHealthPointsUpdate:
+		u.MaxHP += buff.Value
+		u.HP += buff.Value
+	case cards.AuraCooldownUpdate:
+		u.Cooldown -= buff.Value
+	case cards.AuraSkillDamageUpdate:
+		u.SkillValue += buff.Value
+	case cards.AuraSkillCooldownUpdate:
+		u.SkillCooldown -= buff.Value
+		if u.SkillCooldownLeft > u.SkillCooldown {
+			u.SkillCooldownLeft = u.SkillCooldown
+		}
 	case cards.DamageUpdate:
 		u.Attack += buff.Value //<-в случае если баф на атаку, поднимаем атаку на значение бафа
 	case cards.HealthPointsUpdate:
 		u.HP += buff.Value //<-та же тема только с хп
+		if u.HP > u.MaxHP {
+			u.HP = u.MaxHP
+		}
+	case cards.MaxHealthPointsUpdate:
+		u.MaxHP += buff.Value
+		if u.MaxHP < 1 {
+			u.MaxHP = 1
+		}
+		u.HP += buff.Value
+		if u.HP > u.MaxHP {
+			u.HP = u.MaxHP
+		}
 	case cards.CoolDownUpdate:
 		u.Cooldown -= buff.Value //<-на кд баф
 		if u.Cooldown < 0 {
 			u.Cooldown = 0
+		}
+	case cards.SkillDamageUpdate:
+		u.SkillValue += buff.Value
+	case cards.SkillCooldownUpdate:
+		u.SkillCooldown -= buff.Value
+		if u.SkillCooldown < 0 {
+			u.SkillCooldown = 0
+		}
+		if u.SkillCooldownLeft > u.SkillCooldown {
+			u.SkillCooldownLeft = u.SkillCooldown
 		}
 	case cards.MakeTankUpdate: //<-а тут весело, поскольку на танк карту нельзя нанести баф мэйк танк
 		if u.IsTank == true {
