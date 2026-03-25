@@ -39,6 +39,9 @@ func StartTurn(m *MatchState, nowUnix int64) {
 		}
 	}
 	TickerEffects(m, m.ActivePlayer)
+	_ = DispathPassives(m, m.ActivePlayer, cards.PassiveTriggerTurnStart, PassiveTriggerContext{
+		SourceOwnerIdx: m.ActivePlayer,
+	})
 	for i := 0; i < TableSize; i++ {
 		u := p.Table[i]
 		if u == nil {
@@ -89,6 +92,9 @@ func EndTurn(m *MatchState) {
 	if m.Phase != PhaseMain {
 		return
 	}
+	_ = DispathPassives(m, m.ActivePlayer, cards.PassiveTriggerTurnEnd, PassiveTriggerContext{
+		SourceOwnerIdx: m.ActivePlayer,
+	})
 	m.ActivePlayer = 1 - m.ActivePlayer
 	StartTurn(m, time.Now().Unix())
 }
@@ -191,6 +197,12 @@ func PlayBattleCard(m *MatchState,
 		SourceTemplateID: u.TemplateID,
 		VFXKey:           BuildVFXKey(tpl.AssetBaseKey, "summon"),
 		SFXKey:           BuildSFXKey(tpl.AssetBaseKey, "summon"),
+		TargetSlot:       targetSlot,
+	})
+	_ = triggerPassiveByTrigger(m, playerIndex, u, cards.PassiveTriggerOnPlay, PassiveTriggerContext{
+		TargetInstanceID: u.InstanceID,
+		SourceOwnerIdx:   playerIndex,
+		TargetOwnerIdx:   playerIndex,
 		TargetSlot:       targetSlot,
 	})
 	_ = triggerCardSkillByTrigger(m, playerIndex, u, cards.TriggerOnPlay, Action{
@@ -303,15 +315,15 @@ func CardAttack(m *MatchState,
 	if atkPlayer == nil || defPlayer == nil {
 		return errors.New("nil player state")
 	}
-	ai, a := atkPlayer.FindSlot(attackerInstanceID)
-	if ai == -1 || a == nil {
+	atkIdx, atk := atkPlayer.FindSlot(attackerInstanceID)
+	if atkIdx == -1 || atk == nil {
 		return ErrAttackerNotFound
 	}
-	if a.SummonedInTurn == atkPlayer.Turns {
+	if atk.SummonedInTurn == atkPlayer.Turns {
 		return ErrAttackerSummoneddThisTurn
 	}
 	targets := make([]EventTarget, 0, 3)
-	if a.CardType == cards.HealerCard {
+	if atk.CardType == cards.HealerCard {
 		if attackHero {
 			return ErrHealerCannotAttackHero
 		}
@@ -319,16 +331,24 @@ func CardAttack(m *MatchState,
 		if ti == -1 || tu == nil {
 			return ErrTargetNotFound
 		}
-		heal := a.Attack
+		heal := atk.Attack
+		_ = triggerPassiveByTrigger(m, playerIndex, atk, cards.PassiveTriggerOnAttack, PassiveTriggerContext{
+			AttackerInstanceID: atk.InstanceID,
+			AttackerOwnerIdx:   playerIndex,
+			TargetInstanceID:   tu.InstanceID,
+			SourceOwnerIdx:     playerIndex,
+			TargetOwnerIdx:     playerIndex,
+			TargetSlot:         ti,
+		})
 		tu.HP += heal
 		if tu.HP > tu.MaxHP {
 			tu.HP = tu.MaxHP
 		}
-		tpl, ok := r.GetBattleTemplate(a.TemplateID)
+		tpl, ok := r.GetBattleTemplate(atk.TemplateID)
 		if !ok {
-			return errors.New("unknown battle template: " + a.TemplateID)
+			return errors.New("unknown battle template: " + atk.TemplateID)
 		}
-		a.Cooldown = tpl.Cooldown
+		atk.Cooldown = tpl.Cooldown
 		targets = append(targets, EventTarget{
 			InstanceID: tu.InstanceID,
 			TemplateID: tu.TemplateID,
@@ -340,15 +360,15 @@ func CardAttack(m *MatchState,
 			Type:             string(EventHeal),
 			PlayerIndex:      playerIndex,
 			SourceKind:       string(SourceUnit),
-			SourceInstanceID: a.InstanceID,
-			SourceTemplateID: a.TemplateID,
+			SourceInstanceID: atk.InstanceID,
+			SourceTemplateID: atk.TemplateID,
 			VFXKey:           BuildVFXKey(tpl.AssetBaseKey, "attack"), //бессмыслица, добавил чисто для красоты
 			SFXKey:           BuildSFXKey(tpl.AssetBaseKey, "attack"), //ок не бессмыслица, хил с точки зрения движка это атака по своим)))
 			Targets:          targets,
 		})
 		return nil
 	}
-	if a.Cooldown > 0 {
+	if atk.Cooldown > 0 {
 		return ErrAttackerOnCooldown
 	}
 	defenderHasTank := false
@@ -363,7 +383,7 @@ func CardAttack(m *MatchState,
 		if defenderHasTank {
 			return ErrCannotHitHeroWhileTanks
 		}
-		dmg := a.Attack
+		dmg := atk.Attack
 		defPlayer.HeroHP -= dmg
 		heroID := fmt.Sprintf("hero:p%d", 1-playerIndex)
 		targets = append(targets, EventTarget{
@@ -382,7 +402,7 @@ func CardAttack(m *MatchState,
 		}
 		targetSlots := make([]int, 0, 3)
 		targetSlots = append(targetSlots, di)
-		if a.SplashRadius > 0 {
+		if atk.SplashRadius > 0 {
 			left, right := di-1, di+1
 			if left >= 0 && defPlayer.Table[left] != nil {
 				targetSlots = append(targetSlots, left)
@@ -391,7 +411,7 @@ func CardAttack(m *MatchState,
 				targetSlots = append(targetSlots, right)
 			}
 		}
-		dmg := a.Attack
+		dmg := atk.Attack
 		for _, s := range targetSlots {
 			u := defPlayer.Table[s]
 			if u == nil {
@@ -400,6 +420,14 @@ func CardAttack(m *MatchState,
 			inst := u.InstanceID
 			tplID := u.TemplateID
 			u.HP -= dmg
+			_ = triggerPassiveByTrigger(m, 1-playerIndex, u, cards.PassiveTriggerHitMe, PassiveTriggerContext{
+				AttackerInstanceID: atk.InstanceID,
+				AttackerOwnerIdx:   playerIndex,
+				TargetInstanceID:   u.InstanceID,
+				SourceOwnerIdx:     playerIndex,
+				TargetOwnerIdx:     1 - playerIndex,
+				TargetSlot:         s,
+			})
 			died := u.HP <= 0
 			newHP := u.HP
 			if died {
@@ -417,22 +445,31 @@ func CardAttack(m *MatchState,
 			})
 		}
 	}
-	tpl, ok := r.GetBattleTemplate(a.TemplateID)
+	tpl, ok := r.GetBattleTemplate(atk.TemplateID)
 	if !ok {
-		return errors.New("unknown Battle Template: " + a.TemplateID)
+		return errors.New("unknown Battle Template: " + atk.TemplateID)
 	}
-	a.Cooldown = tpl.Cooldown
+	atk.Cooldown = tpl.Cooldown
 	m.Events = append(m.Events, Event{
 		Type:             string(EventAttack),
 		PlayerIndex:      playerIndex,
 		SourceKind:       string(SourceUnit),
-		SourceInstanceID: a.InstanceID,
-		SourceTemplateID: a.TemplateID,
+		SourceInstanceID: atk.InstanceID,
+		SourceTemplateID: atk.TemplateID,
 		VFXKey:           BuildVFXKey(tpl.AssetBaseKey, "attack"),
 		SFXKey:           BuildSFXKey(tpl.AssetBaseKey, "attack"),
 		Targets:          targets,
 	})
 	_, aliveAttacker := atkPlayer.FindSlot(attackerInstanceID)
+	if aliveAttacker != nil {
+		_ = triggerPassiveByTrigger(m, playerIndex, aliveAttacker, cards.PassiveTriggerOnAttack, PassiveTriggerContext{
+			AttackerInstanceID: aliveAttacker.InstanceID,
+			AttackerOwnerIdx:   playerIndex,
+			TargetInstanceID:   defenderInstanceID,
+			SourceOwnerIdx:     playerIndex,
+			TargetOwnerIdx:     1 - playerIndex,
+		})
+	}
 	if aliveAttacker != nil {
 		_ = triggerCardSkillByTrigger(m, playerIndex, aliveAttacker, cards.TriggerOnAttack, Action{
 			PlayerIndex:      playerIndex,
@@ -681,7 +718,27 @@ func PlayCardSkill(m *MatchState, a Action, r BattleTemplateResolver) error {
 	return nil
 }
 
-// ХЕЛПЕР СМЕРТИ
+func DispathPassives(m *MatchState, ownerIdx int, trigger string, ctx PassiveTriggerContext) error {
+	if m == nil || ownerIdx > 1 || ownerIdx < 0 || trigger == "" {
+		return nil
+	}
+	owner := m.Players[ownerIdx]
+	if owner == nil {
+		return nil
+	}
+	for i := 0; i < TableSize; i++ {
+		u := owner.Table[i]
+		if u == nil {
+			continue
+		}
+		if err := triggerPassiveByTrigger(m, ownerIdx, u, trigger, ctx); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// ХЕЛПЕР СМЕРТИ //
 func killUnitAt(m *MatchState, ownerIdx int, slot int) error {
 	if m == nil {
 		return errors.New("nil match state")
@@ -701,6 +758,13 @@ func killUnitAt(m *MatchState, ownerIdx int, slot int) error {
 		return nil
 	}
 	dead := *u
+	_ = triggerPassiveByTrigger(m, ownerIdx, &dead, cards.PassiveTriggerOnDeath, PassiveTriggerContext{
+		DeadInstanceID:   dead.InstanceID,
+		TargetInstanceID: dead.InstanceID,
+		SourceOwnerIdx:   ownerIdx,
+		TargetOwnerIdx:   ownerIdx,
+		TargetSlot:       slot,
+	})
 	if dead.SkillCode == cards.SkillResurrectNextTurn && dead.SkillTrigger == cards.TriggerOnDeath && !dead.ResurrectedUsed {
 		owner.PendingRes = append(owner.PendingRes, PendingResurrected{
 			InstanceID: dead.InstanceID,
@@ -711,8 +775,28 @@ func killUnitAt(m *MatchState, ownerIdx int, slot int) error {
 		Unit:       dead,
 		DiedAtTurn: owner.Turns,
 	})
+	enemyIdx := 1 - ownerIdx
 	_ = triggerOnDeathSkill(m, &dead, ownerIdx)
+	m.Events = append(m.Events, Event{
+		Type:             string(EventDeath),
+		SourceKind:       string(SourceUnit),
+		SourceInstanceID: dead.InstanceID,
+		SourceTemplateID: dead.TemplateID,
+		TargetSlot:       slot,
+	})
 	owner.RemoveAt(slot)
+	_ = DispathPassives(m, ownerIdx, cards.PassiveTriggerOnAllyDead, PassiveTriggerContext{
+		DeadInstanceID: dead.InstanceID,
+		SourceOwnerIdx: ownerIdx,
+		TargetOwnerIdx: ownerIdx,
+		TargetSlot:     slot,
+	})
+	_ = DispathPassives(m, enemyIdx, cards.PassiveTriggerOnEnemyDead, PassiveTriggerContext{
+		DeadInstanceID: dead.InstanceID,
+		SourceOwnerIdx: ownerIdx,
+		TargetOwnerIdx: ownerIdx,
+		TargetSlot:     slot,
+	})
 	m.Events = append(m.Events, Event{
 		Type:             string(EventDeath),
 		SourceKind:       string(SourceUnit),

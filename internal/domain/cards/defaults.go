@@ -21,28 +21,42 @@ var DefaultBattleCards = []BattleCardTemplate{
 	{
 		/*ВОЙСКА ИМПЕРИИ*/
 		//Обычная пехота империи. Трэш
-		Name:            "Имперский пехотинец", //<-имя карты
-		CodeString:      "imperial_guardian",   //<-код карты для простого обращения к нему. Используется в операционке
-		HealthPoints:    30,                    //<-хп карты
-		Attack:          15,                    //<-сила атаки карты
-		SplashRadius:    0,
-		IsTank:          false,         //<-является ли карта танком (это вообще отдельный разговор)
-		CardType:        OrganicalCard, //<-тип карты, нужен для бафов и прочей ерунды
-		CoolDown:        0,             //<-кд атаки карты. Если значение 1-значит карта может бить только через ход
-		ManaCost:        1,             //<-стоимость карты в мане
-		BuffSlot:        true,          //<-есть ли возможность  улучшить карту с помощью бафа
-		MaxCopies:       5,             //<-максимально допустимое количество копий, которое игрок может взять в матч
-		Description:     "",            //<-описание. Используется для UI, чтобы игрок смог прочесть че вообще за карта
-		ImageKey:        "",            //<-ключ картинки, которая отражает то, как выглядит карта
-		AssetBaseKey:    "",            //<-а здесь будут храниться ключи анимации (вообще отдельная тема)
-		SkillName:       "Осколочные гранаты",
-		SkillCode:       SkillDamageSplash,
-		SkillTrigger:    TriggerActive,
-		SkillTarget:     TargetEnemySplash,
-		SkillValue:      10,
-		SkillDuration:   0,
-		SkillCooldown:   2,
-		SkillParamsJSON: "",
+		Name:                  "Имперский пехотинец", //<-имя карты
+		CodeString:            "imperial_guardian",   //<-код карты для простого обращения к нему. Используется в операционке
+		HealthPoints:          30,                    //<-хп карты
+		Attack:                15,                    //<-сила атаки карты
+		SplashRadius:          0,
+		IsTank:                false,         //<-является ли карта танком (это вообще отдельный разговор)
+		CardType:              OrganicalCard, //<-тип карты, нужен для бафов и прочей ерунды
+		CoolDown:              0,             //<-кд атаки карты. Если значение 1-значит карта может бить только через ход
+		ManaCost:              1,             //<-стоимость карты в мане
+		BuffSlot:              true,          //<-есть ли возможность  улучшить карту с помощью бафа
+		MaxCopies:             5,             //<-максимально допустимое количество копий, которое игрок может взять в матч
+		Description:           "",            //<-описание. Используется для UI, чтобы игрок смог прочесть че вообще за карта
+		ImageKey:              "",            //<-ключ картинки, которая отражает то, как выглядит карта
+		AssetBaseKey:          "",            //<-а здесь будут храниться ключи анимации (вообще отдельная тема)
+		SkillName:             "Осколочные гранаты",
+		SkillCode:             SkillDamageSplash,
+		SkillTrigger:          TriggerActive,
+		SkillTarget:           TargetEnemySplash,
+		SkillValue:            10,
+		SkillDuration:         0,
+		SkillCooldown:         2,
+		SkillParamsJSON:       "",
+		PassiveImageKey:       "",
+		PassiveName:           "",
+		PassiveCode:           "",
+		PassiveTrigger:        "",
+		PassiveTarget:         "",
+		PassiveEffect:         "",
+		PassiveCondition:      "",
+		PassiveValue:          1,
+		PassiveDuration:       1,
+		PassiveScale:          "",
+		PassiveCountOwner:     "",
+		PassiveConditionCount: 1,
+		PassiveCountType:      "",
+		PassiveCountCode:      "",
 	},
 	{
 		//пехота с пулеметами. Средняя
@@ -58,7 +72,7 @@ var DefaultBattleCards = []BattleCardTemplate{
 		BuffSlot:        true,
 		MaxCopies:       3,
 		SkillName:       "Крупнокалиберные боеприпасы",
-		SkillCode:       SkillApplyBuff,
+		SkillCode:       SkillApplyDamageBuff,
 		SkillTrigger:    TriggerActive,
 		SkillTarget:     TargetSelf,
 		SkillValue:      10,
@@ -730,47 +744,74 @@ var DefaultBattleCards = []BattleCardTemplate{
 	},
 	{
 		//ультимативный танк за свои деньги. Основной прикол в хп
-		Name:            "Мразь",
-		CodeString:      "scum",
-		HealthPoints:    200,
-		Attack:          40,
-		SplashRadius:    1,
-		IsTank:          true,
-		CardType:        DemonicalCard,
-		CoolDown:        1,
-		ManaCost:        8,
-		BuffSlot:        false,
-		MaxCopies:       2,
-		SkillName:       "Разложение",
-		SkillCode:       SkillIncEnemyCdAllOnDeath,
-		SkillTrigger:    TriggerOnDeath,
-		SkillTarget:     TargetEnemyAll,
-		SkillValue:      2,
-		SkillDuration:   2,
-		SkillCooldown:   0,
-		SkillParamsJSON: "",
+		Name:                  "Мразь",
+		CodeString:            "scum",
+		HealthPoints:          200,
+		Attack:                40,
+		SplashRadius:          0,
+		IsTank:                true,
+		CardType:              DemonicalCard,
+		CoolDown:              1,
+		ManaCost:              8,
+		BuffSlot:              true,
+		MaxCopies:             2,
+		SkillName:             "Разложение",
+		SkillCode:             SkillIncEnemyCdAllOnDeath,
+		SkillTrigger:          TriggerOnDeath,
+		SkillTarget:           TargetEnemyAll,
+		SkillValue:            2,
+		SkillDuration:         2,
+		SkillCooldown:         0,
+		SkillParamsJSON:       "",
+		PassiveImageKey:       "",
+		PassiveName:           "Омерзительная вонь",
+		PassiveCode:           "disgusting_stench",
+		PassiveTrigger:        PassiveTriggerHitMe,
+		PassiveTarget:         PassiveTargetAttacker,
+		PassiveEffect:         DotHPUpdate,
+		PassiveCondition:      PassiveConditionAlways,
+		PassiveValue:          5,
+		PassiveDuration:       3,
+		PassiveScale:          "",
+		PassiveCountOwner:     "",
+		PassiveConditionCount: 0,
+		PassiveCountType:      "",
+		PassiveCountCode:      "",
 	},
 	{
 		//ультимативная. Смысл в большом дамаге
-		Name:            "Демонический берсерк",
-		CodeString:      "demonic_berserker",
-		HealthPoints:    100,
-		Attack:          55,
-		SplashRadius:    0,
-		IsTank:          false,
-		CardType:        DemonicalCard,
-		CoolDown:        0,
-		ManaCost:        8,
-		BuffSlot:        true,
-		MaxCopies:       2,
-		SkillName:       "",
-		SkillCode:       "",
-		SkillTrigger:    "",
-		SkillTarget:     "",
-		SkillValue:      0,
-		SkillDuration:   0,
-		SkillCooldown:   0,
-		SkillParamsJSON: "",
+		Name:                  "Демонический берсерк",
+		CodeString:            "demonic_berserker",
+		HealthPoints:          100,
+		Attack:                55,
+		SplashRadius:          0,
+		IsTank:                false,
+		CardType:              DemonicalCard,
+		CoolDown:              0,
+		ManaCost:              8,
+		BuffSlot:              true,
+		MaxCopies:             2,
+		SkillName:             "Кровавая расправа",
+		SkillCode:             SkillApplyDebuff,
+		SkillTrigger:          TriggerOnAttack,
+		SkillTarget:           TargetEnemyUnit,
+		SkillValue:            10,
+		SkillDuration:         5,
+		SkillCooldown:         3,
+		SkillParamsJSON:       "",
+		PassiveName:           "Хищный зверь",
+		PassiveCode:           "predatory_beast",
+		PassiveTrigger:        PassiveTriggerTurnStart,
+		PassiveTarget:         PassiveTargetSelf,
+		PassiveEffect:         PassiveEffectSkillCooldownDown,
+		PassiveCondition:      PassiveConditionCountAtLeast,
+		PassiveValue:          1,
+		PassiveDuration:       0,
+		PassiveScale:          PassiveScalePerCount,
+		PassiveCountOwner:     PassiveCountOwnerEnemy,
+		PassiveConditionCount: 1,
+		PassiveCountType:      OrganicalCard,
+		PassiveCountCode:      "",
 	},
 	{
 		//средняя карта. Можно сказать треш на высоком уровне маны
@@ -1317,13 +1358,13 @@ var DefaultBattleCards = []BattleCardTemplate{
 		ManaCost:        10,
 		BuffSlot:        true,
 		MaxCopies:       1,
-		SkillName:       "",
-		SkillCode:       "",
-		SkillTrigger:    "",
-		SkillTarget:     "",
-		SkillValue:      0,
-		SkillDuration:   0,
-		SkillCooldown:   0,
+		SkillName:       "ТЕХНОЛОГИЧЕСКИЙ ПРОРЫВ",
+		SkillCode:       SkillApplyDamageBuff,
+		SkillTrigger:    TriggerActive,
+		SkillTarget:     TargetSelf,
+		SkillValue:      50,
+		SkillDuration:   1,
+		SkillCooldown:   5,
 		SkillParamsJSON: "",
 	},
 }

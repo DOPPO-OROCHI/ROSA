@@ -23,36 +23,18 @@ const (
 )
 
 // ГЛОБАЛЬНЫЙ ПАТЧ
-// активные умения карт, либо активный скилл тогда, когда что то произойдет
-// триггеры карт. Типа когда срабатывают скилы ?
-const (
-	TriggerOnPlay    = "on_play"   //срабатывает скил при поставлении карты на стол
-	TriggerOnAttack  = "on_attack" //срабатывает, когда карта совершает атаку
-	TriggerOnDeath   = "on_death"  //когда карта умирает
-	TriggerTurnStart = "on_start"  //в начале хода игрока
-	TriggerActive    = "active"    //активный скилл карты
-)
 
-// на кого срабатывают карты ?
-const (
-	TargetNone            = "none"         //цели не требуется, например когда карта умирает она бьет всех
-	TargetSelf            = "self"         //на себя
-	TargetAllyUnit        = "ally_unit"    //на союзную карту
-	TargetEnemyUnit       = "enemy_unit"   //на вражескую карту
-	TargetAllyAll         = "ally_all"     //весь союзный стол
-	TargetEnemyAll        = "enemy_all"    //весь вражеский стол
-	TargetBothAll         = "both_all"     //вообще весь стол
-	TargetEnemySplash     = "enemy_splash" //сплеш по противникам
-	TargetAllySplash      = "ally_splash"  //сплеш по своим
-	TargetAllyGraveSingle = "ally_grave_single"
-)
-
-// коды скиллов карт
+/*
+Коды скиллов карт. Здесь описывает то, что скилл умеет делать вообще. В дальнейшем сюда будут добавться
+еще константы, которые так или иначе влияют на скилы. Далее все это будет обсулживаться в скилловых хендлерах,
+где карта будем мапить ключ (которыми выступают нижеописанные константы) и хендлер, который я напишу
+*/
 const (
 	SkillDamageSingle             = "damage_single"               //бьем точечно в одну карту done
 	SkillDamageSplash             = "damage_splash"               //бем по сплешу done
+	SkillHealSingle               = "heal_single"                 //лечим соло цель
 	SkillApplyDebuff              = "apply_debuff"                //накладываем дебаф при атаке, или просто по использованию
-	SkillApplyBuff                = "apply_buff"                  //накладываем бафф
+	SkillApplyDamageBuff          = "apply_buff"                  //накладываем бафф
 	SkillSummonSelfCopy           = "summon_self_copy"            //призывает копии себя же
 	SkillBanishUnit               = "banish_unit"                 //убирает карту со стола
 	SkillRevealEnemyHand          = "reveal_enemy_hand"           //смотрим в руку противника
@@ -64,86 +46,165 @@ const (
 	SkillDeathAoe                 = "death_aoe"                   //при уничтожении бьет по столу
 )
 
-// Для JSON скиллов карт
+/*
+Триггеры скиллов. Не путать с триггерами пассивок*. Короче скиллы в игре существуют не только нажимаемыми,
+но и действующими по ситуации. К примеру когда карта совершает атаку. В этом случае врубается скилл карты,
+который потом так или иначе уходит на кд. Здесь так же описываются все возможные варианты. В будущем будут
+добавляться еще сценарии, но пока что этого хватает
+*/
 const (
-	IgnoreTankTrue = "ignore_tank=true"
+	TriggerOnPlay    = "on_play"   //срабатывает скил при поставлении карты на стол
+	TriggerOnAttack  = "on_attack" //срабатывает, когда карта совершает атаку
+	TriggerOnDeath   = "on_death"  //когда карта умирает
+	TriggerTurnStart = "on_start"  //в начале хода игрока
+	TriggerActive    = "active"    //активный скилл карты
 )
 
-// Негативные эффекты на скилы
+/*
+Цели скиллов. НА кого они рассчитаны ? Ну типа, существует сценарий, когда карту бьют, она лечит весь свой
+стол. Или когда карта атакует, она увеличивает кд противнику. Так и вот, эти константы отвечают на вопрос,
+в кого дейсвтует скилл ?
+*/
 const (
-	DotHPUpdate       = "dot_hp_update"
-	DotAttackUpdate   = "dot_attack_update"
-	DotCooldownUpdate = "dot_cooldown_update"
+	TargetNone            = "none"              //цели не требуется, например когда карта умирает она бьет всех
+	TargetSelf            = "self"              //на себя
+	TargetAllyUnit        = "ally_unit"         //на союзную карту
+	TargetEnemyUnit       = "enemy_unit"        //на вражескую карту
+	TargetAllyAll         = "ally_all"          //весь союзный стол
+	TargetEnemyAll        = "enemy_all"         //весь вражеский стол
+	TargetBothAll         = "both_all"          //вообще весь стол
+	TargetEnemySplash     = "enemy_splash"      //сплеш по противникам
+	TargetAllySplash      = "ally_splash"       //сплеш по своим
+	TargetAllyGraveSingle = "ally_grave_single" //поднять мертвую карту из могилы
 )
 
-// Пассивные умения карт
-// Триггеры. Когда срабатывают пассивки ?
+// Для скиллов могут быть описаны спец условия. Например игнор танков. Все это описывается здесь
+const IgnoreTankTrue = "ignore_tank=true"
+
+/*
+Переодические или временные эффекты в зависимости от цели. В чем прикол ? Здесь именно что константы
+дот. Доты тоже бывают разными, здесь мы можем накинуть доту на хп, на кд и на атаку, уменьшая ту или
+иную характеристику. Так же можно будет действовать и с положительными эффектами, но как правило этого
+не нужно делать.
+*/
 const (
-	PassiveTriggerContinuous  = "continuous"
-	PassiveTriggerTurnStart   = "turn_start"
-	PassiveTriggerTurnEnd     = "turn_end"
-	PassiveTriggerOnPlay      = "on_play"
-	PassiveTriggerOnAttack    = "on_attack"
-	PassiveTriggerOnDeath     = "on_death"
-	PassiveTriggerOnAllyDead  = "on_ally_dead"
-	PassiveTriggerOnEnemyDead = "on_enemy_dead"
-	PassiveTriggerHitMe       = "on_hit_me"
+	DotHPUpdate       = "dot_hp_update"       //<-обновляем ХП
+	DotAttackUpdate   = "dot_attack_update"   //<-обновляем кд основной атаки
+	DotCooldownUpdate = "dot_cooldown_update" //<-обновляем кд скилла
 )
 
-// Таргеты. Кто получает эффекты пассивки ?
+/*
+--------ПАССИВНЫЕ УМЕНИЯ КАРТ--------
+Короче это пиздец. Пассивки устроены намного сложнее скиллов, поскольку их эффекты
+постоянны и требуют ну ебать какого менеджмента (в чем ты можешь убедиться, зайдя в
+файл passive_skills.go). Соответственно и всяк разных условий у них больше, к примеру:
+если на столе противника есть 3 механические карты, то карта-владелец пассивки должна
+апнуть всему своему столу урон на 1 ход, триггер в начале хода. Или вот еще прикол, при
+смерти союзной демонической карты, карта-владелец пассивки-сосед умершей карты становится
+танком на 3 хода. Круто да ?) Соответственно и условий больше. Перейдем к описанию...
+*/
+
+/*
+Триггеры пассивок. Тут тоже все замудренно пиздец. В чем прикол ? Как я уже рофлил выше
+условий для тригера пассивки бывает множество, от постоянных, до специфических в духе -умер
+вражеский герой с таким то кодом (НЕ ТИПОМ, А ИМЕННО КОДОМ). Иными словами, когда можно вообще
+проверять, можно ли включить пассивку ? Здесь все это описывается
+*/
 const (
-	PassiveTargetSelf          = "self"
-	PassiveTargetAllyAll       = "ally_all"
-	PassiveTargetEnemyAll      = "enemy_all"
-	PassiveTargetBothAll       = "both_all"
-	PassiveTargetAllyLeftRight = "ally_left_right"
-	PassiveTargetRandomEnemy   = "random_enemy_unit"
-	PassiveTargetRandomAlly    = "random_ally_unit"
+	PassiveTriggerContinuous  = "continuous"    //<-постоянный эффект, не требует проверок
+	PassiveTriggerTurnStart   = "turn_start"    //<-на старт хода (тут уже используется тогда, когда нужна проверка)
+	PassiveTriggerTurnEnd     = "turn_end"      //<-при завершении хода (та же песня только от обратного)
+	PassiveTriggerOnPlay      = "on_play"       //<-при разыгрывании карты (когда ставишь карту на стол)
+	PassiveTriggerOnAttack    = "on_attack"     //<-когда карта атакует
+	PassiveTriggerOnDeath     = "on_death"      //<-при смерти карты (к примеру, если карта умерла тогда, когда на столе есть Х то...)
+	PassiveTriggerOnAllyDead  = "on_ally_dead"  //<-при смерти союзника
+	PassiveTriggerOnEnemyDead = "on_enemy_dead" //<-при смерти противника
+	PassiveTriggerHitMe       = "on_hit_me"     //<-при ударе карты-владельца
+)
 
-	PassiveTargetAllyTypeDemonical  = "ally_type_demonical"
-	PassiveTargetAllyTypeMechanical = "ally_type_mechanical"
-	PassiveTargetAllyTypeOrganical  = "ally_type_organical"
-	PassiveTargetAllyTypeHealer     = "ally_type_healer"
+/*
+Таргеты пассивок. Или кто получает эффекты пассивки ?
+С условиями определились, но теперь нужно внести константы, которые будут отражать то, кто
+цель пассивного умения ? Вот все они. Здесь так же описывается все, что может понадобиться.
+*/
+const (
+	PassiveTargetSelf          = "self"              //<-эффект на себя
+	PassiveTargetAllyAll       = "ally_all"          //<-на всех союзников
+	PassiveTargetAttacker      = "attacker"          //<-на того, кто атакует карту-владельца пассивка
+	PassiveTargetEnemyAll      = "enemy_all"         //<-на всех противников вообще
+	PassiveTargetBothAll       = "both_all"          //<-ВООБЩЕ НА ВСЕХ НА СТОЛЕ
+	PassiveTargetAllyLeftRight = "ally_left_right"   //<-на рядом стоящие от карты-владельца карты
+	PassiveTargetRandomEnemy   = "random_enemy_unit" //<-на случайного противника
+	PassiveTargetRandomAlly    = "random_ally_unit"  //<-на случайного союзника
 
+	PassiveTargetAllyTypeDemonical  = "ally_type_demonical"  //<-на все демонические союзные карты
+	PassiveTargetAllyTypeMechanical = "ally_type_mechanical" //<-на все механические союзные карты
+	PassiveTargetAllyTypeOrganical  = "ally_type_organical"  //<-на все органические союзные карты
+	PassiveTargetAllyTypeHealer     = "ally_type_healer"     //<-на всех хилеров
+	//далее то же самое только уже на противников
 	PassiveTargetEnemyTypeDemonical  = "enemy_type_demonical"
 	PassiveTargetEnemyTypeMechanical = "enemy_type_mechanical"
 	PassiveTargetEnemyTypeOrganical  = "enemy_type_organical"
 	PassiveTargetEnemyTypeHealer     = "enemy_type_healer"
 )
 
-// Эффект от пассивок. Что произойдет ?
+/*
+Эффекты от пассивок. Что произойдет ? Ну вот мы описали выше когда действует пассивка и на кого.
+И че ? Вот эти константы и отвечаеют на этот вопрос. Что будет ?
+*/
 const (
-	PassiveEffectDamageUp          = "damage_up"
-	PassiveEffectHPUp              = "hp_up"
-	PassiveEffectCoolDownDown      = "cooldown_down"
-	PassiveEffectSkillDamageUp     = "skill_damage_up"
-	PassiveEffectSkillCooldownDown = "skill_cooldown_down"
-	PassiveEffectDamage            = "damage"
+	PassiveEffectDamageUp          = "damage_up"           //<-увеличиваем урон
+	PassiveEffectHPUp              = "hp_up"               //<-увеличиваем ХП (общие+хил)
+	PassiveEffectHeal              = "heal"                //<-просто хилим
+	PassiveEffectCooldownDown      = "cooldown_down"       //<-снижаем кд атаки
+	PassiveEffectSkillDamageUp     = "skill_damage_up"     //<-увеличиваем дамаг скилла
+	PassiveEffectSkillCooldownDown = "skill_cooldown_down" //<-снижаем кд скилла
+	PassiveEffectDamage            = "damage"              //<-просто ебашим кого нибудь на столе (не путать с дотами)
 )
 
-// Когда действует пассивка ?
+/*
+Когда действует пассивка ?
+Пассивки не живут перманентно. В случае триггеров был дан ответ на вопрос -Когда проверять условия
+включения пассивки ? То здесь я отвечаю на вопрос, можно ли сработать пассивке в момент времени ? То
+есть триггер=момент, кондиции = дополнительные условия. То есть схема такая :
+-в начале хода игрока проверяем триггер (например TriggetTurnStart)
+-проверяем кондиции (например OrganicalOnTable)
+-если все сработало - круто, врубаем пассивку с ее эффектами. Триггер = окно входа, кондиции = проверка,
+можно ли включить пассивку.
+*/
 const (
-	PassiveConditionAlways            = "always"
-	PassiveConditionDemonicalOnTable  = "demonical_on_table"
-	PassiveConditionOrganicalOnTable  = "organical_on_table"
-	PassiveConditionMechanicalOnTable = "mechanical_on_table"
-	PassiveConditionHealerOnTable     = "healer_on_table"
-
-	//если на столе определенное количество карт
-	PassiveConditionCountAtLeast = "count_at_least" //<-если карт больше N
-	PassiveConditionCountAtMost  = "count_at_most"  //<-если карт меньше или ровно N
-	PassiveConditionExact        = "count_exact"    //<-если карт ровно N
+	PassiveConditionAlways            = "always"              //<-всегда можно врубить при триггере
+	PassiveConditionDemonicalOnTable  = "demonical_on_table"  //<-когда демон на столе
+	PassiveConditionOrganicalOnTable  = "organical_on_table"  //<-когда человек на столе
+	PassiveConditionMechanicalOnTable = "mechanical_on_table" //<-когда на столе машина
+	PassiveConditionHealerOnTable     = "healer_on_table"     //<-ну и хилер
+	//А тут вступает в силу прикол. Для активации некоторых пассивок нужно условие, к примеру
+	//-Органических карт > X. Здесь это описывается.
+	PassiveConditionCountAtLeast = "count_at_least" //<-если карт больше Х
+	PassiveConditionCountAtMost  = "count_at_most"  //<-если карт меньше или ровно Х
+	PassiveConditionExact        = "count_exact"    //<-если карт ровно Х
 )
 
-// Где считать карты для активации пассивок ?
+/*
+А здесь отвечаем на вопрос, где считать карты, подходящие под критерии ? Ну типа, зацени пример
+-увеличить всем хп, если на собзном столе Х людей. Или поднимай всем атаку, если на столе противника
+Х демоном. Или вообще бля. Увеличь всем че нибудь если на общем столе хотябы одна карта с таким кодом(не
+классом, а кодом). Так вот...
+*/
 const (
-	PassiveCountOwnerAlly  = "ally"
-	PassiveCountOwnerEnemy = "enemy"
-	PassiveCountOwnerBoth  = "both"
+	PassiveCountOwnerAlly  = "ally"  //<-союзный стол
+	PassiveCountOwnerEnemy = "enemy" //<-стол противника
+	PassiveCountOwnerBoth  = "both"  //<-оба стола
 )
 
-// Как считать бонусы ?
+// Как считать бонусы ? Тут все просто. Мы либо добавляем Х, либо считает за каждого подходящего под условие
 const (
 	PassiveScaleFlat     = "flat"      //<- просто добавляем Х
 	PassiveScalePerCount = "per_count" //<- за каждого +Х
 )
+
+/*Таким образом реализован такой ебанутый коктейль из возможных вариаций скиллов+пассивок что это пиздец
+В дальнейшем буду еще добавлять. Цепочка добавления такова -пишем константу-пиздуем в passive_skills.go,
+добавляем или переиспользуем хендлер, если нужно добавлять новый хелпер или кейс -добавляем в passiveTargets,
+passiveConditionOK (если появятся новые типы карт), регаем код пассивки (который пишем в карте) в мапу с пассивками,
+*/

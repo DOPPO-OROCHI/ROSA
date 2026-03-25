@@ -19,7 +19,8 @@ func init() {
 	CardSkillHandlers = map[string]CardSkillHandler{
 		cards.SkillDamageSplash:             castDamageSplash,
 		cards.SkillDamageSingle:             castDamageSingle,
-		cards.SkillApplyBuff:                castBuffSelf,
+		cards.SkillHealSingle:               castHealSingle,
+		cards.SkillApplyDamageBuff:          castBuffSelf,
 		cards.SkillApplyDebuff:              castApplyDebuff,
 		cards.SkillSummonSelfCopy:           castSummonSelfCopy,
 		cards.SkillBanishUnit:               castBanishUnit,
@@ -113,6 +114,44 @@ func castDamageSingle(
 			Died:       died,
 			NewHP:      newHP,
 		},
+		},
+	})
+	return nil
+}
+
+// ФУНКЦИЯ ЛЕЧЕНИЯ СОЛО ЦЕЛИ
+func castHealSingle(
+	m *MatchState, a Action,
+	caster *UnitState,
+	owner *PlayerState,
+	_ *PlayerState) error {
+	if m == nil || caster == nil || owner == nil {
+		return errors.New("nil state")
+	}
+	heal := caster.SkillValue
+	slot, target := owner.FindSlot(a.TargetInstanceID)
+	if slot < 0 || target == nil {
+		return ErrCardSkillBadTarget
+	}
+	target.HP += heal
+	if target.HP > target.MaxHP {
+		target.HP = target.MaxHP
+	}
+	m.Events = append(m.Events, Event{
+		Type:             string(EventCardSkill),
+		PlayerIndex:      a.PlayerIndex,
+		SourceKind:       string(SourceUnit),
+		SourceInstanceID: caster.InstanceID,
+		SourceTemplateID: caster.TemplateID,
+		TargetSlot:       slot,
+		Targets: []EventTarget{
+			{
+				InstanceID: target.InstanceID,
+				TemplateID: target.TemplateID,
+				Amount:     heal,
+				Died:       false,
+				NewHP:      target.HP,
+			},
 		},
 	})
 	return nil

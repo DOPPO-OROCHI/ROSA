@@ -13,7 +13,9 @@ type PassiveSkillHandler func(m *MatchState,
 	event string, ctx PassiveTriggerContext) error
 
 type PassiveTriggerContext struct {
-	ActorInstanceID  string
+	AttackerInstanceID string
+	AttackerOwnerIdx   int
+
 	TargetInstanceID string
 	DeadInstanceID   string
 	SourceOwnerIdx   int
@@ -21,47 +23,181 @@ type PassiveTriggerContext struct {
 	TargetSlot       int
 }
 
+type passivePrepared struct {
+	targets []*UnitState
+	value   int
+}
+
 var PassiveSkillsHandler map[string]PassiveSkillHandler
 
 func init() {
 	PassiveSkillsHandler = map[string]PassiveSkillHandler{
-		"passive_damage_up": passiveDamageUpHandler,
+		"disgusting_stench": passiveApplyEffectOnHitMe,       // МРАЗЬ
+		"predatory_beast":   passiveGenericSkillCooldownDown, // ДЕМОНИЧЕСКИЙ БЕРСЕРК
 	}
 }
 
-// ПАССИВКА ПОД АП УРОНА
-func passiveDamageUpHandler(m *MatchState,
+/*
+Диспетчер одной пассивки одной конкретной карты. В чем прикол ?
+Здесь мы принимаем вообще все что связано с картой, проверяя ее
+триггер, после чего ищем его хендлер (код пассивки->хендлер), после
+чего вызываем его. Такой удобный мини оркестратор пассивок. Круто.
+*/
+func triggerPassiveByTrigger(m *MatchState,
+	ownerIdx int, source *UnitState,
+	trigger string, ctx PassiveTriggerContext) error {
+	if m == nil || source == nil {
+		return nil
+	}
+	if !shouldTriggerPassive(source, trigger) {
+		return nil
+	}
+	h, err := getPassiveSkillHandler(source.PassiveCode)
+	if err != nil {
+		return err
+	}
+	return h(m, ownerIdx, source, trigger, ctx)
+}
+
+/*
+-------ХЕНДЛЕРЫ ПАССИВНЫХ СКИЛЛОВ-------
+Здесь описываются собственно чертежи пассивных умений, к которым
+будут подключены пассивки каждой отдельной карты. Здесь проверяются
+параметры карты
+*/
+func passiveGenericDamageUp(m *MatchState,
 	ownerIdx int, source *UnitState,
 	event string, ctx PassiveTriggerContext) error {
-	if m == nil || source == nil || ownerIdx < 0 || ownerIdx > 1 {
+	prep, ok := preparePassiveBase(m, ownerIdx, source, event, ctx)
+	if !ok {
 		return nil
 	}
-	if !shouldTriggerPassive(source, event) {
-		return nil
-	}
-	if source.PassiveTrigger == cards.PassiveTriggerHitMe && ctx.TargetInstanceID != source.InstanceID {
-		return nil
-	}
-	matched := passiveMatchedCount(m, ownerIdx, source)
-	if !passiveConditionOK(m, ownerIdx, source, matched) {
-		return nil
-	}
-	value := calcPassiveFinalValue(source, matched)
-	if value == 0 {
-		return nil
-	}
-	targets := passiveTargets(m, ownerIdx, source, ctx)
-	for _, t := range targets {
-		if t == nil {
-			continue
-		}
-		t.Attack += value
-	}
+	applyPassiveAttackBuff(prep.targets, prep.value)
 	return nil
 }
 
-/*ДАЛЕЕ ХЕЛПЕРЫ*/
-// СЧИТАЕМ СКОЛЬКО ЮНИТОВ ПОДХОДИТ ПОД ТРИГГЕР ПАССИВОК. ПО СТОРОНЕ И ТИПУ\КОДУ КАРТЫ
+func passiveGenericHPUp(m *MatchState,
+	ownerIdx int, source *UnitState,
+	event string, ctx PassiveTriggerContext) error {
+	prep, ok := preparePassiveBase(m, ownerIdx, source, event, ctx)
+	if !ok {
+		return nil
+	}
+	applyPassiveHPBuff(prep.targets, prep.value)
+	return nil
+}
+
+func passiveGenericCooldownDown(m *MatchState,
+	ownerIdx int, source *UnitState,
+	event string, ctx PassiveTriggerContext) error {
+	prep, ok := preparePassiveBase(m, ownerIdx, source, event, ctx)
+	if !ok {
+		return nil
+	}
+	applyPassiveAttackCooldownDown(prep.targets, prep.value)
+	return nil
+}
+
+func passiveGenericSkillDamageUp(m *MatchState,
+	ownerIdx int, source *UnitState,
+	event string, ctx PassiveTriggerContext) error {
+	prep, ok := preparePassiveBase(m, ownerIdx, source, event, ctx)
+	if !ok {
+		return nil
+	}
+	applyPassiveSkillDamageBuff(prep.targets, prep.value)
+	return nil
+}
+
+func passiveGenericSkillCooldownDown(m *MatchState,
+	ownerIdx int, source *UnitState,
+	event string, ctx PassiveTriggerContext) error {
+	prep, ok := preparePassiveBase(m, ownerIdx, source, event, ctx)
+	if !ok {
+		return nil
+	}
+	applyPassiveSkillCooldownDown(prep.targets, prep.value)
+	return nil
+}
+
+func passiveGenericHeal(m *MatchState,
+	ownerIdx int, source *UnitState,
+	event string, ctx PassiveTriggerContext) error {
+	prep, ok := preparePassiveBase(m, ownerIdx, source, event, ctx)
+	if !ok {
+		return nil
+	}
+	applyPassiveHeal(prep.targets, prep.value)
+	return nil
+}
+
+func passiveGenericDamage(m *MatchState,
+	ownerIdx int, source *UnitState,
+	event string, ctx PassiveTriggerContext) error {
+	prep, ok := preparePassiveBase(m, ownerIdx, source, event, ctx)
+	if !ok || prep.value <= 0 {
+		return nil
+	}
+	return applyPassiveDamage(m, ownerIdx, prep.targets, prep.value)
+}
+
+// НАЛОЖЕНИЕ ДЕБАФА НА ПРОТИВНИКА, КОТОРЫЙ БЬЕТ КАРТУ-ИСТОЧНИК
+func passiveApplyEffectOnHitMe(m *MatchState,
+	ownerIdx int, source *UnitState,
+	event string, ctx PassiveTriggerContext) error {
+	prep, ok := preparePassiveBase(m, ownerIdx, source, event, ctx)
+	if !ok {
+		return nil
+	}
+	applyPassiveEffect(prep.targets, source.PassiveEffect, source.PassiveDuration, prep.value)
+	return nil
+}
+
+/*
+-------ХЕЛПЕРЫ-------
+*/
+
+/*
+Общий подготовительный хелпер для пассивки. Здесь проводятся базовые проверки, такие как входящие аргументы
+например... Ну ладно-ладно, здесь проверяем вообзще должна ли карта играть сейчас, проверяется спец-случай,
+онхитми, который отвечает за то, что пиздят карту и является ли это поводом для тика какой-либо пассивки. При
+этом отдаем структуру, которая в себе несет цели для пассивки и значение какого либо из тиков.
+*/
+func preparePassiveBase(m *MatchState,
+	ownerIdx int, source *UnitState,
+	event string, ctx PassiveTriggerContext) (passivePrepared, bool) {
+	if m == nil || source == nil || ownerIdx < 0 || ownerIdx > 1 {
+		return passivePrepared{}, false
+	}
+	if !shouldTriggerPassive(source, event) {
+		return passivePrepared{}, false
+	}
+	if source.PassiveTrigger == cards.PassiveTriggerHitMe && ctx.TargetInstanceID != source.InstanceID {
+		return passivePrepared{}, false
+	}
+	matched := passiveMatchedCount(m, ownerIdx, source)
+	if !passiveConditionOK(m, ownerIdx, source, matched) {
+		return passivePrepared{}, false
+	}
+	value := calcPassiveFinalValue(source, matched)
+	if value == 0 {
+		return passivePrepared{}, false
+	}
+	targets := passiveTargets(m, ownerIdx, source, ctx)
+	if len(targets) == 0 {
+		return passivePrepared{}, false
+	}
+	return passivePrepared{targets: targets, value: value}, true
+}
+
+/*
+Считаем сколько карт подходит под условие пассивки. Дело в том, что для некоторых эффектов необходимо
+присутствие одного или нескольких карт того, или иного типа. Все это формируется здесь. Отдаем int,
+чтобы дальше использовать это в passiveConditionOK, где будет сопоставляться количественные требования
+для условий пассивки. Типа, если на столе будет 5 демонов -хопаааа... То есть че, сюда попадает карта, у
+которой есть фильтр пассивки PassiveCountType. Эта функция собирает все, что подходит под эту штуку. Грубо
+говоря тут выбираем кого считать для активации пассивки. Не просто нихрена.
+*/
 func passiveMatchedCount(m *MatchState, ownerIdx int, source *UnitState) int {
 	if m == nil || source == nil || ownerIdx > 1 || ownerIdx < 0 {
 		return 0
@@ -110,20 +246,30 @@ func passiveMatchedCount(m *MatchState, ownerIdx int, source *UnitState) int {
 	}
 }
 
-// ОПРЕДЕЛЯЕМ АКТИВНА ЛИ ПАССИВНАЯ СПОСОБНОСТЬ В МОМЕНТ ВРЕМЕНИ
+/*
+Проверяем активна ли пассивка исходя из текущего состояния матча.
+Сюда передаем карту-источник пассивки, и уже посчитанное функцией
+выше количество совпадающих карт с требованиями. Дальше смотрим на
+PassiveCondition и решаем, может ли считаться пассивка включенной.
+*/
 func passiveConditionOK(m *MatchState, ownerIdx int, source *UnitState, matched int) bool {
 	if m == nil || source == nil || ownerIdx > 1 || ownerIdx < 0 {
 		return false
 	}
 	switch source.PassiveCondition {
+	//пассивка работает всегда (если пустое поле в дефолтах-работает всегда)
 	case "", cards.PassiveConditionAlways:
 		return true
+		//если найдено не меньше Х карт
 	case cards.PassiveConditionCountAtLeast:
 		return matched >= source.PassiveConditionCount
+		//не больше Х карт
 	case cards.PassiveConditionCountAtMost:
 		return matched <= source.PassiveConditionCount
+		//ровно Х карт
 	case cards.PassiveConditionExact:
 		return matched == source.PassiveConditionCount
+		//если на столе карта нужного типа
 	case cards.PassiveConditionDemonicalOnTable:
 		tmp := *source
 		tmp.PassiveCountType = cards.DemonicalCard
@@ -144,12 +290,18 @@ func passiveConditionOK(m *MatchState, ownerIdx int, source *UnitState, matched 
 		tmp.PassiveCountType = cards.HealerCard
 		tmp.PassiveCountCode = ""
 		return passiveMatchedCount(m, ownerIdx, &tmp) > 0
+		//после всей проверки отдаем инфу о том, считается ли пассивка активной, или еще нет
 	default:
 		return false
 	}
 }
 
-// ОПРЕДЕЛЯЕМ К КАКИМ ЮНИТАМ ПРИМЕНИТЬ ЭФФЕКТ (ally_all, random_enemy...)
+/*
+Собираем список целей для пассивки. И дело тут вот в чем. Каждая из типов пассивок действует по разному. Кто то
+ебашим по всему столу вообще, кто то только по вражескому столу, кто то случайно, кто то вообще по своим и так
+далее, список огромный. Так вот, здесь все это собирается в единый массив, который будет отдаваться в хендлеры,
+для применения. Если таргет не задан, функция берет цель из контекста, через ctx
+*/
 func passiveTargets(m *MatchState, ownerIdx int, source *UnitState, ctx PassiveTriggerContext) []*UnitState {
 	if m == nil || source == nil || ownerIdx > 1 || ownerIdx < 0 {
 		return nil
@@ -224,6 +376,16 @@ func passiveTargets(m *MatchState, ownerIdx int, source *UnitState, ctx PassiveT
 			}
 		}
 		add(picked)
+	case cards.PassiveTargetAttacker:
+		if ctx.AttackerOwnerIdx < 0 || ctx.AttackerOwnerIdx > 1 || ctx.AttackerInstanceID == "" {
+			break
+		}
+		p := m.Players[ctx.AttackerOwnerIdx]
+		if p == nil {
+			break
+		}
+		_, attacker := p.FindSlot(ctx.AttackerInstanceID)
+		add(attacker)
 	case cards.PassiveTargetAllyTypeDemonical:
 		addByType(ally.Table, cards.DemonicalCard)
 	case cards.PassiveTargetAllyTypeMechanical:
@@ -250,7 +412,12 @@ func passiveTargets(m *MatchState, ownerIdx int, source *UnitState, ctx PassiveT
 	return out
 }
 
-// СЧИТАЕМ ФИНАЛЬНУЮ СИЛУ ТОГО ИЛИ ИНОГО ПАССИВНОГО ЭФФЕКТА
+/*
+Считаем финальное значение пассивки. Здесь принимаем карту и кол-во совпаденеий, которое
+было найдено ранее. Функция нужна для того, чтобы узнать итоговую силу эффекта, которая
+возвращает либо текущее значение, либо перемножает его на количество совпадений. На выходе
+даем готовое число, которое двиглом и мной интерпретируется как сила пассивки.
+*/
 func calcPassiveFinalValue(source *UnitState, matchedCount int) int {
 	if source == nil {
 		return 0
@@ -265,7 +432,144 @@ func calcPassiveFinalValue(source *UnitState, matchedCount int) int {
 	}
 }
 
-// Проверяет должна ли пассивка сработать в момент времени или нет
+/*
+-------ПРИМЕНЯЕМ КАКОЙ ЛИБО ПАРАМЕТР-------
+Далее по сути лишь инструменты, которые легко можно интегрировать в любой из
+хендлеров. Смысл прост, здесь раскидано все то, что необходимо к применению.
+*/
+
+// БАФФ НА АТАКУ
+func applyPassiveAttackBuff(targets []*UnitState, value int) {
+	for _, t := range targets {
+		if t == nil {
+			continue
+		}
+		t.Attack += value
+	}
+}
+
+// БАФФ НА ПОДНЯТИЕ ХП И ХИЛЛ
+func applyPassiveHPBuff(targets []*UnitState, value int) {
+	for _, t := range targets {
+		if t == nil {
+			continue
+		}
+		t.HP += value
+		t.MaxHP += value
+	}
+}
+
+// ХИЛИМ, БЕЗ ПОВЫШЕНИЯ МАКСИМАЛЬНОГО ХП
+func applyPassiveHeal(targets []*UnitState, value int) {
+	for _, t := range targets {
+		if t == nil {
+			continue
+		}
+		t.HP += value
+		if t.HP > t.MaxHP {
+			t.HP = t.MaxHP
+		}
+	}
+}
+
+// БАФФ НА СНИЖЕНИЕ КД ОСНОВНОЙ АТАКИ КАРТЫ
+func applyPassiveAttackCooldownDown(targets []*UnitState, value int) {
+	for _, t := range targets {
+		if t == nil {
+			continue
+		}
+		t.Cooldown -= value
+		if t.Cooldown < 0 {
+			t.Cooldown = 0
+		}
+	}
+}
+
+// БАФФ НА СИЛУ СКИЛА КАРТЫ
+func applyPassiveSkillDamageBuff(targets []*UnitState, value int) {
+	for _, t := range targets {
+		if t == nil {
+			continue
+		}
+		t.SkillValue += value
+	}
+}
+
+// БАФФ НА ОТКАТ КД СКИЛА КАРТЫ
+func applyPassiveSkillCooldownDown(targets []*UnitState, value int) {
+	for _, t := range targets {
+		if t == nil {
+			continue
+		}
+		t.SkillCooldownLeft -= value
+		if t.SkillCooldownLeft < 0 {
+			t.SkillCooldownLeft = 0
+		}
+	}
+}
+
+// БАФФ
+func applyPassiveDamage(m *MatchState, ownerIdx int, targets []*UnitState, value int) error {
+	if m == nil || ownerIdx < 0 || ownerIdx > 1 {
+		return nil
+	}
+	dead := map[string]struct{}{}
+	for _, t := range targets {
+		if t == nil {
+			continue
+		}
+		t.HP -= value
+		if t.HP <= 0 {
+			t.HP = 0
+			dead[t.InstanceID] = struct{}{}
+		}
+	}
+	for id := range dead {
+		if p := m.Players[ownerIdx]; p != nil {
+			if slot, u := p.FindSlot(id); slot >= 0 && u != nil && u.HP <= 0 {
+				if err := killUnitAt(m, ownerIdx, slot); err != nil {
+					return err
+				}
+				continue
+			}
+		}
+		enemyIdx := 1 - ownerIdx
+		if p := m.Players[enemyIdx]; p != nil {
+			if slot, u := p.FindSlot(id); slot >= 0 && u != nil && u.HP <= 0 {
+				if err := killUnitAt(m, enemyIdx, slot); err != nil {
+					return err
+				}
+			}
+		}
+	}
+	return nil
+}
+
+/*
+Используем для наложения временного эффекта на карту\ы. Принимает таргеты,
+тип эффекта, длительность и значение, после чего вызываем AddEfect, накидывая
+всю хуйню на карту\ы
+*/
+func applyPassiveEffect(targets []*UnitState,
+	effectType string, duration int, value int) {
+	for _, target := range targets {
+		if target == nil {
+			continue
+		}
+		AddEffect(target, UnitEffect{
+			EffectType: effectType,
+			TurnsLeft:  duration,
+			Value:      value,
+		})
+	}
+}
+
+/*
+-------ОБЩИЕ ХЕЛПЕРЫ-------
+Здесь идет базовая проверка того, когда должен примениться триггер
+пассивки. Плюс функция поиска из карты со всеми пассивными эффектами
+по коду карты, который вшит в карту и должен совпадать с defaults.go
+*/
 func shouldTriggerPassive(u *UnitState, event string) bool {
 	return u != nil && u.PassiveCode != "" && u.PassiveTrigger == event
 }
