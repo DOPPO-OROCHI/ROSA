@@ -420,14 +420,18 @@ func CardAttack(m *MatchState,
 				targetSlots = append(targetSlots, right)
 			}
 		}
-		dmg := atk.Attack
+		baseDamage := atk.Attack
 		for _, s := range targetSlots {
 			u := defPlayer.Table[s]
 			if u == nil {
 				continue
 			}
+			dmg := baseDamage
 			inst := u.InstanceID
 			tplID := u.TemplateID
+			if s != di {
+				dmg = baseDamage / 2
+			}
 			u.HP -= dmg
 			_ = triggerPassiveByTrigger(m, 1-playerIndex, u, cards.PassiveTriggerHitMe, PassiveTriggerContext{
 				AttackerInstanceID: atk.InstanceID,
@@ -440,7 +444,7 @@ func CardAttack(m *MatchState,
 			died := u.HP <= 0
 			newHP := u.HP
 			if died {
-				if err := killUnitAt(m, 1-playerIndex, s); err != nil {
+				if err := killUnitAt(m, 1-playerIndex, s, atk.InstanceID, playerIndex); err != nil {
 					return err
 				}
 				newHP = 0
@@ -563,11 +567,15 @@ func HeroAttack(m *MatchState,
 				targetSlots = append(targetSlots, right)
 			}
 		}
-		dmg := atkPlayer.HeroAttackPower
+		baseDamage := atkPlayer.HeroAttackPower
 		for _, s := range targetSlots {
 			u := defPlayer.Table[s]
 			if u == nil {
 				continue
+			}
+			dmg := baseDamage
+			if s != di {
+				dmg = baseDamage / 2
 			}
 			inst := u.InstanceID
 			tplID := u.TemplateID
@@ -575,7 +583,7 @@ func HeroAttack(m *MatchState,
 			died := u.HP <= 0
 			newHP := u.HP
 			if died {
-				if err := killUnitAt(m, 1-playerIndex, s); err != nil {
+				if err := killUnitAt(m, 1-playerIndex, s, "", playerIndex); err != nil {
 					return err
 				}
 				newHP = 0
@@ -771,7 +779,7 @@ func DispathPassives(m *MatchState, ownerIdx int, trigger string, ctx PassiveTri
 }
 
 // ХЕЛПЕР СМЕРТИ //
-func killUnitAt(m *MatchState, ownerIdx int, slot int) error {
+func killUnitAt(m *MatchState, ownerIdx int, slot int, killerInstanceID string, killerOwnerIdx int) error {
 	if m == nil {
 		return errors.New("nil match state")
 	}
@@ -808,7 +816,7 @@ func killUnitAt(m *MatchState, ownerIdx int, slot int) error {
 		DiedAtTurn: owner.Turns,
 	})
 	enemyIdx := 1 - ownerIdx
-	_ = triggerOnDeathSkill(m, &dead, ownerIdx)
+	_ = triggerOnDeathSkill(m, &dead, ownerIdx, killerInstanceID, killerOwnerIdx)
 	owner.RemoveAt(slot)
 	_ = DispathPassives(m, ownerIdx, cards.PassiveTriggerOnAllyDead, PassiveTriggerContext{
 		DeadInstanceID: dead.InstanceID,

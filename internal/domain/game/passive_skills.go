@@ -138,7 +138,7 @@ func passiveGenericDamage(m *MatchState,
 	if !ok || prep.value <= 0 {
 		return nil
 	}
-	return applyPassiveDamage(m, ownerIdx, prep.targets, prep.value)
+	return applyPassiveDamage(m, ownerIdx, source, prep.targets, prep.value)
 }
 
 // НАЛОЖЕНИЕ ДЕБАФА НА ПРОТИВНИКА, КОТОРЫЙ БЬЕТ КАРТУ-ИСТОЧНИК
@@ -209,6 +209,9 @@ func passiveMatchedCount(m *MatchState, ownerIdx int, source *UnitState) int {
 		for i := 0; i < TableSize; i++ {
 			u := t[i]
 			if u == nil {
+				continue
+			}
+			if source.InstanceID != "" && u.InstanceID == source.InstanceID {
 				continue
 			}
 			if source.PassiveCountType != "" {
@@ -522,9 +525,15 @@ func applyPassiveSkillCooldownDown(targets []*UnitState, duration int, value int
 }
 
 // УРОН ПРИ ТРИГГЕРЕ
-func applyPassiveDamage(m *MatchState, ownerIdx int, targets []*UnitState, value int) error {
+func applyPassiveDamage(m *MatchState, ownerIdx int, source *UnitState, targets []*UnitState, value int) error {
 	if m == nil || ownerIdx < 0 || ownerIdx > 1 {
 		return nil
+	}
+	killerInstanceID := ""
+	killerOwnerIdx := ownerIdx
+	if source != nil {
+		killerInstanceID = source.InstanceID
+		killerOwnerIdx = ownerIdx
 	}
 	dead := map[string]struct{}{}
 	for _, t := range targets {
@@ -540,7 +549,7 @@ func applyPassiveDamage(m *MatchState, ownerIdx int, targets []*UnitState, value
 	for id := range dead {
 		if p := m.Players[ownerIdx]; p != nil {
 			if slot, u := p.FindSlot(id); slot >= 0 && u != nil && u.HP <= 0 {
-				if err := killUnitAt(m, ownerIdx, slot); err != nil {
+				if err := killUnitAt(m, ownerIdx, slot, killerInstanceID, killerOwnerIdx); err != nil {
 					return err
 				}
 				continue
@@ -549,7 +558,7 @@ func applyPassiveDamage(m *MatchState, ownerIdx int, targets []*UnitState, value
 		enemyIdx := 1 - ownerIdx
 		if p := m.Players[enemyIdx]; p != nil {
 			if slot, u := p.FindSlot(id); slot >= 0 && u != nil && u.HP <= 0 {
-				if err := killUnitAt(m, enemyIdx, slot); err != nil {
+				if err := killUnitAt(m, enemyIdx, slot, killerInstanceID, killerOwnerIdx); err != nil {
 					return err
 				}
 			}

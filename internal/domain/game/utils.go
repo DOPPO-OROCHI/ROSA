@@ -45,7 +45,7 @@ func TickerEffects(m *MatchState, ownerIdx int) {
 				}
 			}
 			if u.HP <= 0 {
-				_ = killUnitAt(m, ownerIdx, i)
+				_ = killUnitAt(m, ownerIdx, i, "", ownerIdx)
 				unitDied = true
 				break
 			}

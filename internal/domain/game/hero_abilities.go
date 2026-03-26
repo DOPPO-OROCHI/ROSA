@@ -188,7 +188,7 @@ func (ab SupremeLiderAbilitySpec) Apply(st *MatchState, a Action) error {
 	}
 	u.HP -= dmg
 	if u.HP <= 0 {
-		if err := killUnitAt(st, 1-a.PlayerIndex, slot); err != nil {
+		if err := killUnitAt(st, 1-a.PlayerIndex, slot, "", a.PlayerIndex); err != nil {
 			return err
 		}
 	}
@@ -242,7 +242,7 @@ func (ab TheSystemAbilitySpec) Apply(st *MatchState, a Action) error {
 		}
 		u.HP -= dmg
 		if u.HP <= 0 {
-			if err := killUnitAt(st, 1-a.PlayerIndex, s); err != nil {
+			if err := killUnitAt(st, 1-a.PlayerIndex, s, "", a.PlayerIndex); err != nil {
 				return err
 			}
 		}

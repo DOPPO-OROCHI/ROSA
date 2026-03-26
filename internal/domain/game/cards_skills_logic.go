@@ -6,7 +6,8 @@ import (
 )
 
 // Хелпер для тех карт, смысл которых заключается в тригере скила при смерти
-func triggerOnDeathSkill(m *MatchState, dead *UnitState, deadOwnedIndex int) error {
+func triggerOnDeathSkill(m *MatchState, dead *UnitState,
+	deadOwnedIndex int, killerInstanceID string, killerOwnerIdx int) error {
 	if m == nil || dead == nil {
 		return nil
 	}
@@ -23,8 +24,11 @@ func triggerOnDeathSkill(m *MatchState, dead *UnitState, deadOwnedIndex int) err
 		return err
 	}
 	a := Action{
-		PlayerIndex:    deadOwnedIndex,
-		CardInstanceID: dead.InstanceID,
+		PlayerIndex:      deadOwnedIndex,
+		CardInstanceID:   dead.InstanceID,
+		TargetInstanceID: killerInstanceID,
+		KillerInstanceID: killerInstanceID,
+		KillerOwnerIdx:   killerOwnerIdx,
 	}
 	return h(m, a, dead, owner, enemy)
 }

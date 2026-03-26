@@ -33,10 +33,10 @@ const (
 */
 const (
 	SkillDamageSingle             = "damage_single"               //бьем точечно в одну карту done
-	SkillDamageSplash             = "damage_splash"               //бем по сплешу done
+	SkillDamageSplash             = "damage_splash"               //бьем по сплешу done
 	SkillHealSingle               = "heal_single"                 //лечим соло цель
 	SkillApplyDebuff              = "apply_debuff"                //накладываем дебаф при атаке, или просто по использованию
-	SkillApplyDamageBuff          = "apply_buff"                  //накладываем бафф
+	SkillApplyBuff                = "apply_buff"                  //накладываем бафф
 	SkillSummonSelfCopy           = "summon_self_copy"            //призывает копии себя же
 	SkillBanishUnit               = "banish_unit"                 //убирает карту со стола
 	SkillRevealEnemyHand          = "reveal_enemy_hand"           //смотрим в руку противника
@@ -113,7 +113,7 @@ const (
 проверять, можно ли включить пассивку ? Здесь все это описывается
 */
 const (
-	PassiveTriggerContinuous  = "continuous"    //<-постоянный эффект, не требует проверок
+	PassiveTriggerContinuous  = "continuous"    //<-постоянный эффект
 	PassiveTriggerTurnStart   = "turn_start"    //<-на старт хода (тут уже используется тогда, когда нужна проверка)
 	PassiveTriggerTurnEnd     = "turn_end"      //<-при завершении хода (та же песня только от обратного)
 	PassiveTriggerOnPlay      = "on_play"       //<-при разыгрывании карты (когда ставишь карту на стол)

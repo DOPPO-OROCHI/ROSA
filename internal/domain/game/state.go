@@ -149,6 +149,8 @@ type Action struct {
 	AttackHero       bool       `json:"attack_hero,omitempty"`        //<-отражает истинность намерений типа -мы ебем персонажа или нет ?
 	ExpectedVersion  int64      `json:"expected_version"`             //<-защита от повторов или устаревших действий. Игрок не сможет дважды атаковать одной и той же картой за ход
 	TargetSlot       int        `json:"target_slot,omitempty"`        //<-новая механика, которая позволяет в добавок ко всему пиздить соседние карты сплешем
+	KillerInstanceID string     `json:"killer_instance_id"`
+	KillerOwnerIdx   int        `json:"killer_owner_index"`
 }
 
 // ГЛОБАЛЬНЫЙ ПАТЧ. Внедрение механики возраждения после смерти

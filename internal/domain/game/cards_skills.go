@@ -20,7 +20,7 @@ func init() {
 		cards.SkillDamageSplash:             castDamageSplash,
 		cards.SkillDamageSingle:             castDamageSingle,
 		cards.SkillHealSingle:               castHealSingle,
-		cards.SkillApplyDamageBuff:          castBuffSelf,
+		cards.SkillApplyBuff:                castBuffSelf,
 		cards.SkillApplyDebuff:              castApplyDebuff,
 		cards.SkillSummonSelfCopy:           castSummonSelfCopy,
 		cards.SkillBanishUnit:               castBanishUnit,
@@ -95,7 +95,7 @@ func castDamageSingle(
 	died := target.HP <= 0
 	newHP := target.HP
 	if died {
-		if err := killUnitAt(m, 1-a.PlayerIndex, slot); err != nil {
+		if err := killUnitAt(m, 1-a.PlayerIndex, slot, caster.InstanceID, a.PlayerIndex); err != nil {
 			return err
 		}
 		newHP = 0
@@ -184,11 +184,16 @@ func castDamageSplash(
 			continue
 		}
 		inst, tpl := u.InstanceID, u.TemplateID
-		u.HP -= caster.SkillValue
+		baseDamage := caster.SkillValue
+		damage := baseDamage
+		if s != centerSlot {
+			damage = baseDamage / 2
+		}
+		u.HP -= damage
 		died := u.HP <= 0
 		newHP := u.HP
 		if died {
-			if err := killUnitAt(m, 1-a.PlayerIndex, s); err != nil {
+			if err := killUnitAt(m, 1-a.PlayerIndex, s, caster.InstanceID, a.PlayerIndex); err != nil {
 				return err
 			}
 			newHP = 0
@@ -196,7 +201,7 @@ func castDamageSplash(
 		targets = append(targets, EventTarget{
 			InstanceID: inst,
 			TemplateID: tpl,
-			Amount:     caster.SkillValue,
+			Amount:     damage,
 			Died:       died,
 			NewHP:      newHP,
 		})
@@ -222,7 +227,26 @@ func castBuffSelf(
 	if m == nil || caster == nil || owner == nil {
 		return errors.New("nil state in castBuffSelf")
 	}
-	AddEffect(caster, UnitEffect{EffectType: cards.DamageUpdate,
+	effectType := ""
+	switch caster.SkillParamsJSON {
+	case "", cards.DamageUpdate:
+		effectType = cards.DamageUpdate
+	case cards.HealthPointsUpdate:
+		effectType = cards.HealthPointsUpdate
+	case cards.MaxHealthPointsUpdate:
+		effectType = cards.MaxHealthPointsUpdate
+	case cards.CoolDownUpdate:
+		effectType = cards.CoolDownUpdate
+	case cards.MakeTankUpdate:
+		effectType = cards.MakeTankUpdate
+	case cards.SkillDamageUpdate:
+		effectType = cards.SkillDamageUpdate
+	case cards.SkillCooldownUpdate:
+		effectType = cards.SkillCooldownUpdate
+	default:
+		return ErrCardSkillUnsupported
+	}
+	AddEffect(caster, UnitEffect{EffectType: effectType,
 		TurnsLeft: caster.SkillDuration, Value: caster.SkillValue})
 	m.Events = append(m.Events, Event{
 		Type:             string(EventCardSkill),
@@ -263,33 +287,52 @@ func castApplyDebuff(
 	if mode == "" {
 		mode = cards.DotHPUpdate
 	}
-	switch mode {
-	case cards.DotAttackUpdate:
-		AddEffect(target, UnitEffect{
-			EffectType: cards.DotAttackUpdate,
-			TurnsLeft:  caster.SkillDuration,
-			Value:      caster.SkillValue,
-		})
-	case cards.DotHPUpdate:
-		AddEffect(target, UnitEffect{
-			EffectType: cards.DotHPUpdate,
-			TurnsLeft:  caster.SkillDuration,
-			Value:      caster.SkillValue,
-		})
-	case cards.DotCooldownUpdate:
-		AddEffect(target, UnitEffect{
-			EffectType: cards.DotCooldownUpdate,
-			TurnsLeft:  caster.SkillDuration,
-			Value:      caster.SkillValue,
-		})
-	default:
-		return ErrCardSkillUnsupported
+	targetSlots := []int{slot}
+	if caster.SkillTarget == cards.TargetEnemySplash {
+		left := slot - 1
+		right := slot + 1
+		if left >= 0 && enemy.Table[left] != nil {
+			targetSlots = append(targetSlots, left)
+		}
+		if right < TableSize && enemy.Table[right] != nil {
+			targetSlots = append(targetSlots, right)
+		}
 	}
-	newHP := target.HP
-	died := true
-	if _, u := enemy.FindSlot(a.TargetInstanceID); u != nil {
-		newHP = u.HP
-		died = u.HP <= 0
+	targets := make([]EventTarget, 0, len(targetSlots))
+	for _, s := range targetSlots {
+		u := enemy.Table[s]
+		if u == nil {
+			continue
+		}
+		switch mode {
+		case cards.DotAttackUpdate:
+			AddEffect(target, UnitEffect{
+				EffectType: cards.DotAttackUpdate,
+				TurnsLeft:  caster.SkillDuration,
+				Value:      caster.SkillValue,
+			})
+		case cards.DotHPUpdate:
+			AddEffect(u, UnitEffect{
+				EffectType: cards.DotHPUpdate,
+				TurnsLeft:  caster.SkillDuration,
+				Value:      caster.SkillValue,
+			})
+		case cards.DotCooldownUpdate:
+			AddEffect(u, UnitEffect{
+				EffectType: cards.DotCooldownUpdate,
+				TurnsLeft:  caster.SkillDuration,
+				Value:      caster.SkillValue,
+			})
+		default:
+			return ErrCardSkillUnsupported
+		}
+		targets = append(targets, EventTarget{
+			InstanceID: u.InstanceID,
+			TemplateID: u.TemplateID,
+			Amount:     caster.SkillValue,
+			Died:       false,
+			NewHP:      u.HP,
+		})
 	}
 	m.Events = append(m.Events, Event{
 		Type:             string(EventCardSkill),
@@ -298,15 +341,7 @@ func castApplyDebuff(
 		SourceInstanceID: caster.InstanceID,
 		SourceTemplateID: caster.TemplateID,
 		TargetSlot:       slot,
-		Targets: []EventTarget{
-			{
-				InstanceID: a.TargetInstanceID,
-				TemplateID: target.TemplateID,
-				Amount:     caster.SkillValue,
-				Died:       died,
-				NewHP:      newHP,
-			},
-		},
+		Targets:          targets,
 	})
 	return nil
 }
@@ -393,7 +428,7 @@ func castBanishUnit(
 	if target == nil || slot < 0 {
 		return ErrCardSkillBadTarget
 	}
-	if err := killUnitAt(m, 1-a.PlayerIndex, slot); err != nil {
+	if err := killUnitAt(m, 1-a.PlayerIndex, slot, caster.InstanceID, a.PlayerIndex); err != nil {
 		return err
 	}
 	m.Events = append(m.Events, Event{
@@ -586,7 +621,7 @@ func castDeathAoe(
 		died := u.HP <= 0
 		newHP := u.HP
 		if died {
-			if err := killUnitAt(m, v.ownerIndex, v.slot); err != nil {
+			if err := killUnitAt(m, v.ownerIndex, v.slot, caster.InstanceID, a.PlayerIndex); err != nil {
 				return err
 			}
 			newHP = 0
