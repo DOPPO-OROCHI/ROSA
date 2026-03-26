@@ -32,8 +32,23 @@ var PassiveSkillsHandler map[string]PassiveSkillHandler
 
 func init() {
 	PassiveSkillsHandler = map[string]PassiveSkillHandler{
-		"disgusting_stench": passiveApplyEffectOnHitMe,       // МРАЗЬ
-		"predatory_beast":   passiveGenericSkillCooldownDown, // ДЕМОНИЧЕСКИЙ БЕРСЕРК
+		"tactical_interaction":      passiveGenericDamageUp,          // ИМПЕРСКИЙ ПЕХОТИНЕЦ
+		"regrouping":                passiveGenericHeal,              // ПУЛЕМЕТНОЕ ОТДЕЛЕНИЕ
+		"guidance_group":            passiveAuraDamageUp,             // СНАЙПЕРЫ
+		"to_the_last_drop_of_blood": passiveGenericDamage,            // ГРАНАТОМЕТНОЕ ОТДЕЛЕНИЕ
+		"hatred":                    passiveAuraSkillCooldownDown,    // ЛЕСНИК
+		"combined_arms_operation":   passiveAuraDamageUp,             // ДЕСАНТ
+		"hundreds_of_frontiers":     passiveAuraHPUp,                 // ИМПЕРСКИЕ ШТУРМОВИКИ
+		"iron_discipline":           passiveAuraSkillCooldownDown,    // ИМПЕРСКИЕ ГВАРДЕЙЦЫ
+		"decisive_response":         passiveApplyEffectOnHitMe,       // МЕХАНИЧЕСКИЙ РЫЦАРЬ
+		"iron_fist":                 passiveGenericCooldownDown,      // ТАНКОВЫЙ ВЗВОД
+		"emergency_measures":        passiveGenericCooldownDown,      // АЛЛИГАТОРЫ
+		"above_the_battlefield":     passiveGenericDamage,            // СУ57
+		"motorized_riflemen":        passiveAuraDamageUp,             // ГРУППА БТР
+		"nuclear_dust":              passiveGenericDamage,            // СВЯТОГОР
+		"interceptor_drones":        passiveGenericHeal,              // БЕЛЫЙ ЛЕБЕДЬ
+		"disgusting_stench":         passiveApplyEffectOnHitMe,       // МРАЗЬ
+		"predatory_beast":           passiveGenericSkillCooldownDown, // ДЕМОНИЧЕСКИЙ БЕРСЕРК
 	}
 }
 
@@ -564,6 +579,40 @@ func applyPassiveDamage(m *MatchState, ownerIdx int, source *UnitState, targets 
 			}
 		}
 	}
+	return nil
+}
+
+/*
+-------ДАЛЕЕ АУРЫ-------
+*/
+
+func passiveAuraDamageUp(m *MatchState, ownewIdx int,
+	source *UnitState, event string, ctx PassiveTriggerContext) error {
+	prep, ok := prepareContinuousPassive(m, ownewIdx, source)
+	if !ok {
+		return nil
+	}
+	applyPassiveAuraAttackBuff(prep.targets, prep.value)
+	return nil
+}
+
+func passiveAuraSkillCooldownDown(m *MatchState, ownewIdx int,
+	source *UnitState, event string, ctx PassiveTriggerContext) error {
+	prep, ok := prepareContinuousPassive(m, ownewIdx, source)
+	if !ok {
+		return nil
+	}
+	applyPassiveSkillCooldownDown(prep.targets, prep.value, prep.value)
+	return nil
+}
+
+func passiveAuraHPUp(m *MatchState, ownewIdx int,
+	source *UnitState, event string, ctx PassiveTriggerContext) error {
+	prep, ok := prepareContinuousPassive(m, ownewIdx, source)
+	if !ok {
+		return nil
+	}
+	applyPassiveAuraMaxHealthPointsUpdate(prep.targets, prep.value)
 	return nil
 }
 
