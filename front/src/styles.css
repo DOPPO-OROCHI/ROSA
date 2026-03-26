@@ -1686,6 +1686,7 @@ pre {
 }
 
 .hero-anchor {
+  position: relative;
   display: flex;
   justify-content: center;
 }
@@ -1804,6 +1805,145 @@ pre {
   width: 100%;
   display: flex;
   justify-content: center;
+}
+
+.grave-trigger {
+  position: absolute;
+  left: calc(50% - 170px);
+  top: 50%;
+  transform: translateY(-50%);
+  width: 40px;
+  min-height: 40px;
+  padding: 0;
+  border-radius: 999px;
+  border: 1px solid rgba(121, 194, 214, 0.24);
+  background: linear-gradient(135deg, rgba(11, 26, 34, 0.96), rgba(5, 9, 14, 0.96));
+  color: #dff6ff;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.05rem;
+  font-size: 0.6rem;
+  font-weight: 800;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.34);
+  z-index: 3;
+}
+
+.grave-trigger span {
+  font-size: 0.68rem;
+  color: #ffd896;
+}
+
+.grave-trigger.active {
+  box-shadow:
+    0 0 0 1px rgba(111, 214, 255, 0.36),
+    0 0 20px rgba(91, 196, 255, 0.24),
+    0 10px 24px rgba(0, 0, 0, 0.34);
+}
+
+.grave-top {
+  left: calc(50% - 120px);
+}
+
+.grave-bottom {
+  left: calc(50% - 168px);
+}
+
+.grave-panel {
+  position: absolute;
+  left: 12px;
+  width: min(250px, calc(100% - 24px));
+  max-height: 236px;
+  padding: 0.72rem;
+  border-radius: 18px;
+  border: 1px solid rgba(133, 197, 214, 0.14);
+  background: linear-gradient(180deg, rgba(20, 24, 31, 0.97), rgba(8, 12, 18, 0.97));
+  box-shadow: 0 18px 42px rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(10px);
+  z-index: 5;
+  overflow: hidden;
+}
+
+.grave-panel.top {
+  top: 18px;
+}
+
+.grave-panel.bottom {
+  bottom: 104px;
+}
+
+.grave-panel-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-bottom: 0.55rem;
+}
+
+.grave-panel-head strong {
+  font-size: 0.8rem;
+  color: #eef7fb;
+}
+
+.grave-panel-close {
+  width: 28px;
+  height: 28px;
+  min-height: 28px;
+  padding: 0;
+  border-radius: 999px;
+  background: rgba(10, 14, 19, 0.88);
+  color: #dcebf1;
+  font-size: 0.8rem;
+  font-weight: 800;
+}
+
+.grave-panel-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  max-height: 165px;
+  overflow: auto;
+  padding-right: 0.1rem;
+}
+
+.grave-card-row {
+  display: grid;
+  grid-template-columns: 42px 1fr;
+  gap: 0.55rem;
+  align-items: center;
+  padding: 0.45rem;
+  border-radius: 14px;
+  background: rgba(7, 10, 13, 0.52);
+  border: 1px solid rgba(231, 219, 192, 0.06);
+}
+
+.grave-card-thumb {
+  width: 42px;
+  height: 56px;
+  object-fit: cover;
+  border-radius: 10px;
+}
+
+.grave-card-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 0.16rem;
+  min-width: 0;
+}
+
+.grave-card-copy strong {
+  color: #eef7fb;
+  font-size: 0.72rem;
+  line-height: 1.1;
+}
+
+.grave-card-copy span,
+.grave-card-turn,
+.grave-panel-empty {
+  color: #9eb5bf;
+  font-size: 0.68rem;
+  line-height: 1.15;
 }
 
 .hero-orb {

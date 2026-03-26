@@ -168,6 +168,13 @@ type UnitState = {
   effects?: Array<{ effect_type?: string; turns_left?: number; value?: number }>;
 };
 
+type GraveEntryState = {
+  Unit?: UnitState;
+  unit?: UnitState;
+  DiedAtTurn?: number;
+  died_at_turn?: number;
+};
+
 type MatchPlayer = {
   player_id: number;
   user_id: number;
@@ -188,6 +195,8 @@ type MatchPlayer = {
   hand?: CardsInMatch[];
   deck?: CardsInMatch[];
   discard?: CardsInMatch[];
+  graveyard?: GraveEntryState[];
+  GraveYard?: GraveEntryState[];
   hand_count?: number;
   deck_count?: number;
   disc_count?: number;
@@ -554,6 +563,7 @@ export default function App() {
   const [selectedSkillCasterId, setSelectedSkillCasterId] = useState("");
   const [heroSpellArmed, setHeroSpellArmed] = useState(false);
   const [heroAttackArmed, setHeroAttackArmed] = useState(false);
+  const [openedGraveSide, setOpenedGraveSide] = useState<"own" | "enemy" | null>(null);
 
   const streamRef = useRef<EventSource | null>(null);
   const battleBoardRef = useRef<HTMLElement | null>(null);
@@ -1215,6 +1225,16 @@ export default function App() {
     (card) => cardInstanceId(card) === selectedHandCardId,
   );
   const myHand = myPlayer?.hand ?? [];
+  const ownGraveyard = useMemo(
+    () => myPlayer?.graveyard ?? myPlayer?.GraveYard ?? [],
+    [myPlayer],
+  );
+  const enemyGraveyard = useMemo(
+    () => enemyPlayer?.graveyard ?? enemyPlayer?.GraveYard ?? [],
+    [enemyPlayer],
+  );
+  const openedGraveyard =
+    openedGraveSide === "own" ? ownGraveyard : openedGraveSide === "enemy" ? enemyGraveyard : [];
   const displayedDeckCount = (() => {
     const explicitDeckCount = myPlayer?.deck?.length ?? myPlayer?.deck_count ?? 0;
     if (explicitDeckCount > 0) {
@@ -1239,6 +1259,31 @@ export default function App() {
       return resolveBuffCardImageKey(templateId);
     }
     return resolveBattleCardImageKey(templateId);
+  }
+
+  function renderGraveEntry(entry: GraveEntryState, index: number) {
+    const unit = entry.unit ?? entry.Unit ?? null;
+    if (!unit) {
+      return null;
+    }
+    const templateId = unitTemplateId(unit);
+    const meta = cardCatalogEntry(templateId);
+    const diedAtTurn = entry.died_at_turn ?? entry.DiedAtTurn ?? 0;
+    return (
+      <div key={`${unitInstanceId(unit) || templateId}-${index}`} className="grave-card-row">
+        <AssetImage
+          imageKey={cardImageKeyForTemplate(templateId)}
+          alt={resolveAssetLabel(templateId)}
+          fallbackSrc={resolveCardFallbackSrc()}
+          className="grave-card-thumb"
+        />
+        <div className="grave-card-copy">
+          <strong>{meta?.name || resolveAssetLabel(templateId)}</strong>
+          <span>{`HP ${unitHP(unit)} | ATK ${unitAttack(unit)} | CD ${unitCooldown(unit)}`}</span>
+          <span className="grave-card-turn">{`Turn ${diedAtTurn}`}</span>
+        </div>
+      </div>
+    );
   }
 
   async function handlePlaySelectedCard(slot: number) {
@@ -1639,7 +1684,7 @@ export default function App() {
     const target = event.target as HTMLElement;
     if (
       target.closest(
-        ".slot, .hand-card, .hero-orb-button, .hero-skill-mini, .hero-attack-mini, .end-turn-floating, .ghost-button, .slot-skill-btn, .battle-deck-anchor",
+        ".slot, .hand-card, .hero-orb-button, .hero-skill-mini, .hero-attack-mini, .end-turn-floating, .ghost-button, .slot-skill-btn, .battle-deck-anchor, .grave-trigger, .grave-panel",
       )
     ) {
       return;
@@ -2200,6 +2245,17 @@ export default function App() {
                     </div>
                     <div className="hero-anchor top">
                       <button
+                        className={`grave-trigger grave-top ${openedGraveSide === "enemy" ? "active" : ""}`}
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          setOpenedGraveSide((prev) => (prev === "enemy" ? null : "enemy"));
+                        }}
+                        title="Enemy graveyard"
+                      >
+                        GY
+                        <span>{enemyGraveyard.length}</span>
+                      </button>
+                      <button
                         className={`hero-orb-button ${canSelectEnemyHeroAsHeroSpellTarget() || heroAttackArmed || selectedOwnUnitId ? "hero-targetable" : ""}`}
                         onClick={() => void runTask(handleEnemyHeroClick)}
                         data-attack-target="enemy-hero"
@@ -2237,7 +2293,44 @@ export default function App() {
                     <div className="table-line">
                       {myPlayer.table.map((unit, index) => renderUnitSlot(unit, "own", index))}
                     </div>
+                    {openedGraveSide && (
+                      <div
+                        className={`grave-panel ${openedGraveSide === "enemy" ? "top" : "bottom"}`}
+                        onClick={(event) => event.stopPropagation()}
+                      >
+                        <div className="grave-panel-head">
+                          <strong>{openedGraveSide === "own" ? "Your Graveyard" : "Enemy Graveyard"}</strong>
+                          <button
+                            className="grave-panel-close"
+                            onClick={(event) => {
+                              event.stopPropagation();
+                              setOpenedGraveSide(null);
+                            }}
+                          >
+                            x
+                          </button>
+                        </div>
+                        <div className="grave-panel-list">
+                          {openedGraveyard.length === 0 ? (
+                            <p className="grave-panel-empty">No dead cards yet</p>
+                          ) : (
+                            openedGraveyard.map(renderGraveEntry)
+                          )}
+                        </div>
+                      </div>
+                    )}
                     <div className="hero-anchor bottom">
+                      <button
+                        className={`grave-trigger grave-bottom ${openedGraveSide === "own" ? "active" : ""}`}
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          setOpenedGraveSide((prev) => (prev === "own" ? null : "own"));
+                        }}
+                        title="Your graveyard"
+                      >
+                        GY
+                        <span>{ownGraveyard.length}</span>
+                      </button>
                       <button
                         className={`hero-attack-mini ${heroAttackArmed ? "armed" : ""}`}
                         onClick={handleHeroAttackToggle}
