@@ -1235,26 +1235,8 @@ export default function App() {
   );
   const openedGraveyard =
     openedGraveSide === "own" ? ownGraveyard : openedGraveSide === "enemy" ? enemyGraveyard : [];
-  const displayedDeckCount = (() => {
-    const explicitDeckCount = myPlayer?.deck?.length ?? myPlayer?.deck_count ?? 0;
-    if (explicitDeckCount > 0) {
-      return explicitDeckCount;
-    }
-    const handCount = myPlayer?.hand?.length ?? myPlayer?.hand_count ?? 0;
-    const discardCount = myPlayer?.discard?.length ?? myPlayer?.disc_count ?? 0;
-    const fallbackFromDeckSize = 20 - handCount - discardCount;
-    return Math.max(0, fallbackFromDeckSize);
-  })();
-  const enemyDisplayedDeckCount = (() => {
-    const explicitDeckCount = enemyPlayer?.deck?.length ?? enemyPlayer?.deck_count ?? 0;
-    if (explicitDeckCount > 0) {
-      return explicitDeckCount;
-    }
-    const handCount = enemyPlayer?.hand?.length ?? enemyPlayer?.hand_count ?? 0;
-    const discardCount = enemyPlayer?.discard?.length ?? enemyPlayer?.disc_count ?? 0;
-    const fallbackFromDeckSize = 20 - handCount - discardCount;
-    return Math.max(0, fallbackFromDeckSize);
-  })();
+  const displayedDeckCount = myPlayer?.deck?.length ?? myPlayer?.deck_count ?? 0;
+  const enemyDisplayedDeckCount = enemyPlayer?.deck?.length ?? enemyPlayer?.deck_count ?? 0;
 
   function cardCatalogEntry(templateId: string): CardCatalogEntry | undefined {
     return cardCatalog.get(templateId);
