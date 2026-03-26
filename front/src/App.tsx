@@ -1245,6 +1245,16 @@ export default function App() {
     const fallbackFromDeckSize = 20 - handCount - discardCount;
     return Math.max(0, fallbackFromDeckSize);
   })();
+  const enemyDisplayedDeckCount = (() => {
+    const explicitDeckCount = enemyPlayer?.deck?.length ?? enemyPlayer?.deck_count ?? 0;
+    if (explicitDeckCount > 0) {
+      return explicitDeckCount;
+    }
+    const handCount = enemyPlayer?.hand?.length ?? enemyPlayer?.hand_count ?? 0;
+    const discardCount = enemyPlayer?.discard?.length ?? enemyPlayer?.disc_count ?? 0;
+    const fallbackFromDeckSize = 20 - handCount - discardCount;
+    return Math.max(0, fallbackFromDeckSize);
+  })();
 
   function cardCatalogEntry(templateId: string): CardCatalogEntry | undefined {
     return cardCatalog.get(templateId);
@@ -1684,7 +1694,7 @@ export default function App() {
     const target = event.target as HTMLElement;
     if (
       target.closest(
-        ".slot, .hand-card, .hero-orb-button, .hero-skill-mini, .hero-attack-mini, .end-turn-floating, .ghost-button, .slot-skill-btn, .battle-deck-anchor, .grave-trigger, .grave-panel",
+        ".slot, .hand-card, .hero-orb-button, .hero-skill-mini, .hero-attack-mini, .end-turn-floating, .ghost-button, .slot-skill-btn, .battle-deck-anchor, .grave-trigger, .grave-panel, .deck-trigger",
       )
     ) {
       return;
@@ -2255,6 +2265,14 @@ export default function App() {
                         GY
                         <span>{enemyGraveyard.length}</span>
                       </button>
+                      <div className="deck-trigger deck-top" aria-label="Enemy deck">
+                        <span className="deck-trigger-stack" aria-hidden="true">
+                          <span />
+                          <span />
+                          <span />
+                        </span>
+                        <span className="deck-trigger-count">{enemyDisplayedDeckCount}</span>
+                      </div>
                       <button
                         className={`hero-orb-button ${canSelectEnemyHeroAsHeroSpellTarget() || heroAttackArmed || selectedOwnUnitId ? "hero-targetable" : ""}`}
                         onClick={() => void runTask(handleEnemyHeroClick)}
@@ -2331,6 +2349,14 @@ export default function App() {
                         GY
                         <span>{ownGraveyard.length}</span>
                       </button>
+                      <div className="deck-trigger deck-bottom" aria-label="Your deck">
+                        <span className="deck-trigger-stack" aria-hidden="true">
+                          <span />
+                          <span />
+                          <span />
+                        </span>
+                        <span className="deck-trigger-count">{displayedDeckCount}</span>
+                      </div>
                       <button
                         className={`hero-attack-mini ${heroAttackArmed ? "armed" : ""}`}
                         onClick={handleHeroAttackToggle}
@@ -2387,10 +2413,6 @@ export default function App() {
                           );
                         })}
                     </div>
-                  </div>
-                  <div className="battle-deck-anchor" aria-label="Deck">
-                    <span className="battle-deck-peek" />
-                    <span className="battle-deck-count">{displayedDeckCount}</span>
                   </div>
                   {drawFxTick > 0 && <span key={drawFxTick} className="draw-card-fx" aria-hidden="true" />}
                 </>
