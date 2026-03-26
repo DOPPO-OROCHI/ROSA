@@ -1809,15 +1809,15 @@ pre {
 
 .grave-trigger {
   position: absolute;
-  left: calc(50% - 170px);
+  left: -6px;
   top: 50%;
   transform: translateY(-50%);
-  width: 40px;
-  min-height: 40px;
-  padding: 0;
-  border-radius: 999px;
-  border: 1px solid rgba(121, 194, 214, 0.24);
-  background: linear-gradient(135deg, rgba(11, 26, 34, 0.96), rgba(5, 9, 14, 0.96));
+  width: 48px;
+  min-height: 44px;
+  padding: 0.28rem 0;
+  border-radius: 14px;
+  border: 1px solid rgba(121, 194, 214, 0.18);
+  background: linear-gradient(180deg, rgba(10, 12, 16, 0.98), rgba(4, 6, 10, 0.98));
   color: #dff6ff;
   display: flex;
   flex-direction: column;
@@ -1843,11 +1843,11 @@ pre {
 }
 
 .grave-top {
-  left: calc(50% - 120px);
+  left: -6px;
 }
 
 .grave-bottom {
-  left: calc(50% - 168px);
+  left: -6px;
 }
 
 .grave-panel {
