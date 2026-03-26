@@ -96,10 +96,13 @@ func maskMatchStateForUser(st *game.MatchState, viewerUserID uint) *dto.MaskedMa
 		if i == viewerIndex {
 			mp.Hand = append(mp.Hand, p.Hand...)
 			mp.Discard = append(mp.Discard, p.Discard...)
+			mp.DeckCount = len(p.Deck)
+			mp.DiscCount = len(p.Discard)
 			//если нет, то раскрываем лишь количество карт в руке,деке противника
 		} else {
 			mp.HandCount = len(p.Hand)
 			mp.DeckCount = len(p.Deck)
+			mp.DiscCount = len(p.Discard)
 		}
 		//записываем всю муру в out в поле Players
 		out.Players[i] = mp
