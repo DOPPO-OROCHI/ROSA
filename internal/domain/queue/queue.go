@@ -3,6 +3,7 @@ package queue
 import (
 	"sort"
 	"sync"
+	"time"
 )
 
 /*
@@ -12,8 +13,9 @@ import (
 */
 
 type UserInQueue struct {
-	id     int
-	rating int
+	UserID   int
+	Rating   int
+	JoinedAt time.Time
 }
 
 type Queue struct {
