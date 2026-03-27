@@ -601,7 +601,7 @@ export default function App() {
   const prevHandCountRef = useRef<number | null>(null);
   const eventPlaybackTimerRef = useRef<number | null>(null);
   const queuePrimedRef = useRef(false);
-  const lastQueuedVersionRef = useRef<string>("");
+  const lastQueuedBatchRef = useRef<string>("");
 
   function pushToast(message: string, tone: ToastEntry["tone"] = "info") {
     const id = toastIdRef.current++;
@@ -623,7 +623,7 @@ export default function App() {
       setActiveEvent(null);
       setBoardAttackAnimation(null);
       queuePrimedRef.current = false;
-      lastQueuedVersionRef.current = "";
+      lastQueuedBatchRef.current = "";
       return;
     }
 
@@ -633,7 +633,7 @@ export default function App() {
     stream.addEventListener("state", (event) => {
       try {
         const state = JSON.parse((event as MessageEvent<string>).data) as MatchState;
-        setSelectedMatch(state);
+        ingestMatchState(state, "queue");
       } catch {
         pushToast("Failed to parse battle feed", "error");
       }
@@ -647,7 +647,7 @@ export default function App() {
 
   useEffect(() => {
     queuePrimedRef.current = false;
-    lastQueuedVersionRef.current = "";
+    lastQueuedBatchRef.current = "";
     setEventQueue([]);
     setActiveEvent(null);
     setBoardAttackAnimation(null);
@@ -708,24 +708,6 @@ export default function App() {
     setServerClockOffsetSec(selectedMatch.server_now - nowSec);
   }, [selectedMatch?.server_now, selectedMatch?.match_id]);
 
-  useEffect(() => {
-    if (!selectedMatch || !activeBattle) {
-      return;
-    }
-    const versionKey = `${selectedMatch.match_id}:${selectedMatch.version}`;
-    if (!queuePrimedRef.current) {
-      queuePrimedRef.current = true;
-      lastQueuedVersionRef.current = versionKey;
-      return;
-    }
-    if (lastQueuedVersionRef.current === versionKey) {
-      return;
-    }
-    lastQueuedVersionRef.current = versionKey;
-    if ((selectedMatch.events?.length ?? 0) > 0) {
-      setEventQueue((prev) => [...prev, ...(selectedMatch.events ?? [])]);
-    }
-  }, [activeBattle, selectedMatch]);
   useEffect(() => {
     if (!activeBattle || !myPlayer) {
       prevHandCountRef.current = null;
@@ -987,6 +969,33 @@ export default function App() {
     }
   }
 
+  function eventBatchKey(state: MatchState | null): string {
+    if (!state) {
+      return "";
+    }
+    return `${state.match_id}:${state.version}:${JSON.stringify(state.events ?? [])}`;
+  }
+
+  function ingestMatchState(state: MatchState | null, mode: "prime" | "queue" = "queue") {
+    setSelectedMatch(state);
+    if (!state) {
+      return;
+    }
+    const batchKey = eventBatchKey(state);
+    if (!queuePrimedRef.current || mode === "prime") {
+      queuePrimedRef.current = true;
+      lastQueuedBatchRef.current = batchKey;
+      return;
+    }
+    if (lastQueuedBatchRef.current === batchKey) {
+      return;
+    }
+    lastQueuedBatchRef.current = batchKey;
+    if ((state.events?.length ?? 0) > 0) {
+      setEventQueue((prev) => [...prev, ...(state.events ?? [])]);
+    }
+  }
+
   const cardCatalog = useMemo(() => {
     const next = new Map<string, CardCatalogEntry>();
     for (const card of cards?.battle ?? []) {
@@ -1033,7 +1042,7 @@ export default function App() {
     const active = data.find((match) => !match.finished) ?? null;
     if (selectedMatchId) {
       const current = data.find((match) => match.match_id === selectedMatchId) ?? null;
-      setSelectedMatch(current);
+      ingestMatchState(current, "prime");
       if (!current || current.finished) {
         setSelectedMatchId(null);
       }
@@ -1041,7 +1050,7 @@ export default function App() {
     }
     if (active) {
       setSelectedMatchId(active.match_id);
-      setSelectedMatch(active);
+      ingestMatchState(active, "prime");
       pushToast(`Battle #${active.match_id} ready`);
     }
   }
@@ -1050,12 +1059,12 @@ export default function App() {
     const data = await apiFetch<MatchState>(`/matches/${matchId}`);
     if (data.finished) {
       setSelectedMatchId(null);
-      setSelectedMatch(null);
+      ingestMatchState(null, "prime");
       pushToast(`Battle #${matchId} already finished`);
       return;
     }
     setSelectedMatchId(matchId);
-    setSelectedMatch(data);
+    ingestMatchState(data, "prime");
   }
 
   async function refreshAll() {
@@ -1265,7 +1274,7 @@ export default function App() {
     });
     await refreshMatches();
     setSelectedMatchId(match.match_id);
-    setSelectedMatch(match);
+    ingestMatchState(match, "prime");
     pushToast(`Battle #${match.match_id} deployed`);
   }
 
@@ -1424,10 +1433,10 @@ export default function App() {
         expected_version: selectedMatch.version,
       }),
     });
-    setSelectedMatch(next);
-    await refreshMatches();
-    setActionStatus(successText);
+    ingestMatchState(next, "queue");
     clearSelections();
+    setActionStatus(successText);
+    await refreshMatches();
     if (next.finished) {
       streamRef.current?.close();
       streamRef.current = null;
