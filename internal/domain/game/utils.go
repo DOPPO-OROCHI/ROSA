@@ -99,10 +99,8 @@ func RemoveEffect(u *UnitState, e UnitEffect) {
 			u.HP = u.MaxHP
 		}
 	case cards.AuraCooldownUpdate:
-		u.Cooldown += e.Value
-		if u.Cooldown < 0 {
-			u.Cooldown = 0
-		}
+		u.BaseCooldown += e.Value
+		clampUnitCooldown(u)
 	case cards.AuraSkillDamageUpdate:
 		u.SkillValue -= e.Value
 		if u.SkillValue < 0 {
@@ -129,7 +127,8 @@ func RemoveEffect(u *UnitState, e UnitEffect) {
 			u.HP = u.MaxHP
 		}
 	case cards.CoolDownUpdate:
-		u.Cooldown += e.Value //<-а тут тоже весело, просто добавляем кд к карте.
+		u.BaseCooldown += e.Value //<-возвращаем базовый кд, а не раздуваем текущий remaining cooldown.
+		clampUnitCooldown(u)
 	case cards.SkillDamageUpdate:
 		u.SkillValue -= e.Value
 		if u.SkillValue < 0 {
@@ -156,7 +155,11 @@ func ApplyEffect(u *UnitState, buff UnitEffect) error {
 		u.MaxHP += buff.Value
 		u.HP += buff.Value
 	case cards.AuraCooldownUpdate:
-		u.Cooldown -= buff.Value
+		u.BaseCooldown -= buff.Value
+		if u.Cooldown > 0 {
+			u.Cooldown -= buff.Value
+		}
+		clampUnitCooldown(u)
 	case cards.AuraSkillDamageUpdate:
 		u.SkillValue += buff.Value
 	case cards.AuraSkillCooldownUpdate:
@@ -181,10 +184,11 @@ func ApplyEffect(u *UnitState, buff UnitEffect) error {
 			u.HP = u.MaxHP
 		}
 	case cards.CoolDownUpdate:
-		u.Cooldown -= buff.Value //<-на кд баф
-		if u.Cooldown < 0 {
-			u.Cooldown = 0
+		u.BaseCooldown -= buff.Value //<-на кд баф
+		if u.Cooldown > 0 {
+			u.Cooldown -= buff.Value
 		}
+		clampUnitCooldown(u)
 	case cards.SkillDamageUpdate:
 		u.SkillValue += buff.Value
 	case cards.SkillCooldownUpdate:
@@ -204,6 +208,19 @@ func ApplyEffect(u *UnitState, buff UnitEffect) error {
 		//заглушка
 	}
 	return nil
+}
+
+// Хелпер, который позволяет стабилизировать КД карты
+func clampUnitCooldown(u *UnitState) {
+	if u == nil {
+		return
+	}
+	if u.BaseCooldown < 0 {
+		u.BaseCooldown = 0
+	}
+	if u.Cooldown < 0 {
+		u.Cooldown = 0
+	}
 }
 
 /*Таким образом работают хелп функции вокруг основных функций (которые мы написали в turn.go). Тут происходит

@@ -69,6 +69,7 @@ type UnitState struct {
 	Attack                int          //<-это копия статки карты, на момент выхода на стол
 	SplashRadius          int          //<-радиус атаки
 	CanBeUpgraded         bool         //<-тонкий момент, этот параметр копируется из шаблона, а дальше используется для бафов
+	BaseCooldown          int
 	Cooldown              int          //<-кд карты
 	IsTank                bool         //<-является ли карта танком
 	SummonedInTurn        int          //<-этот параметр равен ходу, в который была призвана карта, чтобы она не могла

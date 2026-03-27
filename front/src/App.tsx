@@ -141,6 +141,7 @@ type UnitState = {
   HP?: number;
   Attack?: number;
   MaxHP?: number;
+  BaseCooldown?: number;
   Cooldown?: number;
   IsTank?: boolean;
   SummonedInTurn?: number;
@@ -156,6 +157,7 @@ type UnitState = {
   hp?: number;
   attack?: number;
   max_hp?: number;
+  base_cooldown?: number;
   cooldown?: number;
   is_tank?: boolean;
   summoned_in_turn?: number;
@@ -472,6 +474,10 @@ function unitAttack(unit: UnitState): number {
 
 function unitCooldown(unit: UnitState): number {
   return unit.cooldown ?? unit.Cooldown ?? 0;
+}
+
+function unitBaseCooldown(unit: UnitState): number {
+  return unit.base_cooldown ?? unit.BaseCooldown ?? 0;
 }
 
 function unitIsTank(unit: UnitState): boolean {
@@ -1806,10 +1812,8 @@ export default function App() {
     const meta = cardCatalogEntry(unitTemplateId(unit));
     const fallbackSkill = skillFallbackByTemplate[unitTemplateId(unit)];
     const cooldownLeft = unitCooldown(unit);
-    const baseCooldown =
-      meta && "cooldown" in meta && typeof meta.cooldown === "number"
-        ? Math.max(meta.cooldown, cooldownLeft)
-        : cooldownLeft;
+    const templateCooldown = meta && "cooldown" in meta && typeof meta.cooldown === "number" ? meta.cooldown : 0;
+    const baseCooldown = Math.max(unitBaseCooldown(unit), templateCooldown, cooldownLeft);
     const isOnCooldown = cooldownLeft > 0;
     const isTank = unitIsTank(unit);
     const ownerTurns = side === "own" ? (myPlayer?.turns ?? -1) : (enemyPlayer?.turns ?? -1);
@@ -2441,9 +2445,6 @@ export default function App() {
               ref={battleBoardRef}
               onClick={handleBattleBoardEmptyClick}
             >
-              <button className="ghost-button leave-inline in-board" onClick={() => void runTask(handleLeaveMatch)}>
-                Leave Match
-              </button>
               <div
                 className="battle-board-background"
                 style={{ backgroundImage: `url(${resolveBoardBackgroundSrc()})` }}
@@ -2472,23 +2473,30 @@ export default function App() {
                       </div>
                     </aside>
                   )}
-                  <div className="enemy-zone">
-                    <div className="enemy-hand">
-                      {Array.from({ length: enemyPlayer.hand_count ?? 0 }).map((_, index, array) => {
-                        const offset = index - (array.length - 1) / 2;
-                        const fanStyle = {
-                          "--fan-offset": `${offset}`,
-                          "--fan-depth": `${Math.abs(offset) * 2}px`,
-                          zIndex: array.length - index,
-                        } as CSSProperties;
-                        return (
-                          <div key={`back-${index}`} className="card-back" style={fanStyle} />
-                        );
-                      })}
+                  <div className="battle-scene">
+                    <div className="battle-top-utility">
+                      <button className="ghost-button leave-inline in-board" onClick={() => void runTask(handleLeaveMatch)}>
+                        Leave Match
+                      </button>
                     </div>
-                    <div className="hero-anchor top">
+
+                    <div className="battle-enemy-hand-layer">
+                      <div className="enemy-hand">
+                        {Array.from({ length: enemyPlayer.hand_count ?? 0 }).map((_, index, array) => {
+                          const offset = index - (array.length - 1) / 2;
+                          const fanStyle = {
+                            "--fan-offset": `${offset}`,
+                            "--fan-depth": `${Math.abs(offset) * 2}px`,
+                            zIndex: array.length - index,
+                          } as CSSProperties;
+                          return <div key={`back-${index}`} className="card-back" style={fanStyle} />;
+                        })}
+                      </div>
+                    </div>
+
+                    <div className="battle-side-info left enemy">
                       <button
-                        className={`grave-trigger grave-top ${openedGraveSide === "enemy" ? "active" : ""}`}
+                        className={`grave-trigger grave-static ${openedGraveSide === "enemy" ? "active" : ""}`}
                         onClick={(event) => {
                           event.stopPropagation();
                           setOpenedGraveSide((prev) => (prev === "enemy" ? null : "enemy"));
@@ -2498,7 +2506,10 @@ export default function App() {
                         GY
                         <span>{enemyGraveyard.length}</span>
                       </button>
-                      <div className="deck-trigger deck-top" aria-label="Enemy deck">
+                    </div>
+
+                    <div className="battle-side-info right enemy">
+                      <div className="deck-trigger deck-static" aria-label="Enemy deck">
                         <span className="deck-trigger-stack" aria-hidden="true">
                           <span />
                           <span />
@@ -2506,52 +2517,162 @@ export default function App() {
                         </span>
                         <span className="deck-trigger-count">{enemyDisplayedDeckCount}</span>
                       </div>
-                      <button
-                        className={`hero-orb-button ${canSelectEnemyHeroAsHeroSpellTarget() || heroAttackArmed || selectedOwnUnitId ? "hero-targetable" : ""} ${boardAttackAnimation?.sourceKind === "hero" && boardAttackAnimation.sourceSide === "enemy" ? "hero-motion-source" : ""} ${boardAttackAnimation?.targetIds.includes(enemyHeroEventId) ? "hero-hit" : ""}`}
-                        onClick={() => void runTask(handleEnemyHeroClick)}
-                        data-attack-target="enemy-hero"
-                        data-hero-side="enemy"
-                        style={
-                          boardAttackAnimation?.sourceKind === "hero" && boardAttackAnimation.sourceSide === "enemy"
-                            ? ({
-                                transform: `translate(${boardAttackAnimation.dx}px, ${boardAttackAnimation.dy}px)`,
-                              } as CSSProperties)
-                            : undefined
-                        }
-                      >
-                        {renderHeroHud(enemyPlayer, enemyHeroHpPeak, true)}
-                      </button>
                     </div>
-                    <div className="table-line">
-                      {enemyPlayer.table.map((unit, index) => renderUnitSlot(unit, "enemy", index))}
-                    </div>
-                  </div>
 
-                  <div className="battle-midline">
-                    <div className="midline-actions">
-                      <div
-                        className={`turn-timer-line ${turnSecondsLeft <= 10 ? "danger" : ""} ${isMyTurn ? "my-turn" : "enemy-turn"}`}
-                        aria-label={isMyTurn ? "Your turn timer" : "Enemy turn timer"}
-                      >
-                        <span
-                          className="turn-timer-line-fill left"
-                          style={{ width: `${Math.max(0, Math.min(50, turnProgress * 50))}%` }}
-                        />
-                        <span
-                          className="turn-timer-line-fill right"
-                          style={{ width: `${Math.max(0, Math.min(50, turnProgress * 50))}%` }}
-                        />
+                    <div className="battle-enemy-hero-layer">
+                      <div className="hero-anchor top hero-anchor-scene">
+                        <button
+                          className={`hero-orb-button ${canSelectEnemyHeroAsHeroSpellTarget() || heroAttackArmed || selectedOwnUnitId ? "hero-targetable" : ""} ${boardAttackAnimation?.sourceKind === "hero" && boardAttackAnimation.sourceSide === "enemy" ? "hero-motion-source" : ""} ${boardAttackAnimation?.targetIds.includes(enemyHeroEventId) ? "hero-hit" : ""}`}
+                          onClick={() => void runTask(handleEnemyHeroClick)}
+                          data-attack-target="enemy-hero"
+                          data-hero-side="enemy"
+                          style={
+                            boardAttackAnimation?.sourceKind === "hero" && boardAttackAnimation.sourceSide === "enemy"
+                              ? ({
+                                  transform: `translate(${boardAttackAnimation.dx}px, ${boardAttackAnimation.dy}px)`,
+                                } as CSSProperties)
+                              : undefined
+                          }
+                        >
+                          {renderHeroHud(enemyPlayer, enemyHeroHpPeak, true)}
+                        </button>
                       </div>
+                    </div>
+
+                    <div className="battle-field-layer">
+                      <div className="battlefield-core">
+                        <div className="battlefield-row enemy">
+                          <div className="table-line">
+                            {enemyPlayer.table.map((unit, index) => renderUnitSlot(unit, "enemy", index))}
+                          </div>
+                        </div>
+                        <div className="battlefield-midline">
+                          <div
+                            className={`turn-timer-line ${turnSecondsLeft <= 10 ? "danger" : ""} ${isMyTurn ? "my-turn" : "enemy-turn"}`}
+                            aria-label={isMyTurn ? "Your turn timer" : "Enemy turn timer"}
+                          >
+                            <span
+                              className="turn-timer-line-fill left"
+                              style={{ width: `${Math.max(0, Math.min(50, turnProgress * 50))}%` }}
+                            />
+                            <span
+                              className="turn-timer-line-fill right"
+                              style={{ width: `${Math.max(0, Math.min(50, turnProgress * 50))}%` }}
+                            />
+                          </div>
+                        </div>
+                        <div className="battlefield-row own">
+                          <div className="table-line">
+                            {myPlayer.table.map((unit, index) => renderUnitSlot(unit, "own", index))}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="battle-turn-control-layer">
                       <button className="end-turn-floating" onClick={() => void runTask(handleEndTurn)}>
                         End Turn
                       </button>
                     </div>
-                  </div>
 
-                  <div className="ally-zone">
-                    <div className="table-line">
-                      {myPlayer.table.map((unit, index) => renderUnitSlot(unit, "own", index))}
+                    <div className="battle-side-info left own">
+                      <button
+                        className={`grave-trigger grave-static ${openedGraveSide === "own" ? "active" : ""}`}
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          setOpenedGraveSide((prev) => (prev === "own" ? null : "own"));
+                        }}
+                        title="Your graveyard"
+                      >
+                        GY
+                        <span>{ownGraveyard.length}</span>
+                      </button>
                     </div>
+
+                    <div className="battle-side-info right own">
+                      <div className="deck-trigger deck-static" aria-label="Your deck">
+                        <span className="deck-trigger-stack" aria-hidden="true">
+                          <span />
+                          <span />
+                          <span />
+                        </span>
+                        <span className="deck-trigger-count">{displayedDeckCount}</span>
+                      </div>
+                    </div>
+
+                    <div className="battle-player-hero-layer">
+                      <div className="hero-anchor bottom hero-anchor-scene">
+                        <button
+                          className={`hero-attack-mini ${heroAttackArmed ? "armed" : ""}`}
+                          onClick={handleHeroAttackToggle}
+                          title={`Hero attack (${myPlayer.hero_attack_power})`}
+                        >
+                          HA
+                        </button>
+                        <button className="hero-skill-mini" onClick={() => void runTask(handleHeroSpell)}>
+                          HS
+                          <span className="hero-skill-mana">{heroAbilityManaCost(myPlayer)}</span>
+                        </button>
+                        <div
+                          className={`hero-center-wrap ${boardAttackAnimation?.sourceKind === "hero" && boardAttackAnimation.sourceSide === "own" ? "hero-motion-source" : ""} ${boardAttackAnimation?.targetIds.includes(ownHeroEventId) ? "hero-hit" : ""}`}
+                          data-hero-side="own"
+                          style={
+                            boardAttackAnimation?.sourceKind === "hero" && boardAttackAnimation.sourceSide === "own"
+                              ? ({
+                                  transform: `translate(${boardAttackAnimation.dx}px, ${boardAttackAnimation.dy}px)`,
+                                } as CSSProperties)
+                              : undefined
+                          }
+                        >
+                          {renderHeroHud(myPlayer, ownHeroHpPeak, false)}
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="battle-player-hand-layer">
+                      <div
+                        className={`hand-row ${myHand.length >= 9 ? "ultra-compact" : myHand.length >= 7 ? "compact" : ""}`}
+                      >
+                        {myHand.map((card, index) => {
+                          const selected = selectedHandCardId === cardInstanceId(card);
+                          const templateId = cardTemplateId(card);
+                          const tone = getAssetTone(templateId);
+                          const meta = cardCatalogEntry(templateId);
+                          const offset = index - (myHand.length - 1) / 2;
+                          const depthScale = myHand.length >= 9 ? 1.8 : myHand.length >= 7 ? 2.4 : 3;
+                          const fanStyle = {
+                            "--fan-offset": `${offset}`,
+                            "--fan-depth": `${Math.abs(offset) * depthScale}px`,
+                            zIndex: selected ? 30 : myHand.length - index,
+                          } as CSSProperties;
+                          return (
+                            <button
+                              key={cardInstanceId(card)}
+                              className={`hand-card tone-${tone} ${selected ? "selected" : ""}`}
+                              style={fanStyle}
+                              onClick={() => setSelectedHandCardId(cardInstanceId(card))}
+                            >
+                              <AssetImage
+                                imageKey={cardImageKeyForTemplate(templateId)}
+                                alt={templateId}
+                                fallbackSrc={resolveCardFallbackSrc()}
+                                className="hand-card-media"
+                              />
+                              <span className="hand-card-mana">{meta?.mana_cost ?? "?"}</span>
+                              <div className="hand-card-bottom">
+                                <strong className="hand-card-name">{resolveAssetLabel(templateId)}</strong>
+                                <div className="hand-card-stats">
+                                  {"attack" in (meta ?? {}) && meta?.attack !== undefined ? <span>ATK {meta.attack}</span> : <span>{meta?.buff_type || cardKind(card)}</span>}
+                                  {"health_points" in (meta ?? {}) && meta?.health_points !== undefined ? <span>HP {meta.health_points}</span> : <span>VAL {meta?.buff_value ?? "-"}</span>}
+                                  {"cooldown" in (meta ?? {}) && meta?.cooldown !== undefined ? <span>CD {meta.cooldown}</span> : <span>LVL {card.card_level ?? card.CardLevel ?? 1}</span>}
+                                </div>
+                              </div>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+
                     {openedGraveSide && (
                       <div
                         className={`grave-panel ${openedGraveSide === "enemy" ? "top" : "bottom"}`}
@@ -2578,92 +2699,6 @@ export default function App() {
                         </div>
                       </div>
                     )}
-                    <div className="hero-anchor bottom">
-                      <button
-                        className={`grave-trigger grave-bottom ${openedGraveSide === "own" ? "active" : ""}`}
-                        onClick={(event) => {
-                          event.stopPropagation();
-                          setOpenedGraveSide((prev) => (prev === "own" ? null : "own"));
-                        }}
-                        title="Your graveyard"
-                      >
-                        GY
-                        <span>{ownGraveyard.length}</span>
-                      </button>
-                      <div className="deck-trigger deck-bottom" aria-label="Your deck">
-                        <span className="deck-trigger-stack" aria-hidden="true">
-                          <span />
-                          <span />
-                          <span />
-                        </span>
-                        <span className="deck-trigger-count">{displayedDeckCount}</span>
-                      </div>
-                      <button
-                        className={`hero-attack-mini ${heroAttackArmed ? "armed" : ""}`}
-                        onClick={handleHeroAttackToggle}
-                        title={`Hero attack (${myPlayer.hero_attack_power})`}
-                      >
-                        HA
-                      </button>
-                      <button className="hero-skill-mini" onClick={() => void runTask(handleHeroSpell)}>
-                        HS
-                        <span className="hero-skill-mana">{heroAbilityManaCost(myPlayer)}</span>
-                      </button>
-                      <div
-                        className={`hero-center-wrap ${boardAttackAnimation?.sourceKind === "hero" && boardAttackAnimation.sourceSide === "own" ? "hero-motion-source" : ""} ${boardAttackAnimation?.targetIds.includes(ownHeroEventId) ? "hero-hit" : ""}`}
-                        data-hero-side="own"
-                        style={
-                          boardAttackAnimation?.sourceKind === "hero" && boardAttackAnimation.sourceSide === "own"
-                            ? ({
-                                transform: `translate(${boardAttackAnimation.dx}px, ${boardAttackAnimation.dy}px)`,
-                              } as CSSProperties)
-                            : undefined
-                        }
-                      >
-                        {renderHeroHud(myPlayer, ownHeroHpPeak, false)}
-                      </div>
-                    </div>
-                    <div
-                      className={`hand-row ${myHand.length >= 9 ? "ultra-compact" : myHand.length >= 7 ? "compact" : ""}`}
-                    >
-                      {myHand.map((card, index) => {
-                        const selected = selectedHandCardId === cardInstanceId(card);
-                        const templateId = cardTemplateId(card);
-                        const tone = getAssetTone(templateId);
-                        const meta = cardCatalogEntry(templateId);
-                        const offset = index - (myHand.length - 1) / 2;
-                        const depthScale = myHand.length >= 9 ? 1.8 : myHand.length >= 7 ? 2.4 : 3;
-                        const fanStyle = {
-                          "--fan-offset": `${offset}`,
-                          "--fan-depth": `${Math.abs(offset) * depthScale}px`,
-                          zIndex: selected ? 30 : myHand.length - index,
-                        } as CSSProperties;
-                        return (
-                          <button
-                            key={cardInstanceId(card)}
-                            className={`hand-card tone-${tone} ${selected ? "selected" : ""}`}
-                            style={fanStyle}
-                            onClick={() => setSelectedHandCardId(cardInstanceId(card))}
-                          >
-                            <AssetImage
-                              imageKey={cardImageKeyForTemplate(templateId)}
-                              alt={templateId}
-                              fallbackSrc={resolveCardFallbackSrc()}
-                              className="hand-card-media"
-                            />
-                            <span className="hand-card-mana">{meta?.mana_cost ?? "?"}</span>
-                            <div className="hand-card-bottom">
-                              <strong className="hand-card-name">{resolveAssetLabel(templateId)}</strong>
-                              <div className="hand-card-stats">
-                                {"attack" in (meta ?? {}) && meta?.attack !== undefined ? <span>ATK {meta.attack}</span> : <span>{meta?.buff_type || cardKind(card)}</span>}
-                                {"health_points" in (meta ?? {}) && meta?.health_points !== undefined ? <span>HP {meta.health_points}</span> : <span>VAL {meta?.buff_value ?? "-"}</span>}
-                                {"cooldown" in (meta ?? {}) && meta?.cooldown !== undefined ? <span>CD {meta.cooldown}</span> : <span>LVL {card.card_level ?? card.CardLevel ?? 1}</span>}
-                              </div>
-                            </div>
-                          </button>
-                          );
-                        })}
-                    </div>
                   </div>
                   {drawFxTick > 0 && <span key={drawFxTick} className="draw-card-fx" aria-hidden="true" />}
                 </>

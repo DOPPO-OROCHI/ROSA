@@ -376,6 +376,7 @@ func castSummonSelfCopy(
 			Attack:            caster.Attack,
 			SplashRadius:      caster.SplashRadius,
 			CanBeUpgraded:     caster.CanBeUpgraded,
+			BaseCooldown:      caster.BaseCooldown,
 			Cooldown:          0,
 			IsTank:            caster.IsTank,
 			SummonedInTurn:    owner.Turns,

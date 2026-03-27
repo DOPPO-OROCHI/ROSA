@@ -158,6 +158,7 @@ func PlayBattleCard(m *MatchState,
 		Attack:                atk,
 		SplashRadius:          tpl.SplashRadius,
 		CanBeUpgraded:         tpl.CanBeUpgraded,
+		BaseCooldown:          tpl.Cooldown,
 		Cooldown:              0,
 		IsTank:                tpl.IsTank,
 		Effects:               nil,
@@ -357,7 +358,7 @@ func CardAttack(m *MatchState,
 		if !ok {
 			return errors.New("unknown battle template: " + atk.TemplateID)
 		}
-		atk.Cooldown = tpl.Cooldown
+		atk.Cooldown = atk.BaseCooldown
 		targets = append(targets, EventTarget{
 			InstanceID: tu.InstanceID,
 			TemplateID: tu.TemplateID,
@@ -462,7 +463,7 @@ func CardAttack(m *MatchState,
 	if !ok {
 		return errors.New("unknown Battle Template: " + atk.TemplateID)
 	}
-	atk.Cooldown = tpl.Cooldown
+	atk.Cooldown = atk.BaseCooldown
 	m.Events = append(m.Events, Event{
 		Type:             string(EventAttack),
 		PlayerIndex:      playerIndex,
