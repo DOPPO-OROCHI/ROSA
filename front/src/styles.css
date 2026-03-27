@@ -1566,9 +1566,9 @@ pre {
     48px
     72px
     150px
-    minmax(228px, 1fr)
-    164px
-    148px;
+    minmax(296px, 1fr)
+    144px
+    132px;
   column-gap: 14px;
   row-gap: 10px;
   height: 100%;
@@ -1668,12 +1668,12 @@ pre {
 .battlefield-core {
   position: relative;
   height: 100%;
-  min-height: 0;
+  min-height: 296px;
   display: grid;
-  grid-template-rows: 1fr 40px 1fr;
-  gap: 10px;
+  grid-template-rows: minmax(122px, 1fr) 34px minmax(122px, 1fr);
+  gap: 8px;
   width: 100%;
-  padding: 14px 12px;
+  padding: 18px 12px 20px;
   border-radius: 28px;
   border: 1px solid rgba(123, 216, 245, 0.08);
   background:
@@ -1693,10 +1693,12 @@ pre {
 
 .battlefield-row.enemy {
   align-items: flex-end;
+  padding-top: 6px;
 }
 
 .battlefield-row.own {
   align-items: flex-start;
+  padding-bottom: 8px;
 }
 
 .battlefield-midline {
@@ -1882,7 +1884,7 @@ pre {
   position: relative;
   align-items: center;
   justify-content: center;
-  min-height: 132px;
+  min-height: 120px;
 }
 
 .hero-anchor-button {
