@@ -3140,6 +3140,116 @@ pre {
       calc(8px + env(safe-area-inset-bottom))
       10px;
   }
+
+  .war-shell.battle-mode .battle-scene {
+    grid-template-rows:
+      42px
+      52px
+      124px
+      minmax(340px, 1fr)
+      132px
+      120px;
+    row-gap: 8px;
+  }
+
+  .war-shell.battle-mode .battle-top-utility {
+    align-items: center;
+  }
+
+  .war-shell.battle-mode .battle-utility-stack {
+    gap: 0.35rem;
+  }
+
+  .war-shell.battle-mode .leave-inline,
+  .war-shell.battle-mode .expand-inline.in-board {
+    min-height: 34px;
+    padding: 0.38rem 0.72rem;
+    font-size: 0.88rem;
+  }
+
+  .war-shell.battle-mode .battle-enemy-hand-layer {
+    padding-top: 0;
+  }
+
+  .war-shell.battle-mode .enemy-hand {
+    width: min(100%, 260px);
+    min-height: 52px;
+  }
+
+  .war-shell.battle-mode .card-back {
+    width: 30px;
+    height: 46px;
+    margin-left: -8px;
+  }
+
+  .war-shell.battle-mode .battle-field-layer {
+    padding-inline: 42px;
+  }
+
+  .war-shell.battle-mode .battlefield-core {
+    min-height: 340px;
+    grid-template-rows: minmax(126px, 1fr) 30px minmax(126px, 1fr);
+    gap: 7px;
+    padding: 14px 10px 16px;
+    border-radius: 24px;
+  }
+
+  .war-shell.battle-mode .battle-side-info.enemy {
+    top: 154px;
+  }
+
+  .war-shell.battle-mode .battle-side-info.own {
+    bottom: 152px;
+  }
+
+  .war-shell.battle-mode .battle-turn-control-layer {
+    right: 2px;
+  }
+
+  .war-shell.battle-mode .end-turn-floating {
+    min-height: 32px;
+    padding: 0.32rem 0.52rem;
+    font-size: 0.62rem;
+  }
+
+  .war-shell.battle-mode .hero-orb {
+    width: 104px;
+    height: 104px;
+  }
+
+  .war-shell.battle-mode .hero-orb-avatar {
+    width: 78px;
+    height: 78px;
+  }
+
+  .war-shell.battle-mode .hero-anchor.bottom {
+    min-height: 108px;
+  }
+
+  .war-shell.battle-mode .hero-skill-mini {
+    left: calc(50% + 56px);
+    width: 42px;
+    height: 42px;
+    min-height: 42px;
+  }
+
+  .war-shell.battle-mode .hero-attack-mini {
+    left: calc(50% - 98px);
+    width: 42px;
+    height: 42px;
+    min-height: 42px;
+  }
+
+  .war-shell.battle-mode .hand-row {
+    width: min(100%, 360px);
+    min-height: 116px;
+  }
+
+  .war-shell.battle-mode .hand-card {
+    width: 68px;
+    min-width: 68px;
+    min-height: 98px;
+  }
 }
 
 @media (min-width: 700px) {
