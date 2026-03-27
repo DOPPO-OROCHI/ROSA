@@ -1560,6 +1560,67 @@ pre {
   filter: saturate(0.7) contrast(1.05);
 }
 
+.battle-cinematic {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 158px;
+  min-height: 92px;
+  padding: 0.55rem;
+  border-radius: 18px;
+  border: 1px solid rgba(123, 216, 245, 0.18);
+  background: linear-gradient(180deg, rgba(12, 18, 24, 0.96), rgba(5, 8, 12, 0.96));
+  box-shadow: 0 18px 42px rgba(0, 0, 0, 0.34);
+  display: flex;
+  gap: 0.55rem;
+  align-items: center;
+  z-index: 4;
+  pointer-events: none;
+}
+
+.battle-cinematic-media {
+  width: 48px;
+  height: 68px;
+  flex: 0 0 auto;
+  border-radius: 12px;
+  overflow: hidden;
+  background: rgba(6, 10, 14, 0.9);
+  border: 1px solid rgba(231, 219, 192, 0.08);
+}
+
+.battle-cinematic-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.battle-cinematic-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 0.16rem;
+  min-width: 0;
+}
+
+.battle-cinematic-kicker {
+  color: #71d6ff;
+  font-size: 0.56rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.battle-cinematic-copy strong {
+  color: #eef7fb;
+  font-size: 0.78rem;
+  line-height: 1.1;
+}
+
+.battle-cinematic-copy span {
+  color: #a8bec7;
+  font-size: 0.64rem;
+  line-height: 1.15;
+}
+
 .enemy-zone,
 .ally-zone {
   display: flex;
@@ -1805,6 +1866,8 @@ pre {
   width: 100%;
   display: flex;
   justify-content: center;
+  position: relative;
+  transition: transform 0.18s ease-out;
 }
 
 .grave-trigger {
@@ -2015,6 +2078,46 @@ pre {
   line-height: 1.15;
 }
 
+.hero-orb-button,
+.slot {
+  transition:
+    transform 0.18s ease-out,
+    box-shadow 0.18s ease-out,
+    filter 0.18s ease-out;
+}
+
+.slot.attack-source,
+.hero-motion-source {
+  z-index: 6;
+  filter: drop-shadow(0 10px 24px rgba(255, 210, 110, 0.22));
+}
+
+.slot.hit-target::after,
+.hero-hit::after {
+  content: "";
+  position: absolute;
+  inset: -4px;
+  border-radius: 18px;
+  background: radial-gradient(circle, rgba(255, 243, 170, 0.34), rgba(255, 78, 78, 0.18) 46%, transparent 72%);
+  pointer-events: none;
+  animation: battleHitFlash 0.38s ease-out;
+}
+
+.hero-hit::after {
+  border-radius: 999px;
+}
+
+@keyframes battleHitFlash {
+  0% {
+    opacity: 0.9;
+    transform: scale(0.92);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.12);
+  }
+}
+
 .hero-orb {
   position: relative;
   width: 120px;
@@ -2024,6 +2127,7 @@ pre {
 }
 
 .hero-orb-button {
+  position: relative;
   padding: 0;
   border: 0;
   background: transparent;

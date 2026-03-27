@@ -204,10 +204,31 @@ type MatchPlayer = {
 
 type MatchEvent = {
   type: string;
+  player_index?: number;
+  source_kind?: string;
+  source_instance_id?: string;
+  source_hero_code?: string;
+  target_slot?: number;
+  targets?: Array<{
+    instance_id?: string;
+    template_id?: string;
+    amount?: number;
+    died?: boolean;
+    new_hp?: number;
+  }>;
   vfx_key?: string;
   sfx_key?: string;
   source_template_id?: string;
   source_card_template_id?: string;
+};
+
+type BoardAttackAnimation = {
+  sourceKind: "unit" | "hero";
+  sourceInstanceId?: string;
+  sourceSide?: "own" | "enemy";
+  dx: number;
+  dy: number;
+  targetIds: string[];
 };
 
 type MatchState = {
@@ -564,6 +585,9 @@ export default function App() {
   const [heroSpellArmed, setHeroSpellArmed] = useState(false);
   const [heroAttackArmed, setHeroAttackArmed] = useState(false);
   const [openedGraveSide, setOpenedGraveSide] = useState<"own" | "enemy" | null>(null);
+  const [eventQueue, setEventQueue] = useState<MatchEvent[]>([]);
+  const [activeEvent, setActiveEvent] = useState<MatchEvent | null>(null);
+  const [boardAttackAnimation, setBoardAttackAnimation] = useState<BoardAttackAnimation | null>(null);
 
   const streamRef = useRef<EventSource | null>(null);
   const battleBoardRef = useRef<HTMLElement | null>(null);
@@ -575,6 +599,9 @@ export default function App() {
   const [serverClockOffsetSec, setServerClockOffsetSec] = useState(0);
   const [drawFxTick, setDrawFxTick] = useState(0);
   const prevHandCountRef = useRef<number | null>(null);
+  const eventPlaybackTimerRef = useRef<number | null>(null);
+  const queuePrimedRef = useRef(false);
+  const lastQueuedVersionRef = useRef<string>("");
 
   function pushToast(message: string, tone: ToastEntry["tone"] = "info") {
     const id = toastIdRef.current++;
@@ -592,6 +619,11 @@ export default function App() {
     if (!selectedMatchId) {
       streamRef.current?.close();
       streamRef.current = null;
+      setEventQueue([]);
+      setActiveEvent(null);
+      setBoardAttackAnimation(null);
+      queuePrimedRef.current = false;
+      lastQueuedVersionRef.current = "";
       return;
     }
 
@@ -613,6 +645,18 @@ export default function App() {
     return () => stream.close();
   }, [selectedMatchId]);
 
+  useEffect(() => {
+    queuePrimedRef.current = false;
+    lastQueuedVersionRef.current = "";
+    setEventQueue([]);
+    setActiveEvent(null);
+    setBoardAttackAnimation(null);
+    if (eventPlaybackTimerRef.current) {
+      window.clearTimeout(eventPlaybackTimerRef.current);
+      eventPlaybackTimerRef.current = null;
+    }
+  }, [selectedMatch?.match_id]);
+
   const myPlayer = useMemo(
     () => selectedMatch?.players.find((player) => player?.user_id === me?.user_id) ?? null,
     [selectedMatch, me],
@@ -622,6 +666,8 @@ export default function App() {
     [selectedMatch, me],
   );
   const activeBattle = Boolean(selectedMatch && !selectedMatch.finished);
+  const ownHeroEventId = myPlayer ? `hero:p${myPlayer.player_id}` : "";
+  const enemyHeroEventId = enemyPlayer ? `hero:p${enemyPlayer.player_id}` : "";
   const isMyTurn = Boolean(
     selectedMatch &&
       myPlayer &&
@@ -661,6 +707,25 @@ export default function App() {
     const nowSec = Math.floor(Date.now() / 1000);
     setServerClockOffsetSec(selectedMatch.server_now - nowSec);
   }, [selectedMatch?.server_now, selectedMatch?.match_id]);
+
+  useEffect(() => {
+    if (!selectedMatch || !activeBattle) {
+      return;
+    }
+    const versionKey = `${selectedMatch.match_id}:${selectedMatch.version}`;
+    if (!queuePrimedRef.current) {
+      queuePrimedRef.current = true;
+      lastQueuedVersionRef.current = versionKey;
+      return;
+    }
+    if (lastQueuedVersionRef.current === versionKey) {
+      return;
+    }
+    lastQueuedVersionRef.current = versionKey;
+    if ((selectedMatch.events?.length ?? 0) > 0) {
+      setEventQueue((prev) => [...prev, ...(selectedMatch.events ?? [])]);
+    }
+  }, [activeBattle, selectedMatch]);
   useEffect(() => {
     if (!activeBattle || !myPlayer) {
       prevHandCountRef.current = null;
@@ -676,6 +741,31 @@ export default function App() {
     }
     prevHandCountRef.current = myHandCount;
   }, [activeBattle, myPlayer, myHandCount]);
+
+  useEffect(() => {
+    if (activeEvent || eventQueue.length === 0) {
+      return;
+    }
+    const nextEvent = eventQueue[0];
+    setActiveEvent(nextEvent);
+    setBoardAttackAnimation(buildBoardAttackAnimation(nextEvent));
+    const duration = eventDurationMs(nextEvent);
+    eventPlaybackTimerRef.current = window.setTimeout(() => {
+      setBoardAttackAnimation(null);
+      setActiveEvent(null);
+      setEventQueue((prev) => prev.slice(1));
+      eventPlaybackTimerRef.current = null;
+    }, duration);
+  }, [activeEvent, eventQueue]);
+
+  useEffect(() => {
+    return () => {
+      if (eventPlaybackTimerRef.current) {
+        window.clearTimeout(eventPlaybackTimerRef.current);
+        eventPlaybackTimerRef.current = null;
+      }
+    };
+  }, []);
   const clientNowSec = Math.floor(clockTickMs / 1000);
   const syncedNowSec = clientNowSec + serverClockOffsetSec;
   const turnTotalSec = Math.max(1, selectedMatch?.turn_time_sec ?? 45);
@@ -770,6 +860,131 @@ export default function App() {
       x: rect.left + rect.width / 2 - boardRect.left,
       y: rect.top + rect.height / 2 - boardRect.top,
     };
+  }
+
+  function sideForPlayerIndex(playerIndex: number): "own" | "enemy" {
+    return myPlayer && playerIndex === myPlayer.player_id ? "own" : "enemy";
+  }
+
+  function heroInstanceIdForPlayerIndex(playerIndex: number): string {
+    return `hero:p${playerIndex}`;
+  }
+
+  function pointForUnitInstance(instanceId: string): { x: number; y: number } | null {
+    if (!battleBoardRef.current || !instanceId) {
+      return null;
+    }
+    const node = battleBoardRef.current.querySelector<HTMLElement>(`[data-unit-id="${instanceId}"]`);
+    return node ? getElementCenterInBoard(node) : null;
+  }
+
+  function pointForHeroSide(side: "own" | "enemy"): { x: number; y: number } | null {
+    if (!battleBoardRef.current) {
+      return null;
+    }
+    const node = battleBoardRef.current.querySelector<HTMLElement>(`[data-hero-side="${side}"]`);
+    return node ? getElementCenterInBoard(node) : null;
+  }
+
+  function eventDurationMs(event: MatchEvent): number {
+    switch (event.type) {
+      case "attack":
+      case "hero_attack":
+        return 460;
+      case "card_skill":
+      case "hero_spell":
+        return 880;
+      case "death":
+        return 520;
+      default:
+        return 620;
+    }
+  }
+
+  function buildBoardAttackAnimation(event: MatchEvent): BoardAttackAnimation | null {
+    if (!event.player_index) {
+      if (event.player_index !== 0) {
+        return null;
+      }
+    }
+    if (event.type !== "attack" && event.type !== "hero_attack") {
+      return null;
+    }
+    const firstTargetId = event.targets?.[0]?.instance_id ?? "";
+    if (!firstTargetId) {
+      return null;
+    }
+
+    let sourcePoint: { x: number; y: number } | null = null;
+    if (event.source_kind === "unit" && event.source_instance_id) {
+      sourcePoint = pointForUnitInstance(event.source_instance_id);
+    } else if (event.source_kind === "hero") {
+      sourcePoint = pointForHeroSide(sideForPlayerIndex(event.player_index ?? 0));
+    }
+
+    let targetPoint: { x: number; y: number } | null = null;
+    if (firstTargetId.startsWith("hero:p")) {
+      const heroPlayerIndex = Number(firstTargetId.replace("hero:p", ""));
+      targetPoint = pointForHeroSide(sideForPlayerIndex(heroPlayerIndex));
+    } else {
+      targetPoint = pointForUnitInstance(firstTargetId);
+    }
+
+    if (!sourcePoint || !targetPoint) {
+      return null;
+    }
+
+    const dx = (targetPoint.x - sourcePoint.x) * 0.36;
+    const dy = (targetPoint.y - sourcePoint.y) * 0.36;
+    return {
+      sourceKind: event.source_kind === "hero" ? "hero" : "unit",
+      sourceInstanceId: event.source_instance_id,
+      sourceSide: sideForPlayerIndex(event.player_index ?? 0),
+      dx,
+      dy,
+      targetIds: (event.targets ?? []).map((target) => target.instance_id ?? "").filter(Boolean),
+    };
+  }
+
+  function eventSourceImageKey(event: MatchEvent): string {
+    if (event.source_kind === "hero" && event.source_hero_code) {
+      return resolveHeroImageKey(event.source_hero_code);
+    }
+    const templateId = event.source_template_id ?? event.source_card_template_id ?? "";
+    return templateId ? cardImageKeyForTemplate(templateId) : resolveCardFallbackSrc();
+  }
+
+  function eventSourceLabel(event: MatchEvent): string {
+    if (event.source_kind === "hero" && event.source_hero_code) {
+      return resolveAssetLabel(event.source_hero_code);
+    }
+    const templateId = event.source_template_id ?? event.source_card_template_id ?? "";
+    return templateId ? resolveAssetLabel(templateId) : "Battle Action";
+  }
+
+  function eventTitle(event: MatchEvent): string {
+    switch (event.type) {
+      case "attack":
+        return "Attack";
+      case "hero_attack":
+        return "Hero Attack";
+      case "card_skill":
+        return "Card Skill";
+      case "hero_spell":
+        return "Hero Skill";
+      case "summon":
+        return "Summon";
+      case "buff":
+        return "Buff";
+      case "heal":
+        return "Heal";
+      case "death":
+        return "Death";
+      case "resurrect":
+        return "Resurrect";
+      default:
+        return event.type || "Action";
+    }
   }
 
   const cardCatalog = useMemo(() => {
@@ -1599,13 +1814,23 @@ export default function App() {
     const skillLeft = unitSkillCooldownLeft(unit);
     const skillBase = unitSkillCooldown(unit) || meta?.skill_cooldown || fallbackSkill?.cooldown || 0;
     const skillDisabled = !hasActiveSkill || skillLeft > 0 || !isMyTurn || Boolean(selectedCard);
+    const isAttackSource =
+      boardAttackAnimation?.sourceKind === "unit" &&
+      boardAttackAnimation.sourceInstanceId === unitInstanceId(unit);
+    const isHitTarget = boardAttackAnimation?.targetIds.includes(unitInstanceId(unit)) ?? false;
+    const slotStyle = {
+      transform:
+        `${selected ? "translateY(-2px) " : ""}` +
+        `${isAttackSource ? `translate(${boardAttackAnimation?.dx ?? 0}px, ${boardAttackAnimation?.dy ?? 0}px)` : ""}`,
+    } as CSSProperties;
 
     return (
       <button
-        className={`slot tone-${tone} ${selected ? "selected" : ""} ${skillTargetable ? "skill-targetable" : ""} ${selectedBySkill ? "skill-caster" : ""}`}
+        className={`slot tone-${tone} ${selected ? "selected" : ""} ${skillTargetable ? "skill-targetable" : ""} ${selectedBySkill ? "skill-caster" : ""} ${isAttackSource ? "attack-source" : ""} ${isHitTarget ? "hit-target" : ""}`}
         data-unit-id={unitInstanceId(unit)}
         data-slot-side={side}
         data-attack-target={side === "enemy" ? "enemy-unit" : undefined}
+        style={slotStyle}
         onClick={() =>
           void (side === "own" ? handleOwnUnitClick(unit) : handleEnemyUnitClick(unit))
         }
@@ -2221,6 +2446,23 @@ export default function App() {
                 </div>
               ) : (
                 <>
+                  {activeEvent && (
+                    <aside className="battle-cinematic" aria-live="polite">
+                      <div className="battle-cinematic-media">
+                        <AssetImage
+                          imageKey={eventSourceImageKey(activeEvent)}
+                          alt={eventSourceLabel(activeEvent)}
+                          fallbackSrc={resolveCardFallbackSrc()}
+                          className="battle-cinematic-image"
+                        />
+                      </div>
+                      <div className="battle-cinematic-copy">
+                        <span className="battle-cinematic-kicker">{eventTitle(activeEvent)}</span>
+                        <strong>{eventSourceLabel(activeEvent)}</strong>
+                        <span>{`${activeEvent.targets?.length ?? 0} target${(activeEvent.targets?.length ?? 0) === 1 ? "" : "s"}`}</span>
+                      </div>
+                    </aside>
+                  )}
                   <div className="enemy-zone">
                     <div className="enemy-hand">
                       {Array.from({ length: enemyPlayer.hand_count ?? 0 }).map((_, index, array) => {
@@ -2256,9 +2498,17 @@ export default function App() {
                         <span className="deck-trigger-count">{enemyDisplayedDeckCount}</span>
                       </div>
                       <button
-                        className={`hero-orb-button ${canSelectEnemyHeroAsHeroSpellTarget() || heroAttackArmed || selectedOwnUnitId ? "hero-targetable" : ""}`}
+                        className={`hero-orb-button ${canSelectEnemyHeroAsHeroSpellTarget() || heroAttackArmed || selectedOwnUnitId ? "hero-targetable" : ""} ${boardAttackAnimation?.sourceKind === "hero" && boardAttackAnimation.sourceSide === "enemy" ? "hero-motion-source" : ""} ${boardAttackAnimation?.targetIds.includes(enemyHeroEventId) ? "hero-hit" : ""}`}
                         onClick={() => void runTask(handleEnemyHeroClick)}
                         data-attack-target="enemy-hero"
+                        data-hero-side="enemy"
+                        style={
+                          boardAttackAnimation?.sourceKind === "hero" && boardAttackAnimation.sourceSide === "enemy"
+                            ? ({
+                                transform: `translate(${boardAttackAnimation.dx}px, ${boardAttackAnimation.dy}px)`,
+                              } as CSSProperties)
+                            : undefined
+                        }
                       >
                         {renderHeroHud(enemyPlayer, enemyHeroHpPeak, true)}
                       </button>
@@ -2350,7 +2600,17 @@ export default function App() {
                         HS
                         <span className="hero-skill-mana">{heroAbilityManaCost(myPlayer)}</span>
                       </button>
-                      <div className="hero-center-wrap">
+                      <div
+                        className={`hero-center-wrap ${boardAttackAnimation?.sourceKind === "hero" && boardAttackAnimation.sourceSide === "own" ? "hero-motion-source" : ""} ${boardAttackAnimation?.targetIds.includes(ownHeroEventId) ? "hero-hit" : ""}`}
+                        data-hero-side="own"
+                        style={
+                          boardAttackAnimation?.sourceKind === "hero" && boardAttackAnimation.sourceSide === "own"
+                            ? ({
+                                transform: `translate(${boardAttackAnimation.dx}px, ${boardAttackAnimation.dy}px)`,
+                              } as CSSProperties)
+                            : undefined
+                        }
+                      >
                         {renderHeroHud(myPlayer, ownHeroHpPeak, false)}
                       </div>
                     </div>
