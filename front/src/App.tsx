@@ -11,7 +11,13 @@ import {
   resolveImageSrc,
 } from "./assets";
 import { apiUrl } from "./config";
-import { bootstrapTelegramWebApp, getTelegramInitData } from "./telegram";
+import {
+  bootstrapTelegramWebApp,
+  exitMiniAppFullscreen,
+  getTelegramInitData,
+  isMiniAppFullscreen,
+  requestMiniAppFullscreen,
+} from "./telegram";
 
 type TabId = "home" | "inventory";
 
@@ -594,6 +600,7 @@ export default function App() {
   const [eventQueue, setEventQueue] = useState<MatchEvent[]>([]);
   const [activeEvent, setActiveEvent] = useState<MatchEvent | null>(null);
   const [boardAttackAnimation, setBoardAttackAnimation] = useState<BoardAttackAnimation | null>(null);
+  const [miniAppFullscreen, setMiniAppFullscreen] = useState(false);
 
   const streamRef = useRef<EventSource | null>(null);
   const battleBoardRef = useRef<HTMLElement | null>(null);
@@ -619,6 +626,17 @@ export default function App() {
 
   useEffect(() => {
     bootstrapTelegramWebApp();
+    setMiniAppFullscreen(isMiniAppFullscreen());
+  }, []);
+
+  useEffect(() => {
+    const syncFullscreen = () => setMiniAppFullscreen(isMiniAppFullscreen());
+    document.addEventListener("fullscreenchange", syncFullscreen);
+    window.addEventListener("resize", syncFullscreen);
+    return () => {
+      document.removeEventListener("fullscreenchange", syncFullscreen);
+      window.removeEventListener("resize", syncFullscreen);
+    };
   }, []);
 
   useEffect(() => {
@@ -1282,6 +1300,14 @@ export default function App() {
     setSelectedMatchId(match.match_id);
     ingestMatchState(match, "prime");
     pushToast(`Battle #${match.match_id} deployed`);
+  }
+
+  async function handleToggleMiniAppFullscreen() {
+    const next = miniAppFullscreen ? await exitMiniAppFullscreen() : await requestMiniAppFullscreen();
+    if (!next && !miniAppFullscreen) {
+      pushToast("Fullscreen is not supported here", "error");
+    }
+    setMiniAppFullscreen(isMiniAppFullscreen());
   }
 
   function targetLabel(target: string): string {
@@ -2475,9 +2501,14 @@ export default function App() {
                   )}
                   <div className="battle-scene">
                     <div className="battle-top-utility">
-                      <button className="ghost-button leave-inline in-board" onClick={() => void runTask(handleLeaveMatch)}>
-                        Leave Match
-                      </button>
+                      <div className="battle-utility-stack">
+                        <button className="ghost-button leave-inline in-board" onClick={() => void runTask(handleLeaveMatch)}>
+                          Leave Match
+                        </button>
+                        <button className="ghost-button expand-inline in-board" onClick={() => void runTask(handleToggleMiniAppFullscreen)}>
+                          {miniAppFullscreen ? "Window" : "Fullscreen"}
+                        </button>
+                      </div>
                     </div>
 
                     <div className="battle-enemy-hand-layer">

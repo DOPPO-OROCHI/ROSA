@@ -1499,11 +1499,27 @@ pre {
   background: rgba(19, 25, 33, 0.88);
 }
 
+.battle-utility-stack {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  flex-wrap: wrap;
+}
+
 .leave-inline.in-board {
-  position: absolute;
-  top: 8px;
-  left: 8px;
-  z-index: 7;
+  position: relative;
+  top: auto;
+  left: auto;
+  z-index: 1;
+}
+
+.expand-inline.in-board {
+  min-height: 38px;
+  padding: 0.45rem 0.85rem;
+  border-radius: 12px;
+  background: rgba(19, 25, 33, 0.88);
+  position: relative;
+  z-index: 1;
 }
 
 .battle-side {
