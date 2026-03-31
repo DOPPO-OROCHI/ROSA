@@ -8,6 +8,7 @@ import (
 	"TheWar/internal/applycation"
 	"TheWar/internal/bootstrap"
 	"TheWar/internal/domain/game"
+	"TheWar/internal/domain/queue"
 	"TheWar/internal/infra/cache"
 	"TheWar/internal/infra/db"
 	"TheWar/internal/infra/repository"
@@ -52,26 +53,26 @@ func main() {
 	defer stop()
 	store := middleware.NewTokenStore(db.DB, 72*time.Hour)
 	hub := transport.NewHub()
+	matchQueue := queue.NewQueue()
 	app := adapters.App{
-		CreateMatch: handlers.NewCreateMatchHandler(handlers.CreateMatchHandlerDeps{DB: db.DB}),
-		GetMatch:    handlers.NewGetMatchHandler(handlers.GetMatchHandlerDeps{DB: db.DB}),
-		MatchesList: handlers.NewMathesListHandler(handlers.MathesListHandlerDeps{DB: db.DB}),
-		ApplyAction: handlers.NewApplyActionHandler(handlers.ApplyActionHandlerDeps{DB: db.DB, Resolvers: mustBeResolvers(&rc), Hub: hub}),
-		GetMe:       handlers.NewGetMeHandler(handlers.GetMeHandler{DB: db.DB}),
-		GetDeck:     handlers.NewGetDeckHandler(handlers.DeckHandlerDeps{DB: db.DB}),
-		SaveDeck:    handlers.NewSaveDeckHandler(handlers.DeckHandlerDeps{DB: db.DB}),
-		CardsList:   handlers.NewCardsListHandler(dtoLikeDepsForCards(db.DB)),
-		HeroesList:  handlers.NewHeroesListHandler(handlers.HeroListHandler{DB: db.DB}),
-		SelectHero:  handlers.NewSelectedHeroHandler(db.DB),
-		StreamMatch: handlers.NewStreamMatchHandler(handlers.StreamMatchDeps{Hub: hub, Store: store}),
-		AuthTelegram: handlers.NewAuthTelegramHandler(handlers.AuthTelegramDeps{
-			DB:    db.DB,
-			Store: store,
-		}),
+		CreateMatch:  handlers.NewCreateMatchHandler(handlers.CreateMatchHandlerDeps{DB: db.DB}),
+		GetMatch:     handlers.NewGetMatchHandler(handlers.GetMatchHandlerDeps{DB: db.DB}),
+		MatchesList:  handlers.NewMathesListHandler(handlers.MathesListHandlerDeps{DB: db.DB}),
+		ApplyAction:  handlers.NewApplyActionHandler(handlers.ApplyActionHandlerDeps{DB: db.DB, Resolvers: mustBeResolvers(&rc), Hub: hub}),
+		GetMe:        handlers.NewGetMeHandler(handlers.GetMeHandler{DB: db.DB}),
+		GetDeck:      handlers.NewGetDeckHandler(handlers.DeckHandlerDeps{DB: db.DB}),
+		SaveDeck:     handlers.NewSaveDeckHandler(handlers.DeckHandlerDeps{DB: db.DB}),
+		CardsList:    handlers.NewCardsListHandler(dtoLikeDepsForCards(db.DB)),
+		HeroesList:   handlers.NewHeroesListHandler(handlers.HeroListHandler{DB: db.DB}),
+		SelectHero:   handlers.NewSelectedHeroHandler(db.DB),
+		StreamMatch:  handlers.NewStreamMatchHandler(handlers.StreamMatchDeps{Hub: hub, Store: store}),
+		AuthTelegram: handlers.NewAuthTelegramHandler(handlers.AuthTelegramDeps{DB: db.DB, Store: store}),
+		JoinQueue:    handlers.JoinQueue(handlers.NewJoinHandler(handlers.JoinQueueHandlerDeps{DB: db.DB, Queue: matchQueue})),
+		LeaveQueue:   handlers.LeaveQueue(handlers.NewLeaveQueueHandler(handlers.LeaveQueueHandlerDeps{Queue: matchQueue})),
+		QueueStatus:  handlers.QueueStatus(handlers.NewQueueStatusHandler(handlers.QueueStatusHandlerDeps{Queue: matchQueue})),
 	}
 	mux := adapters.NewMux(app)
 	httpHandler := middleware.AuthMiddleware(store)(mux)
-
 	srv := &http.Server{
 		Addr:         ":1234",
 		Handler:      httpHandler,
@@ -88,6 +89,7 @@ func main() {
 			case <-ctx.Done():
 				return
 			case <-t.C:
+				matchQueue.CleanupExpired()
 				now := time.Now().Unix()
 				ids, err := repository.ListExpiredMatches(db.DB, now, 50)
 				if err != nil {

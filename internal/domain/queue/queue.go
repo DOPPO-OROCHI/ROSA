@@ -5,6 +5,12 @@ import (
 	"time"
 )
 
+/*Данный файл полностью посвящен описанию такой сущности как очередь. В моей игре очередь работает внутри
+оперативной памяти. Это сделано потому, что мой учитель так сказал. Почему не брать инфу из БД ? Вопросы
+тут не тебе задавать... Так и вот. Чтобы реализовать такую сущность как очередь, я прибегнул к структурам,
+методы которой и будут отвечать за операционку внутри очередей.*/
+
+// структура пользователя внутри очереди, грубо говоря слепок объекта, который находится в массиве очереди
 type UserInQueue struct {
 	UserID            int       //<-айди пользователя в очереди
 	Rating            int       //<-его рейтинг
@@ -14,13 +20,14 @@ type UserInQueue struct {
 	SearchRange       int       //<-рендж поиска по тем, у кого рейтнг+- наш
 }
 
+// а это очередь, где находятся игроки, а так же поля, который нужны для...
 type Queue struct {
 	Users              []UserInQueue
-	Penalties          map[int]time.Time
-	DefaultSearchRange int
-	PenaltyDuration    time.Duration
-	AcceptTimeOut      time.Duration
-	reMu               sync.RWMutex
+	Penalties          map[int]time.Time //<-подсчета штрафников (если игрок не принял игру-штраф 3 минуты)
+	DefaultSearchRange int               //<-дефолтный рендж по поиску (типа по рейтингу матчим игроков)
+	PenaltyDuration    time.Duration     //<-длительность штрафа отдельно взятого игрока
+	AcceptTimeout      time.Duration     //<-таймаут на принятие матча
+	reMu               sync.RWMutex      //<-мьютекс
 }
 
 func NewQueue() *Queue {
@@ -29,7 +36,7 @@ func NewQueue() *Queue {
 		Penalties:          make(map[int]time.Time),
 		DefaultSearchRange: DefaultSearchRange,
 		PenaltyDuration:    PenaltyDefaultMinutes,
-		AcceptTimeOut:      AcceptTimeoutDefault,
+		AcceptTimeout:      AcceptTimeoutDefault,
 	}
 }
 
@@ -159,6 +166,9 @@ func (q *Queue) FindMatchForUser(userID int) (UserInQueue, bool) {
 	foundCurrent := false
 	for i := range q.Users {
 		if q.Users[i].UserID == userID {
+			if penaltyUntil, ok := q.Penalties[userID]; ok && time.Now().Before(penaltyUntil) {
+				return UserInQueue{}, false
+			}
 			currentUser = q.Users[i]
 			foundCurrent = true
 			break
@@ -168,7 +178,7 @@ func (q *Queue) FindMatchForUser(userID int) (UserInQueue, bool) {
 		return UserInQueue{}, false
 	}
 	var bestCandidate UserInQueue
-	foundCondidate := false
+	foundCandidate := false
 	bestDiff := 0
 	for i := range q.Users {
 		candidate := q.Users[i]
@@ -182,13 +192,16 @@ func (q *Queue) FindMatchForUser(userID int) (UserInQueue, bool) {
 		if diff > currentUser.SearchRange {
 			continue
 		}
-		if !foundCondidate || diff < bestDiff {
+		if diff > candidate.SearchRange {
+			continue
+		}
+		if !foundCandidate || diff < bestDiff {
 			bestCandidate = candidate
 			bestDiff = diff
-			foundCondidate = true
+			foundCandidate = true
 		}
 	}
-	if !foundCondidate {
+	if !foundCandidate {
 		return UserInQueue{}, false
 	}
 	return bestCandidate, true
@@ -222,43 +235,6 @@ func (q *Queue) CanJoinQueue(user *UserInQueue) error {
 		return ErrUserQueuePenalty
 	}
 	return nil
-}
-
-// обновляем статус пользователя в очереди (стоит в очереди, нашел матч, заблокирован и тд)
-func (q *Queue) UpdateUserStatusInQueue(userID int,
-	status string, mathedWithUser int) error {
-	if q == nil {
-		return ErrNilQueue
-	}
-	if userID <= 0 {
-		return ErrBadUserID
-	}
-	if status == "" {
-		return ErrBadStatus
-	}
-	q.reMu.Lock()
-	defer q.reMu.Unlock()
-	for i := range q.Users {
-		if q.Users[i].UserID != userID {
-			continue
-		}
-		switch status {
-		case QueueStatusSearching:
-			q.Users[i].Status = QueueStatusSearching
-			q.Users[i].MatchedWithUserID = 0
-			return nil
-		case QueueStatusPendingMatch:
-			if mathedWithUser <= 0 {
-				return ErrBadUserID
-			}
-			q.Users[i].Status = QueueStatusPendingMatch
-			q.Users[i].MatchedWithUserID = mathedWithUser
-			return nil
-		default:
-			return ErrBadStatus
-		}
-	}
-	return ErrUserNotFoundInQueue
 }
 
 // для штрафов, таймаутов и так далее
@@ -315,4 +291,162 @@ func (q *Queue) GetPenaltyUntil(userID int) (time.Time, bool) {
 		return time.Time{}, false
 	}
 	return penaltyUntil, true
+}
+
+func (q *Queue) ReserveMatchForUser(userID int) (UserInQueue, UserInQueue, bool, error) {
+	if q == nil {
+		return UserInQueue{}, UserInQueue{}, false, ErrNilQueue
+	}
+	if userID <= 0 {
+		return UserInQueue{}, UserInQueue{}, false, ErrBadUserID
+	}
+	q.reMu.Lock()
+	defer q.reMu.Unlock()
+	currentIdx := -1
+	bestCandidateIdx := -1
+	bestDiff := 0
+	ratingDiff := func(a, b int) int {
+		if a > b {
+			return a - b
+		}
+		return b - a
+	}
+	for i := range q.Users {
+		if q.Users[i].UserID == userID {
+			currentIdx = i
+			break
+		}
+	}
+	if currentIdx == -1 {
+		return UserInQueue{}, UserInQueue{}, false, ErrUserNotFoundInQueue
+	}
+	if q.Users[currentIdx].Status != QueueStatusSearching {
+		return UserInQueue{}, UserInQueue{}, false, ErrBadStatus
+	}
+	for i := range q.Users {
+		if i == currentIdx {
+			continue
+		}
+		candidate := q.Users[i]
+		if candidate.Status != QueueStatusSearching {
+			continue
+		}
+		diff := ratingDiff(q.Users[currentIdx].Rating, candidate.Rating)
+		if diff > q.Users[currentIdx].SearchRange {
+			continue
+		}
+		if diff > candidate.SearchRange {
+			continue
+		}
+		if bestCandidateIdx == -1 || diff < bestDiff {
+			bestCandidateIdx = i
+			bestDiff = diff
+		}
+	}
+	if bestCandidateIdx == -1 {
+		return UserInQueue{}, UserInQueue{}, false, nil
+	}
+	q.Users[currentIdx].Status = QueueStatusPendingMatch
+	q.Users[currentIdx].MatchedWithUserID = q.Users[bestCandidateIdx].UserID
+	q.Users[bestCandidateIdx].Status = QueueStatusPendingMatch
+	q.Users[bestCandidateIdx].MatchedWithUserID = q.Users[currentIdx].UserID
+	return q.Users[currentIdx], q.Users[bestCandidateIdx], true, nil
+}
+
+func (q *Queue) ReturnUserToSearch(userID int) error {
+	if q == nil {
+		return ErrNilQueue
+	}
+	if userID <= 0 {
+		return ErrBadUserID
+	}
+	q.reMu.Lock()
+	defer q.reMu.Unlock()
+	for i := range q.Users {
+		if q.Users[i].UserID == userID {
+			q.Users[i].Status = QueueStatusSearching
+			q.Users[i].MatchedWithUserID = 0
+			return nil
+		}
+	}
+	return ErrUserNotFoundInQueue
+}
+
+func (q *Queue) ResetPendingPair(userID1, userID2 int) error {
+	if q == nil {
+		return ErrNilQueue
+	}
+	if userID1 <= 0 || userID2 <= 0 || userID1 == userID2 {
+		return ErrBadUserID
+	}
+	q.reMu.Lock()
+	defer q.reMu.Unlock()
+	idx1 := -1
+	idx2 := -1
+	for i := range q.Users {
+		if q.Users[i].UserID == userID1 {
+			idx1 = i
+		}
+		if q.Users[i].UserID == userID2 {
+			idx2 = i
+		}
+	}
+	if idx1 == -1 || idx2 == -1 {
+		return ErrUserNotFoundInQueue
+	}
+	if q.Users[idx1].Status != QueueStatusPendingMatch || q.Users[idx2].Status != QueueStatusPendingMatch {
+		return ErrBadStatus
+	}
+	if q.Users[idx1].MatchedWithUserID != userID2 || q.Users[idx2].MatchedWithUserID != userID1 {
+		return ErrBadStatus
+	}
+	q.Users[idx1].Status = QueueStatusSearching
+	q.Users[idx1].MatchedWithUserID = 0
+	q.Users[idx2].Status = QueueStatusSearching
+	q.Users[idx2].MatchedWithUserID = 0
+	return nil
+}
+
+func (q *Queue) GetSearchDuration(userID int) (time.Duration, bool) {
+	if q == nil {
+		return 0, false
+	}
+	if userID <= 0 {
+		return 0, false
+	}
+	q.reMu.RLock()
+	defer q.reMu.RUnlock()
+	for i := range q.Users {
+		if q.Users[i].UserID == userID {
+			if q.Users[i].JoinedAt.IsZero() {
+				return 0, false
+			}
+			return time.Since(q.Users[i].JoinedAt), true
+		}
+	}
+	return 0, false
+}
+
+func (q *Queue) GetUserMatchmakingState(userID int) string {
+	if q == nil {
+		return MatchMakingStateIdle
+	}
+	if userID <= 0 {
+		return MatchMakingStateIdle
+	}
+	if q.HasActivePenalty(userID) {
+		return MatchMakingStatePenalty
+	}
+	user, ok := q.GetUserInQueue(userID)
+	if !ok {
+		return MatchMakingStateIdle
+	}
+	switch user.Status {
+	case QueueStatusSearching:
+		return MatchMakingStateSearching
+	case QueueStatusPendingMatch:
+		return MatchMakingStatePendingMatch
+	default:
+		return MatchMakingStateIdle
+	}
 }

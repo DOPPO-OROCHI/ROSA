@@ -34,6 +34,10 @@ type App struct {
 	SelectHero   http.HandlerFunc
 	StreamMatch  http.HandlerFunc
 	AuthTelegram http.HandlerFunc
+
+	JoinQueue   http.HandlerFunc
+	LeaveQueue  http.HandlerFunc
+	QueueStatus http.HandlerFunc
 }
 
 /*
@@ -96,6 +100,28 @@ func NewMux(app App) *http.ServeMux {
 		default:
 			http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
 		}
+	})
+	//очереди
+	mux.HandleFunc("/queue/join", func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodPost {
+			http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+			return
+		}
+		app.JoinQueue(w, r)
+	})
+	mux.HandleFunc("/queue/leave", func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodPost {
+			http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+			return
+		}
+		app.LeaveQueue(w, r)
+	})
+	mux.HandleFunc("/queue/status", func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodGet {
+			http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+			return
+		}
+		app.QueueStatus(w, r)
 	})
 	/*Поинтереснее, но тоже изи. В зависимости от присланного метода определеяем то, что клиент хочет
 	сделать с декой. Либо посмотреть на свою деку, либо обновить существующую (в этом же блоке -создать деку)*/
