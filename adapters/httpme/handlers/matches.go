@@ -4,8 +4,6 @@ import (
 	"TheWar/adapters/httpme/dto"
 	"TheWar/adapters/httpme/middleware"
 	"TheWar/internal/domain/game"
-	"TheWar/internal/domain/heroes"
-	"TheWar/internal/domain/player"
 	"TheWar/internal/infra/repository"
 	"encoding/json"
 	"errors"
@@ -63,67 +61,15 @@ func NewCreateMatchHandler(d CreateMatchHandlerDeps) http.HandlerFunc {
 			middleware.WriteErr(w, http.StatusBadRequest, "cannot play against yourself")
 			return
 		}
-		var p1 player.TelegramUser //<-грузим в память все то, что необходимо для создания матча со стороны игрока 1
-		//(тот, который инициализировал матч)
-		if err := d.DB.Select("id", "selected_hero_template_id").
-			Where("id = ?", userID).
-			First(&p1).Error; err != nil {
-			middleware.WriteErr(w, http.StatusUnauthorized, "user not found") //<-если такого юзера нет, отдаем ошибку
-			return
-		}
-		if p1.SelectedHeroTemplateID == nil { //<-проверяем выбранного персонажа
-			middleware.WriteErr(w, http.StatusBadRequest, "select hero first")
-			return
-		}
-		var p1Tpl heroes.CharacterTemplate //<-а здесь мы выгружаем в память все то, что необходимо для работы с CreateMatchTX
-		if err := d.DB.Select("id", "character_code").
-			Where("id = ?", *p1.SelectedHeroTemplateID).
-			First(&p1Tpl).Error; err != nil { //<-при этом выгружая все нужные данные из БД по темплейту персонажа
-			middleware.WriteErr(w, http.StatusBadRequest, "selected hero template not found") //<-если перс не валиден и читак решил
-			//что он умный, отдаем ошибку
-			return
-		}
-		//пишем в память данные из БД относительно выбранного персонажа игроком
-		p1HeroCode := p1Tpl.CharacterCode
-		//то же самое проделываем и для второго пользователя
-		var p2 player.TelegramUser
-		if err := d.DB.Select("id", "selected_hero_template_id").
-			Where("id = ?", req.OpponentUserID).
-			First(&p2).Error; err != nil {
-			middleware.WriteErr(w, http.StatusBadRequest, "opponent not found")
-			return
-		}
-		if p2.SelectedHeroTemplateID == nil {
-			middleware.WriteErr(w, http.StatusBadRequest, "opponent has no selected hero")
-			return
-		}
-		var p2Tpl heroes.CharacterTemplate
-		if err := d.DB.Select("id", "character_code").
-			Where("id = ?", *p2.SelectedHeroTemplateID).
-			First(&p2Tpl).Error; err != nil {
-			middleware.WriteErr(w, http.StatusBadRequest, "opponent selected hero template not found")
-			return
-		}
-		p2HeroCode := p2Tpl.CharacterCode
-		//транзакционно создаем матч, загружая в него все необходимое для создания. Здесь наша глобальная БД переменная,
-		//айди юзера, который инициализировал матч, айди оппонента и их персонажи. Все остальное, что касается входящих
-		//дек и так далее -зона ответственности CreateMatchTX. Базовый минимум соблюден
-		st, err := repository.CreateMatchTX(
-			d.DB,
-			userID,
-			req.OpponentUserID,
-			p1HeroCode,
-			p2HeroCode,
-		)
+		st, err := createMatchForUsers(d.DB, userID, req.OpponentUserID)
 		if err != nil {
 			if errors.Is(err, repository.ErrActiveMatchExists) {
-				middleware.WriteErr(w, http.StatusConflict, "active match already exists")
+				middleware.WriteErr(w, http.StatusConflict, err.Error())
 				return
 			}
 			middleware.WriteErr(w, http.StatusBadRequest, err.Error())
 			return
 		}
-		//начинаем отдаем сразу замаскированное состояние
 		middleware.WriteJSON(w, http.StatusOK, maskMatchStateForUser(st, userID))
 	}
 }

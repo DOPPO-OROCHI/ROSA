@@ -1,6 +1,7 @@
 package queue
 
 import (
+	"strconv"
 	"sync"
 	"time"
 )
@@ -27,7 +28,19 @@ type Queue struct {
 	DefaultSearchRange int               //<-дефолтный рендж по поиску (типа по рейтингу матчим игроков)
 	PenaltyDuration    time.Duration     //<-длительность штрафа отдельно взятого игрока
 	AcceptTimeout      time.Duration     //<-таймаут на принятие матча
-	reMu               sync.RWMutex      //<-мьютекс
+	PendingMatches     map[string]PendingMatch
+	PendingByUser      map[int]string
+	reMu               sync.RWMutex //<-мьютекс
+}
+
+type PendingMatch struct {
+	ID              string
+	UserID1         int
+	UserID2         int
+	AcceptedByUser1 bool
+	AcceptedByUser2 bool
+	CreatedAt       time.Time
+	ExpiresAt       time.Time
 }
 
 func NewQueue() *Queue {
@@ -37,6 +50,8 @@ func NewQueue() *Queue {
 		DefaultSearchRange: DefaultSearchRange,
 		PenaltyDuration:    PenaltyDefaultMinutes,
 		AcceptTimeout:      AcceptTimeoutDefault,
+		PendingMatches:     make(map[string]PendingMatch),
+		PendingByUser:      make(map[int]string),
 	}
 }
 
@@ -245,10 +260,55 @@ func (q *Queue) CleanupExpired() {
 	q.reMu.Lock()
 	defer q.reMu.Unlock()
 	now := time.Now()
+	toRemove := make(map[int]bool)
 	for userID, penaltyUntil := range q.Penalties {
 		if penaltyUntil.IsZero() || !now.Before(penaltyUntil) {
 			delete(q.Penalties, userID)
 		}
+	}
+	for pendingID, pending := range q.PendingMatches {
+		if now.Before(pending.ExpiresAt) {
+			continue
+		}
+		idx1 := -1
+		idx2 := -1
+		for i := range q.Users {
+			if q.Users[i].UserID == pending.UserID1 {
+				idx1 = i
+			}
+			if q.Users[i].UserID == pending.UserID2 {
+				idx2 = i
+			}
+		}
+		if pending.AcceptedByUser1 == false {
+			q.Penalties[pending.UserID1] = now.Add(q.PenaltyDuration)
+			toRemove[pending.UserID1] = true
+		}
+		if pending.AcceptedByUser1 == true && idx1 != -1 {
+			q.Users[idx1].Status = QueueStatusSearching
+			q.Users[idx1].MatchedWithUserID = 0
+		}
+		if pending.AcceptedByUser2 == false {
+			q.Penalties[pending.UserID2] = now.Add(q.PenaltyDuration)
+			toRemove[pending.UserID2] = true
+		}
+		if pending.AcceptedByUser2 == true && idx2 != -1 {
+			q.Users[idx2].Status = QueueStatusSearching
+			q.Users[idx2].MatchedWithUserID = 0
+		}
+		delete(q.PendingMatches, pendingID)
+		delete(q.PendingByUser, pending.UserID1)
+		delete(q.PendingByUser, pending.UserID2)
+	}
+	if len(toRemove) > 0 {
+		filtered := q.Users[:0]
+		for _, user := range q.Users {
+			if toRemove[user.UserID] {
+				continue
+			}
+			filtered = append(filtered, user)
+		}
+		q.Users = filtered
 	}
 }
 
@@ -323,6 +383,12 @@ func (q *Queue) ReserveMatchForUser(userID int) (UserInQueue, UserInQueue, bool,
 	if q.Users[currentIdx].Status != QueueStatusSearching {
 		return UserInQueue{}, UserInQueue{}, false, ErrBadStatus
 	}
+	if _, ok := q.PendingByUser[userID]; ok {
+		return UserInQueue{}, UserInQueue{}, false, ErrBadStatus
+	}
+	if penaltyUntil, ok := q.Penalties[userID]; ok && time.Now().Before(penaltyUntil) {
+		return UserInQueue{}, UserInQueue{}, false, ErrUserQueuePenalty
+	}
 	for i := range q.Users {
 		if i == currentIdx {
 			continue
@@ -346,6 +412,23 @@ func (q *Queue) ReserveMatchForUser(userID int) (UserInQueue, UserInQueue, bool,
 	if bestCandidateIdx == -1 {
 		return UserInQueue{}, UserInQueue{}, false, nil
 	}
+	if _, ok := q.PendingByUser[q.Users[bestCandidateIdx].UserID]; ok {
+		return UserInQueue{}, UserInQueue{}, false, ErrBadStatus
+	}
+	now := time.Now()
+	pendingID := strconv.FormatInt(now.UnixNano(), 10)
+	pending := PendingMatch{
+		ID:              pendingID,
+		UserID1:         q.Users[currentIdx].UserID,
+		UserID2:         q.Users[bestCandidateIdx].UserID,
+		AcceptedByUser1: false,
+		AcceptedByUser2: false,
+		CreatedAt:       now,
+		ExpiresAt:       now.Add(q.AcceptTimeout),
+	}
+	q.PendingMatches[pendingID] = pending
+	q.PendingByUser[q.Users[currentIdx].UserID] = pendingID
+	q.PendingByUser[q.Users[bestCandidateIdx].UserID] = pendingID
 	q.Users[currentIdx].Status = QueueStatusPendingMatch
 	q.Users[currentIdx].MatchedWithUserID = q.Users[bestCandidateIdx].UserID
 	q.Users[bestCandidateIdx].Status = QueueStatusPendingMatch
@@ -448,5 +531,109 @@ func (q *Queue) GetUserMatchmakingState(userID int) string {
 		return MatchMakingStatePendingMatch
 	default:
 		return MatchMakingStateIdle
+	}
+}
+
+func (q *Queue) AcceptPendingMatch(userID int) (PendingMatch, bool, error) {
+	if q == nil {
+		return PendingMatch{}, false, ErrNilQueue
+	}
+	if userID <= 0 {
+		return PendingMatch{}, false, ErrBadUserID
+	}
+	q.reMu.Lock()
+	defer q.reMu.Unlock()
+	pendingID, ok := q.PendingByUser[userID]
+	if !ok {
+		return PendingMatch{}, false, ErrBadStatus
+	}
+	pending, ok := q.PendingMatches[pendingID]
+	if !ok {
+		return PendingMatch{}, false, ErrBadStatus
+	}
+	if !time.Now().Before(pending.ExpiresAt) {
+		return PendingMatch{}, false, ErrBadStatus
+	}
+	switch userID {
+	case pending.UserID1:
+		pending.AcceptedByUser1 = true
+	case pending.UserID2:
+		pending.AcceptedByUser2 = true
+	default:
+		return PendingMatch{}, false, ErrBadUserID
+	}
+	bothAccepted := pending.AcceptedByUser1 && pending.AcceptedByUser2
+	q.PendingMatches[pendingID] = pending
+	return pending, bothAccepted, nil
+}
+
+func (q *Queue) DeclinePendingMatch(userID int) error {
+	if q == nil {
+		return ErrNilQueue
+	}
+	if userID <= 0 {
+		return ErrBadUserID
+	}
+	q.reMu.Lock()
+	defer q.reMu.Unlock()
+	pendingID, ok := q.PendingByUser[userID]
+	if !ok {
+		return ErrBadStatus
+	}
+	pending, ok := q.PendingMatches[pendingID]
+	if !ok {
+		return ErrBadStatus
+	}
+	if !time.Now().Before(pending.ExpiresAt) {
+		return ErrBadStatus
+	}
+	declinerID := userID
+	otherUserID := 0
+	if pending.UserID1 == userID {
+		otherUserID = pending.UserID2
+	} else if pending.UserID2 == userID {
+		otherUserID = pending.UserID1
+	} else {
+		return ErrBadUserID
+	}
+	declinerIdx := -1
+	otherIdx := -1
+	for i := range q.Users {
+		if q.Users[i].UserID == declinerID {
+			declinerIdx = i
+		}
+		if q.Users[i].UserID == otherUserID {
+			otherIdx = i
+		}
+	}
+	if declinerIdx == -1 || otherIdx == -1 {
+		return ErrUserNotFoundInQueue
+	}
+	q.Users[otherIdx].Status = QueueStatusSearching
+	q.Users[otherIdx].MatchedWithUserID = 0
+	q.Users = append(q.Users[:declinerIdx], q.Users[declinerIdx+1:]...)
+	q.Penalties[declinerID] = time.Now().Add(q.PenaltyDuration)
+	delete(q.PendingMatches, pendingID)
+	delete(q.PendingByUser, declinerID)
+	delete(q.PendingByUser, otherUserID)
+	return nil
+}
+
+func (q *Queue) FinalizeAcceptedMatch(userID1, userID2 int) error {
+	if q == nil {
+		return ErrNilUser
+	}
+	if userID1 <= 0 || userID2 <= 0 {
+		return ErrBadUserID
+	}
+	q.reMu.Lock()
+	defer q.reMu.Unlock()
+	pendingID, ok := q.PendingByUser[userID1]
+	if !ok {
+		return ErrBadStatus
+	}
+	pending, ok := q.PendingMatches[pendingID]
+	if !ok {
+
 	}
 }
