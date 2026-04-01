@@ -254,6 +254,16 @@ type MatchState = {
   events?: MatchEvent[];
 };
 
+type MatchmakingState = "idle" | "searching" | "pending_match" | "penalty";
+type MatchmakingMode = "ranked";
+
+type QueueStatusResponse = {
+  state: MatchmakingState;
+  opponent_user_id?: number;
+  search_duration_sec?: number;
+  penalty_until?: string;
+};
+
 type DragAttackState = {
   sourceId: string;
   sourceX: number;
@@ -570,7 +580,6 @@ function ProfilePanel(props: {
 export default function App() {
   const [tab, setTab] = useState<TabId>("home");
   const [loading, setLoading] = useState(false);
-  const [opponentUserId, setOpponentUserId] = useState("5");
   const [showProfile, setShowProfile] = useState(false);
   const [toasts, setToasts] = useState<ToastEntry[]>([]);
 
@@ -601,6 +610,9 @@ export default function App() {
   const [activeEvent, setActiveEvent] = useState<MatchEvent | null>(null);
   const [boardAttackAnimation, setBoardAttackAnimation] = useState<BoardAttackAnimation | null>(null);
   const [miniAppFullscreen, setMiniAppFullscreen] = useState(false);
+  const [queuePanelOpen, setQueuePanelOpen] = useState(false);
+  const [selectedQueueMode, setSelectedQueueMode] = useState<MatchmakingMode | null>(null);
+  const [queueStatus, setQueueStatus] = useState<QueueStatusResponse>({ state: "idle" });
 
   const streamRef = useRef<EventSource | null>(null);
   const battleBoardRef = useRef<HTMLElement | null>(null);
@@ -1079,6 +1091,15 @@ export default function App() {
     }
   }
 
+  async function refreshQueueStatus() {
+    try {
+      const data = await apiFetch<QueueStatusResponse>("/queue/status");
+      setQueueStatus(data);
+    } catch {
+      setQueueStatus({ state: "idle" });
+    }
+  }
+
   async function refreshMatch(matchId: number) {
     const data = await apiFetch<MatchState>(`/matches/${matchId}`);
     if (data.finished) {
@@ -1098,6 +1119,7 @@ export default function App() {
       refreshCards(),
       refreshDeck(),
       refreshMatches(),
+      refreshQueueStatus(),
     ]);
   }
 
@@ -1152,6 +1174,42 @@ export default function App() {
       cancelled = true;
     };
   }, []);
+
+  useEffect(() => {
+    if (activeBattle) {
+      return;
+    }
+
+    let cancelled = false;
+    const syncQueue = async () => {
+      try {
+        const data = await apiFetch<QueueStatusResponse>("/queue/status");
+        if (!cancelled) {
+          setQueueStatus(data);
+        }
+      } catch {
+        if (!cancelled) {
+          setQueueStatus({ state: "idle" });
+        }
+      }
+    };
+
+    void syncQueue();
+    const timerId = window.setInterval(() => {
+      void syncQueue();
+    }, 1000);
+
+    return () => {
+      cancelled = true;
+      window.clearInterval(timerId);
+    };
+  }, [activeBattle]);
+
+  useEffect(() => {
+    if (queueStatus.state === "searching" || queueStatus.state === "pending_match") {
+      setQueuePanelOpen(false);
+    }
+  }, [queueStatus.state]);
 
   useEffect(() => {
     if (!me || activeBattle) {
@@ -1291,15 +1349,26 @@ export default function App() {
     }
   }
 
-  async function createMatch() {
-    const match = await apiFetch<MatchState>("/matches", {
+  async function joinMatchmakingQueue() {
+    if (!selectedQueueMode) {
+      pushToast("Select a mode first", "error");
+      return;
+    }
+
+    const next = await apiFetch<QueueStatusResponse>("/queue/join", {
       method: "POST",
-      body: JSON.stringify({ opponent_user_id: Number(opponentUserId) }),
     });
-    await refreshMatches();
-    setSelectedMatchId(match.match_id);
-    ingestMatchState(match, "prime");
-    pushToast(`Battle #${match.match_id} deployed`);
+    setQueueStatus(next);
+    setQueuePanelOpen(false);
+    await refreshQueueStatus();
+  }
+
+  async function leaveMatchmakingQueue() {
+    const next = await apiFetch<QueueStatusResponse>("/queue/leave", {
+      method: "POST",
+    });
+    setQueueStatus(next);
+    setQueuePanelOpen(false);
   }
 
   async function handleToggleMiniAppFullscreen() {
@@ -1951,6 +2020,24 @@ export default function App() {
     }
   }
 
+  function formatElapsedTimer(totalSeconds: number): string {
+    const safe = Math.max(0, totalSeconds);
+    const minutes = Math.floor(safe / 60);
+    const seconds = safe % 60;
+    return `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
+  }
+
+  function penaltySecondsLeft(isoTime?: string): number {
+    if (!isoTime) {
+      return 0;
+    }
+    const untilMs = Date.parse(isoTime);
+    if (Number.isNaN(untilMs)) {
+      return 0;
+    }
+    return Math.max(0, Math.ceil((untilMs - Date.now()) / 1000));
+  }
+
   function polarToCartesian(cx: number, cy: number, r: number, angleDeg: number) {
     const rad = (angleDeg * Math.PI) / 180;
     return {
@@ -2101,12 +2188,39 @@ export default function App() {
     const from = catalogPage * 6;
     return catalogCards.slice(from, from + 6);
   }, [catalogCards, catalogPage]);
+  const matchmakingTimerLabel = useMemo(() => {
+    if (queueStatus.state === "searching") {
+      return formatElapsedTimer(queueStatus.search_duration_sec ?? 0);
+    }
+    if (queueStatus.state === "penalty") {
+      return formatElapsedTimer(penaltySecondsLeft(queueStatus.penalty_until));
+    }
+    return "00:00";
+  }, [queueStatus]);
+  const canOpenQueuePanel = queueStatus.state === "idle" || queueStatus.state === "penalty";
 
   return (
     <div className={`war-shell ${activeBattle ? "battle-mode" : ""}`}>
       <main className="view-frame">
         {!activeBattle && tab === "home" && (
           <section className="screen-grid home-grid">
+            {(queueStatus.state === "searching" || queueStatus.state === "penalty") && (
+              <div className={`queue-status-banner ${queueStatus.state === "penalty" ? "danger" : ""}`}>
+                <div className="queue-status-copy">
+                  <span className="queue-status-kicker">
+                    {queueStatus.state === "searching" ? "ПОИСК МАТЧА" : "ПОИСК НЕДОСТУПЕН"}
+                  </span>
+                  <strong>{matchmakingTimerLabel}</strong>
+                </div>
+                <button
+                  className={`queue-status-action ${queueStatus.state === "penalty" ? "disabled" : ""}`}
+                  onClick={() => void runTask(leaveMatchmakingQueue)}
+                  disabled={queueStatus.state === "penalty"}
+                >
+                  Отмена
+                </button>
+              </div>
+            )}
             <div className="panel command-panel">
               <div
                 className="hero-banner hero-banner-top"
@@ -2208,15 +2322,72 @@ export default function App() {
                   </div>
                 </div>
               )}
-              <label>
-                Opponent user id
-                <input
-                  value={opponentUserId}
-                  onChange={(event) => setOpponentUserId(event.target.value)}
-                />
-              </label>
+              {queuePanelOpen && (
+                <div
+                  className="queue-mode-overlay"
+                  onClick={() => {
+                    setQueuePanelOpen(false);
+                    setSelectedQueueMode(null);
+                  }}
+                >
+                  <aside className="queue-mode-drawer" onClick={(event) => event.stopPropagation()}>
+                    <button
+                      className="queue-mode-close"
+                      onClick={() => {
+                        setQueuePanelOpen(false);
+                        setSelectedQueueMode(null);
+                      }}
+                    >
+                      X
+                    </button>
+                    <div className="queue-mode-art">
+                      <div className="queue-mode-art-placeholder">
+                        <span>ART</span>
+                      </div>
+                    </div>
+                    <div className="queue-mode-copy">
+                      <span className="panel-kicker">Matchmaking</span>
+                      <strong>Choose a queue</strong>
+                    </div>
+                    <button
+                      className={`queue-mode-option ${selectedQueueMode === "ranked" ? "selected" : ""}`}
+                      onClick={() => setSelectedQueueMode((prev) => (prev === "ranked" ? null : "ranked"))}
+                    >
+                      <span className={`queue-mode-check ${selectedQueueMode === "ranked" ? "active" : ""}`} />
+                      <span className="queue-mode-option-copy">
+                        <strong>Рейтинговая игра</strong>
+                        <span>Бой за рейтинг и честный матчмейкинг</span>
+                      </span>
+                    </button>
+                    <button
+                      className="queue-mode-confirm"
+                      disabled={!selectedQueueMode}
+                      onClick={() => void runTask(joinMatchmakingQueue)}
+                    >
+                      НАЙТИ
+                    </button>
+                  </aside>
+                </div>
+              )}
               {!me && <button onClick={() => void runTask(retryTelegramAuth)}>Retry Auth</button>}
-              <button onClick={() => void runTask(createMatch)}>Start Battle</button>
+              <button
+                className={`matchmaking-launch ${queueStatus.state === "penalty" ? "danger" : ""}`}
+                onClick={() => {
+                  if (!canOpenQueuePanel) {
+                    return;
+                  }
+                  setQueuePanelOpen(true);
+                }}
+                disabled={!canOpenQueuePanel}
+              >
+                {queueStatus.state === "penalty"
+                  ? "ПОИСК НЕДОСТУПЕН"
+                  : queueStatus.state === "pending_match"
+                    ? "МАТЧ НАЙДЕН"
+                    : queueStatus.state === "searching"
+                      ? "ПОИСК ИДЕТ"
+                      : "НАЙТИ МАТЧ"}
+              </button>
               <button className="open-inventory" onClick={() => setTab("inventory")}>
                 Inventory
               </button>
