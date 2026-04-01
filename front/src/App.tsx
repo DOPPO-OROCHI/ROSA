@@ -380,12 +380,17 @@ const defaultDeck: DeckEntry[] = [
 ];
 
 async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> {
+  const headers: Record<string, string> = {
+    ...(init?.headers as Record<string, string> | undefined),
+  };
+
+  if (init?.body !== undefined && !("Content-Type" in headers)) {
+    headers["Content-Type"] = "application/json";
+  }
+
   const requestInit: RequestInit = {
     credentials: "include",
-    headers: {
-      "Content-Type": "application/json",
-      ...(init?.headers ?? {}),
-    },
+    headers,
     ...init,
   };
 
