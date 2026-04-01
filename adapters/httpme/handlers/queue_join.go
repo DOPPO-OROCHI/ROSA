@@ -20,8 +20,8 @@ type JoinQueueHandler struct {
 }
 
 type JoinQueueResponse struct {
-	State          string `gorm:"state"`
-	OpponentUserID int    `gorm:"opponent_user_id,omitempty"`
+	State          string `json:"state"`
+	OpponentUserID int    `json:"opponent_user_id,omitempty"`
 }
 
 func NewJoinHandler(deps JoinQueueHandlerDeps) JoinQueueHandler {
