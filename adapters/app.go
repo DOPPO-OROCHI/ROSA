@@ -103,6 +103,9 @@ func NewMux(app App) *http.ServeMux {
 	})
 	//очереди
 	mux.HandleFunc("/queue/join", func(w http.ResponseWriter, r *http.Request) {
+		if r.Method == http.MethodOptions {
+			w.WriteHeader(http.StatusNoContent)
+		}
 		if r.Method != http.MethodPost {
 			http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
 			return
@@ -110,6 +113,9 @@ func NewMux(app App) *http.ServeMux {
 		app.JoinQueue(w, r)
 	})
 	mux.HandleFunc("/queue/leave", func(w http.ResponseWriter, r *http.Request) {
+		if r.Method == http.MethodOptions {
+			w.WriteHeader(http.StatusNoContent)
+		}
 		if r.Method != http.MethodPost {
 			http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
 			return
@@ -117,6 +123,9 @@ func NewMux(app App) *http.ServeMux {
 		app.LeaveQueue(w, r)
 	})
 	mux.HandleFunc("/queue/status", func(w http.ResponseWriter, r *http.Request) {
+		if r.Method == http.MethodOptions {
+			w.WriteHeader(http.StatusNoContent)
+		}
 		if r.Method != http.MethodGet {
 			http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
 			return
