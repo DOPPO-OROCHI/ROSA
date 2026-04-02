@@ -2368,20 +2368,6 @@ export default function App() {
                 </section>
               </div>
             )}
-            <div className="home-top-actions">
-              <button
-                className="home-corner-button"
-                onClick={() => pushToast("Когда-нибудь, тут будут твои друзья", "info")}
-              >
-                ДРУЗЬЯ
-              </button>
-              <button
-                className="home-corner-button"
-                onClick={() => pushToast("Когда-нибудь, тут будет твой баланс", "info")}
-              >
-                БАЛАНС
-              </button>
-            </div>
 
             <section
               className="home-stage"
@@ -2393,6 +2379,21 @@ export default function App() {
             >
               <div className="home-stage-backdrop" />
               <div className="home-stage-frame">
+                <div className="home-stage-actions">
+                  <button
+                    className="home-corner-button"
+                    onClick={() => pushToast("Когда-нибудь, тут будут твои друзья", "info")}
+                  >
+                    ДРУЗЬЯ
+                  </button>
+                  <button
+                    className="home-corner-button"
+                    onClick={() => pushToast("Когда-нибудь, тут будет твой баланс", "info")}
+                  >
+                    БАЛАНС
+                  </button>
+                </div>
+
                 <button
                   className={`avatar-trigger home-profile-trigger ${loading ? "busy" : ""}`}
                   onClick={() => setShowProfile(true)}
@@ -3131,6 +3132,7 @@ export default function App() {
     </div>
   );
 }
+
 
 
 
