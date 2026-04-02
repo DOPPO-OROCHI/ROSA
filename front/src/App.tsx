@@ -2588,126 +2588,109 @@ export default function App() {
                   </button>
                 </div>
 
-                <div className="inventory-layout">
-                  <div className="inventory-left-column">
-                    <div className="panel inventory-panel inventory-deck-panel">
-                      <div className="section-head inventory-panel-head">
-                        <h2>{"\u0414\u0415\u041a\u0410 \u0418\u0413\u0420\u041e\u041a\u0410"}</h2>
-                      </div>
-                      <div className="deck-summary">
-                        <span>Total cards</span>
-                        <strong>{deckTotal}</strong>
-                      </div>
-                      {!deckReady && <p className="deck-warning">Р”РµРєР° РЅРµ СЃРѕР±СЂР°РЅР° (РЅСѓР¶РЅРѕ 20 РєР°СЂС‚)</p>}
-                      <div className="deck-grid">
-                        {deckGroups.map((group) => (
-                          <button
-                            key={group.key}
-                            className="deck-slot filled interactive"
-                            onClick={() => setDeckInspectorKey(group.key)}
-                          >
+                <div className="inventory-shell-grid">
+                  <section className="panel inventory-deck-panel inventory-panel">
+                    <div className="section-head inventory-panel-head">
+                      <h2>{"\u0414\u0415\u041a\u0410 \u0418\u0413\u0420\u041e\u041a\u0410"}</h2>
+                      <span className="inventory-panel-kicker">Deck</span>
+                    </div>
+                    <div className="deck-summary inventory-deck-summary">
+                      <span>Total cards</span>
+                      <strong>{deckTotal}</strong>
+                    </div>
+                    {!deckReady && <p className="deck-warning">Р”РµРєР° РЅРµ СЃРѕР±СЂР°РЅР° (РЅСѓР¶РЅРѕ 20 РєР°СЂС‚)</p>}
+                    <div className="inventory-deck-grid">
+                      {deckGroups.map((group) => (
+                        <button
+                          key={group.key}
+                          className="inventory-deck-tile"
+                          onClick={() => setDeckInspectorKey(group.key)}
+                        >
+                          <div className="inventory-deck-tile-media">
                             <AssetImage
                               imageKey={group.imageKey}
                               alt={group.name}
                               fallbackSrc={resolveCardFallbackSrc()}
-                              className="deck-slot-media"
+                              className="inventory-deck-tile-image"
                             />
-                            <div className="deck-slot-meta">
-                              <span className="deck-slot-mana">{group.mana}</span>
-                              <strong>{group.name}</strong>
-                            </div>
-                            <span className="deck-slot-count">x{group.count}</span>
-                          </button>
-                        ))}
-                        {deckGroups.length === 0 && (
-                          <article className="deck-slot empty deck-slot-empty-wide">
-                            <span>Deck is empty</span>
-                          </article>
-                        )}
-                      </div>
-                      {inspectedDeckGroup && (
-                        <div className="deck-fan-overlay" onClick={() => setDeckInspectorKey(null)}>
-                          <div className="deck-fan-window" onClick={(event) => event.stopPropagation()}>
-                            <button className="deck-fan-close" onClick={() => setDeckInspectorKey(null)}>
-                              X
-                            </button>
-                            <div className="deck-fan-head">
-                              <strong>{inspectedDeckGroup.name}</strong>
-                              <span>x{inspectedDeckGroup.count}</span>
-                            </div>
-                            <div className="deck-fan-row">
-                              <div
-                                className="deck-fan-dense"
-                                style={{ "--fan-count": `${inspectedDeckGroup.count}` } as CSSProperties}
-                              >
-                                {Array.from({ length: inspectedDeckGroup.count }).map((_, index, array) => (
-                                  <article
-                                    key={`${inspectedDeckGroup.key}:fan:${index}`}
-                                    className="deck-fan-card"
-                                    style={
-                                      {
-                                        "--fan-offset": `${index - (array.length - 1) / 2}`,
-                                      } as CSSProperties
-                                    }
-                                  >
-                                    <AssetImage
-                                      imageKey={inspectedDeckGroup.imageKey}
-                                      alt={inspectedDeckGroup.name}
-                                      fallbackSrc={resolveCardFallbackSrc()}
-                                      className="deck-fan-media"
-                                    />
-                                    <button
-                                      className="deck-fan-remove"
-                                      onClick={() => void runTask(() => removeCardFromDeck(inspectedDeckGroup.kind, inspectedDeckGroup.templateId))}
-                                    >
-                                      X
-                                    </button>
-                                  </article>
-                                ))}
-                              </div>
-                            </div>
-                            <div className="deck-fan-info">
-                              <span>DECK COPIES {inspectedDeckGroup.count}</span>
-                              <span>MANA {inspectedDeckMeta?.mana_cost ?? 0}</span>
-                              {inspectedDeckGroup.kind === "battle" ? (
-                                <span>
-                                  HP {inspectedDeckMeta?.health_points ?? 0} | ATK {inspectedDeckMeta?.attack ?? 0} | CD {inspectedDeckMeta?.cooldown ?? 0} | MAX {inspectedDeckMeta?.max_copies ?? 0}
-                                </span>
-                              ) : (
-                                <span>
-                                  {inspectedDeckMeta?.buff_type || "Buff"} {inspectedDeckMeta?.buff_value ?? 0} | DUR {inspectedDeckMeta?.duration ?? 0} | MAX {inspectedDeckMeta?.max_copies ?? 0}
-                                </span>
-                              )}
-                              <span>{inspectedDeckMeta?.description || "-"}</span>
-                            </div>
+                            <span className="inventory-deck-tile-mana">{group.mana}</span>
+                            <span className="inventory-deck-tile-count">x{group.count}</span>
                           </div>
-                        </div>
+                          <strong>{group.name}</strong>
+                        </button>
+                      ))}
+                      {deckGroups.length === 0 && (
+                        <article className="inventory-deck-empty">
+                          <span>Deck is empty</span>
+                        </article>
                       )}
                     </div>
-
-                    <div className="panel inventory-panel inventory-side-panel">
-                      <div className="section-head inventory-panel-head">
-                        <h2>{"\u041c\u0410\u0413\u0410\u0417\u0418\u041d"}</h2>
+                    {inspectedDeckGroup && (
+                      <div className="deck-fan-overlay" onClick={() => setDeckInspectorKey(null)}>
+                        <div className="deck-fan-window" onClick={(event) => event.stopPropagation()}>
+                          <button className="deck-fan-close" onClick={() => setDeckInspectorKey(null)}>
+                            X
+                          </button>
+                          <div className="deck-fan-head">
+                            <strong>{inspectedDeckGroup.name}</strong>
+                            <span>x{inspectedDeckGroup.count}</span>
+                          </div>
+                          <div className="deck-fan-row">
+                            <div
+                              className="deck-fan-dense"
+                              style={{ "--fan-count": `${inspectedDeckGroup.count}` } as CSSProperties}
+                            >
+                              {Array.from({ length: inspectedDeckGroup.count }).map((_, index, array) => (
+                                <article
+                                  key={`${inspectedDeckGroup.key}:fan:${index}`}
+                                  className="deck-fan-card"
+                                  style={
+                                    {
+                                      "--fan-offset": `${index - (array.length - 1) / 2}`,
+                                    } as CSSProperties
+                                  }
+                                >
+                                  <AssetImage
+                                    imageKey={inspectedDeckGroup.imageKey}
+                                    alt={inspectedDeckGroup.name}
+                                    fallbackSrc={resolveCardFallbackSrc()}
+                                    className="deck-fan-media"
+                                  />
+                                  <button
+                                    className="deck-fan-remove"
+                                    onClick={() => void runTask(() => removeCardFromDeck(inspectedDeckGroup.kind, inspectedDeckGroup.templateId))}
+                                  >
+                                    X
+                                  </button>
+                                </article>
+                              ))}
+                            </div>
+                          </div>
+                          <div className="deck-fan-info">
+                            <span>DECK COPIES {inspectedDeckGroup.count}</span>
+                            <span>MANA {inspectedDeckMeta?.mana_cost ?? 0}</span>
+                            {inspectedDeckGroup.kind === "battle" ? (
+                              <span>
+                                HP {inspectedDeckMeta?.health_points ?? 0} | ATK {inspectedDeckMeta?.attack ?? 0} | CD {inspectedDeckMeta?.cooldown ?? 0} | MAX {inspectedDeckMeta?.max_copies ?? 0}
+                              </span>
+                            ) : (
+                              <span>
+                                {inspectedDeckMeta?.buff_type || "Buff"} {inspectedDeckMeta?.buff_value ?? 0} | DUR {inspectedDeckMeta?.duration ?? 0} | MAX {inspectedDeckMeta?.max_copies ?? 0}
+                              </span>
+                            )}
+                            <span>{inspectedDeckMeta?.description || "-"}</span>
+                          </div>
+                        </div>
                       </div>
-                      <div className="inventory-placeholder-panel">
-                        <strong>{"\u0421\u041a\u041e\u0420\u041e"}</strong>
-                        <p>{"\u041a\u043e\u0433\u0434\u0430-\u043d\u0438\u0431\u0443\u0434\u044c \u0437\u0434\u0435\u0441\u044c \u043f\u043e\u044f\u0432\u0438\u0442\u0441\u044f \u043c\u0430\u0433\u0430\u0437\u0438\u043d \u0438 \u043d\u043e\u0432\u044b\u0435 \u043f\u0430\u043a\u0438 \u043a\u0430\u0440\u0442."}</p>
-                        <button
-                          className="home-main-button tertiary inventory-placeholder-button"
-                          onClick={() => pushToast("Когда-нибудь, здесь будет магазин", "info")}
-                        >
-                          {"\u041d\u0415 \u0421\u0415\u0419\u0427\u0410\u0421"}
-                        </button>
-                      </div>
-                    </div>
-                  </div>
+                    )}
+                  </section>
 
-                  <div className="panel inventory-panel catalog-panel inventory-catalog-panel">
+                  <section className="panel inventory-catalog-panel inventory-panel">
                     <div className="section-head inventory-panel-head inventory-panel-head-row">
                       <h2>{"\u0412\u0421\u0415 \u041a\u0410\u0420\u0422\u042b \u0418\u0413\u0420\u041e\u041a\u0410"}</h2>
                       <span className="inventory-panel-kicker">Collection</span>
                     </div>
-                    <div className="catalog-toolbar">
+                    <div className="catalog-toolbar inventory-catalog-toolbar">
                       <div className="catalog-kind-switch">
                         <button
                           className={catalogKind === "battle" ? "nav-pill active" : "nav-pill"}
@@ -2741,7 +2724,7 @@ export default function App() {
                         </select>
                       </label>
                     </div>
-                    <div className="catalog-grid">
+                    <div className="inventory-collection-grid">
                       {catalogPageItems.map((card) => {
                         const imageKey =
                           card.kind === "battle"
@@ -2754,7 +2737,7 @@ export default function App() {
                         return (
                           <article
                             key={templateKey}
-                            className={`asset-card tone-${getAssetTone(card.asset_base_key)} clickable ${exhausted ? "exhausted" : ""}`}
+                            className={`inventory-card-tile ${exhausted ? "exhausted" : ""}`}
                             onClick={() =>
                               setCardPreview(
                                 card.kind === "battle"
@@ -2781,28 +2764,24 @@ export default function App() {
                               )
                             }
                           >
-                            <div className="asset-frame">
+                            <div className="inventory-card-media">
                               <AssetImage
                                 imageKey={imageKey}
                                 alt={card.name}
                                 fallbackSrc={resolveCardFallbackSrc()}
-                                className="asset-frame-media"
+                                className="inventory-card-image"
                               />
-                              {card.kind === "battle" && (
-                                <div className="asset-top-stats" aria-label="Card stats">
-                                  <span className="asset-top-stat-icon mana" aria-label={`Mana ${card.mana_cost}`}>
-                                    <span className="asset-top-stat-value">{card.mana_cost}</span>
-                                  </span>
-                                  <span className="asset-top-stat-icon attack" aria-label={`Attack ${card.attack}`}>
-                                    <span className="asset-top-stat-value">{card.attack}</span>
-                                  </span>
-                                  <span className="asset-top-stat-icon health" aria-label={`Health ${card.health_points}`}>
-                                    <span className="asset-top-stat-value">{card.health_points}</span>
-                                  </span>
-                                </div>
+                              <span className="inventory-card-mana">{card.mana_cost}</span>
+                              {card.kind === "battle" ? (
+                                <>
+                                  <span className="inventory-card-stat attack">{card.attack}</span>
+                                  <span className="inventory-card-stat health">{card.health_points}</span>
+                                </>
+                              ) : (
+                                <span className="inventory-card-buff">{card.duration}</span>
                               )}
                               <button
-                                className="asset-add"
+                                className="inventory-card-add"
                                 disabled={exhausted}
                                 onClick={(event) => {
                                   event.stopPropagation();
@@ -2820,7 +2799,7 @@ export default function App() {
                         );
                       })}
                     </div>
-                    <div className="catalog-pager">
+                    <div className="catalog-pager inventory-catalog-pager">
                       <button
                         className="ghost-button"
                         onClick={() => setCatalogPage((prev) => Math.max(0, prev - 1))}
@@ -2839,7 +2818,23 @@ export default function App() {
                         {">"}
                       </button>
                     </div>
-                  </div>
+                  </section>
+
+                  <section className="panel inventory-side-panel inventory-panel">
+                    <div className="section-head inventory-panel-head">
+                      <h2>{"\u041c\u0410\u0413\u0410\u0417\u0418\u041d"}</h2>
+                    </div>
+                    <div className="inventory-placeholder-panel">
+                      <strong>{"\u0421\u041a\u041e\u0420\u041e"}</strong>
+                      <p>{"\u041a\u043e\u0433\u0434\u0430-\u043d\u0438\u0431\u0443\u0434\u044c \u0437\u0434\u0435\u0441\u044c \u043f\u043e\u044f\u0432\u0438\u0442\u0441\u044f \u043c\u0430\u0433\u0430\u0437\u0438\u043d \u0438 \u043d\u043e\u0432\u044b\u0435 \u043f\u0430\u043a\u0438 \u043a\u0430\u0440\u0442."}</p>
+                      <button
+                        className="home-main-button tertiary inventory-placeholder-button"
+                        onClick={() => pushToast("Когда-нибудь, здесь будет магазин", "info")}
+                      >
+                        {"\u041d\u0415 \u0421\u0415\u0419\u0427\u0410\u0421"}
+                      </button>
+                    </div>
+                  </section>
                 </div>
               </div>
             </section>
@@ -3161,6 +3156,7 @@ export default function App() {
     </div>
   );
 }
+
 
 
 
