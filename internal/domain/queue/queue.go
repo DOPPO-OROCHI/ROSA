@@ -621,19 +621,71 @@ func (q *Queue) DeclinePendingMatch(userID int) error {
 
 func (q *Queue) FinalizeAcceptedMatch(userID1, userID2 int) error {
 	if q == nil {
-		return ErrNilUser
+		return ErrNilQueue
 	}
 	if userID1 <= 0 || userID2 <= 0 {
 		return ErrBadUserID
 	}
+	if userID1 == userID2 {
+		return ErrBadUserID
+	}
 	q.reMu.Lock()
 	defer q.reMu.Unlock()
-	pendingID, ok := q.PendingByUser[userID1]
+	if pendingID, ok := q.PendingByUser[userID1]; ok {
+		delete(q.PendingMatches, pendingID)
+	} else if pendingID, ok := q.PendingByUser[userID2]; ok {
+		delete(q.PendingMatches, pendingID)
+	}
+	delete(q.PendingByUser, userID1)
+	delete(q.PendingByUser, userID2)
+	filtered := q.Users[:0]
+	for _, user := range q.Users {
+		if user.UserID == userID1 || user.UserID == userID2 {
+			continue
+		}
+		filtered = append(filtered, user)
+	}
+	q.Users = filtered
+	return nil
+}
+
+func (q *Queue) GetPendingMatchInfo(userID int) (PendingMatch, error) {
+	if q == nil {
+		return PendingMatch{}, ErrNilQueue
+	}
+	if userID <= 0 {
+		return PendingMatch{}, ErrBadUserID
+	}
+	q.reMu.RLock()
+	defer q.reMu.RUnlock()
+	pendingID, ok := q.PendingByUser[userID]
 	if !ok {
-		return ErrBadStatus
+		return PendingMatch{}, ErrBadStatus
 	}
 	pending, ok := q.PendingMatches[pendingID]
 	if !ok {
-
+		return PendingMatch{}, ErrBadStatus
 	}
+	return pending, nil
+}
+
+func (q *Queue) GetPendingAcceptanceState(userID int) (acceptedByMe bool,
+	acceptedByOpponent bool, expiresAt time.Time, opponentUserID int, ok bool) {
+	if q == nil {
+		return false, false, time.Time{}, 0, false
+	}
+	if userID <= 0 {
+		return false, false, time.Time{}, 0, false
+	}
+	pending, err := q.GetPendingMatchInfo(userID)
+	if err != nil {
+		return false, false, time.Time{}, 0, false
+	}
+	if userID == pending.UserID1 {
+		return pending.AcceptedByUser1, pending.AcceptedByUser2, pending.ExpiresAt, pending.UserID2, true
+	}
+	if userID == pending.UserID2 {
+		return pending.AcceptedByUser2, pending.AcceptedByUser1, pending.ExpiresAt, pending.UserID1, true
+	}
+	return false, false, time.Time{}, 0, false
 }

@@ -8,10 +8,13 @@ import (
 )
 
 type QueueStatusResponse struct {
-	State             string    `json:"state"`
-	OpponentUserID    int       `json:"opponent_user_id,omitempty"`
-	SearchDurationSec int       `json:"search_duration_sec,omitempty"`
-	PenaltyUntil      time.Time `json:"penalty_until,omitempty"`
+	State              string    `json:"state"`
+	OpponentUserID     int       `json:"opponent_user_id,omitempty"`
+	SearchDurationSec  int       `json:"search_duration_sec,omitempty"`
+	PenaltyUntil       time.Time `json:"penalty_until,omitempty"`
+	AcceptDeadlineAt   time.Time `json:"accept_deadline_at,omitempty"`
+	AcceptedByMe       bool      `json:"accepted_by_me,omitempty"`
+	AcceptedByOpponent bool      `json:"accepted_by_opponent,omitempty"`
 }
 
 type QueueStatusHandlerDeps struct {

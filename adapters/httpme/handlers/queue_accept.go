@@ -57,6 +57,10 @@ func AcceptQueue(q AcceptQueueHandler) http.HandlerFunc {
 			middleware.WriteErr(w, http.StatusBadRequest, err.Error())
 			return
 		}
+		if err := q.queue.FinalizeAcceptedMatch(pending.UserID1, pending.UserID2); err != nil {
+			middleware.WriteErr(w, http.StatusInternalServerError, "failed to finalize accepted match")
+			return
+		}
 		middleware.WriteJSON(w, http.StatusOK, maskMatchStateForUser(st, user.UserID))
 	}
 }

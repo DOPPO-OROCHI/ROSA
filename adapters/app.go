@@ -35,9 +35,11 @@ type App struct {
 	StreamMatch  http.HandlerFunc
 	AuthTelegram http.HandlerFunc
 
-	JoinQueue   http.HandlerFunc
-	LeaveQueue  http.HandlerFunc
-	QueueStatus http.HandlerFunc
+	JoinQueue    http.HandlerFunc
+	LeaveQueue   http.HandlerFunc
+	QueueStatus  http.HandlerFunc
+	AcceptQueue  http.HandlerFunc
+	DeclineQueue http.HandlerFunc
 }
 
 /*
@@ -73,7 +75,7 @@ func NewMux(app App) *http.ServeMux {
 	mux.HandleFunc("/matches/", func(w http.ResponseWriter, r *http.Request) {
 		matchID, tail, err := middleware.ParceMatchPath(r.URL.Path)
 		if err != nil {
-			http.Error(w, "not found", http.StatusNotFound)
+			w.WriteHeader(http.StatusNotFound)
 			return
 		}
 		_ = matchID
@@ -88,7 +90,7 @@ func NewMux(app App) *http.ServeMux {
 			app.StreamMatch(w, r)
 			return
 		default:
-			http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+			w.WriteHeader(http.StatusMethodNotAllowed)
 			return
 		}
 	})
@@ -98,39 +100,44 @@ func NewMux(app App) *http.ServeMux {
 		case http.MethodGet:
 			app.GetMe(w, r)
 		default:
-			http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+			w.WriteHeader(http.StatusMethodNotAllowed)
 		}
 	})
 	//очереди
 	mux.HandleFunc("/queue/join", func(w http.ResponseWriter, r *http.Request) {
-		if r.Method == http.MethodOptions {
-			w.WriteHeader(http.StatusNoContent)
-		}
 		if r.Method != http.MethodPost {
-			http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+			w.WriteHeader(http.StatusMethodNotAllowed)
 			return
 		}
 		app.JoinQueue(w, r)
 	})
 	mux.HandleFunc("/queue/leave", func(w http.ResponseWriter, r *http.Request) {
-		if r.Method == http.MethodOptions {
-			w.WriteHeader(http.StatusNoContent)
-		}
 		if r.Method != http.MethodPost {
-			http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+			w.WriteHeader(http.StatusMethodNotAllowed)
 			return
 		}
 		app.LeaveQueue(w, r)
 	})
 	mux.HandleFunc("/queue/status", func(w http.ResponseWriter, r *http.Request) {
-		if r.Method == http.MethodOptions {
-			w.WriteHeader(http.StatusNoContent)
-		}
 		if r.Method != http.MethodGet {
-			http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+			w.WriteHeader(http.StatusMethodNotAllowed)
 			return
 		}
 		app.QueueStatus(w, r)
+	})
+	mux.HandleFunc("/queue/accept", func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodPost {
+			w.WriteHeader(http.StatusMethodNotAllowed)
+			return
+		}
+		app.AcceptQueue(w, r)
+	})
+	mux.HandleFunc("/queue/decline", func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodPost {
+			w.WriteHeader(http.StatusMethodNotAllowed)
+			return
+		}
+		app.DeclineQueue(w, r)
 	})
 	/*Поинтереснее, но тоже изи. В зависимости от присланного метода определеяем то, что клиент хочет
 	сделать с декой. Либо посмотреть на свою деку, либо обновить существующую (в этом же блоке -создать деку)*/

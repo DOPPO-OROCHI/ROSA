@@ -70,6 +70,8 @@ func main() {
 		JoinQueue:    handlers.JoinQueue(handlers.NewJoinHandler(handlers.JoinQueueHandlerDeps{DB: db.DB, Queue: matchQueue})),
 		LeaveQueue:   handlers.LeaveQueue(handlers.NewLeaveQueueHandler(handlers.LeaveQueueHandlerDeps{Queue: matchQueue})),
 		QueueStatus:  handlers.QueueStatus(handlers.NewQueueStatusHandler(handlers.QueueStatusHandlerDeps{Queue: matchQueue})),
+		AcceptQueue:  handlers.AcceptQueue(handlers.NewAcceptQueueHandler(handlers.AcceptQueueHandlerDeps{DB: db.DB, Queue: matchQueue})),
+		DeclineQueue: handlers.DeclineQueue(handlers.NewDeclineQueueHandler(handlers.DeclineQueueHandlerDeps{Queue: matchQueue})),
 	}
 	mux := adapters.NewMux(app)
 	httpHandler := middleware.AuthMiddleware(store)(mux)
