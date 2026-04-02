@@ -5776,3 +5776,65 @@ pre {
     font-size: 0.66rem;
   }
 }
+
+/* Inventory hard-fit fix */
+.war-shell.inventory-mode .inventory-stage-frame,
+.war-shell.inventory-mode .inventory-shell-grid,
+.war-shell.inventory-mode .inventory-deck-panel,
+.war-shell.inventory-mode .inventory-catalog-panel,
+.war-shell.inventory-mode .inventory-side-panel {
+  overflow: hidden;
+}
+
+.war-shell.inventory-mode .inventory-shell-grid {
+  grid-template-rows: minmax(0, 1fr) 92px;
+}
+
+.war-shell.inventory-mode .inventory-deck-panel {
+  grid-template-rows: auto auto auto minmax(0, 1fr);
+}
+
+.war-shell.inventory-mode .inventory-deck-grid {
+  grid-auto-rows: 112px;
+  overflow: hidden;
+}
+
+.war-shell.inventory-mode .inventory-catalog-panel {
+  grid-template-rows: auto auto minmax(0, 1fr) 32px;
+}
+
+.war-shell.inventory-mode .inventory-collection-grid {
+  height: 100%;
+  grid-template-rows: repeat(2, minmax(0, 1fr));
+  align-items: stretch;
+  overflow: hidden;
+}
+
+.war-shell.inventory-mode .inventory-card-tile {
+  min-height: 0;
+  height: 100%;
+}
+
+.war-shell.inventory-mode .inventory-card-media {
+  min-height: 0;
+}
+
+@media (orientation: landscape) and (max-height: 740px) {
+  .war-shell.inventory-mode .inventory-shell-grid {
+    grid-template-columns: 306px minmax(0, 1fr);
+    grid-template-rows: minmax(0, 1fr) 84px;
+  }
+
+  .war-shell.inventory-mode .inventory-deck-grid {
+    grid-auto-rows: 96px;
+    gap: 7px;
+  }
+
+  .war-shell.inventory-mode .inventory-catalog-panel {
+    grid-template-rows: auto auto minmax(0, 1fr) 28px;
+  }
+
+  .war-shell.inventory-mode .inventory-collection-grid {
+    gap: 10px;
+  }
+}
