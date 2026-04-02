@@ -2546,6 +2546,11 @@ export default function App() {
               <button className="open-inventory" onClick={() => setTab("inventory")}>
                 Inventory
               </button>
+              <div className="home-placeholder-card">
+                <span className="panel-kicker">Store</span>
+                <strong>Soon</strong>
+                <p>Здесь появится магазин, паки и дополнительные предложения.</p>
+              </div>
             </div>
 
           </section>
