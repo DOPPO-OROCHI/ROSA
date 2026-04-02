@@ -2248,13 +2248,13 @@ export default function App() {
     buff.sort((a, b) => a.mana_cost - b.mana_cost || a.name.localeCompare(b.name));
     return buff;
   }, [cards, catalogKind, catalogSort]);
-  const catalogPages = Math.max(1, Math.ceil(catalogCards.length / 6));
+  const catalogPages = Math.max(1, Math.ceil(catalogCards.length / 8));
   useEffect(() => {
     setCatalogPage((prev) => Math.min(prev, catalogPages - 1));
   }, [catalogPages]);
   const catalogPageItems = useMemo(() => {
-    const from = catalogPage * 6;
-    return catalogCards.slice(from, from + 6);
+    const from = catalogPage * 8;
+    return catalogCards.slice(from, from + 8);
   }, [catalogCards, catalogPage]);
   const matchmakingTimerLabel = useMemo(() => {
     if (queueStatus.state === "searching") {
