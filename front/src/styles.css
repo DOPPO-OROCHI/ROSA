@@ -74,6 +74,18 @@ pre {
     max(12px, calc(12px + env(safe-area-inset-left)));
 }
 
+.war-shell.inventory-mode {
+  width: 100%;
+  max-width: none;
+  min-height: 100vh;
+  min-height: 100dvh;
+  padding:
+    calc(12px + env(safe-area-inset-top))
+    max(12px, calc(12px + env(safe-area-inset-right)))
+    calc(12px + env(safe-area-inset-bottom))
+    max(12px, calc(12px + env(safe-area-inset-left)));
+}
+
 .war-shell.battle-mode {
   height: 100vh;
   height: 100dvh;
@@ -622,6 +634,149 @@ pre {
 
 .queue-status-banner.danger .queue-status-kicker {
   color: #f0a39a;
+}
+
+.inventory-hub {
+  position: relative;
+  min-height: calc(100vh - 108px - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+}
+
+.inventory-stage {
+  position: relative;
+  min-height: calc(100vh - 108px - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+  border-radius: 36px;
+  overflow: hidden;
+  border: 1px solid rgba(231, 219, 192, 0.1);
+  background:
+    linear-gradient(180deg, rgba(10, 14, 20, 0.96), rgba(6, 8, 12, 0.98));
+  box-shadow:
+    0 28px 64px rgba(0, 0, 0, 0.38),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.02);
+}
+
+.inventory-stage::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle at 50% 24%, rgba(106, 62, 40, 0.18), transparent 28%),
+    radial-gradient(circle at center, transparent 40%, rgba(2, 4, 7, 0.16) 70%, rgba(2, 4, 7, 0.6) 100%);
+}
+
+.inventory-stage-backdrop {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(90deg, rgba(6, 9, 12, 0.86), rgba(6, 9, 12, 0.18) 18%, rgba(6, 9, 12, 0.18) 82%, rgba(6, 9, 12, 0.86)),
+    linear-gradient(180deg, rgba(6, 9, 12, 0.74), rgba(6, 9, 12, 0.16) 28%, rgba(6, 9, 12, 0.74));
+  z-index: 1;
+}
+
+.inventory-stage-frame {
+  position: relative;
+  z-index: 2;
+  min-height: calc(100vh - 108px - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+  display: grid;
+  grid-template-rows: auto 1fr;
+  gap: 1rem;
+  padding: 1.25rem 1.35rem 1.35rem;
+}
+
+.inventory-stage-topbar {
+  display: flex;
+  justify-content: flex-start;
+}
+
+.inventory-back-button {
+  min-width: 130px;
+  min-height: 52px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.inventory-layout {
+  min-height: 0;
+  display: grid;
+  grid-template-columns: minmax(300px, 0.6fr) minmax(0, 1.4fr);
+  gap: 1rem;
+}
+
+.inventory-left-column {
+  min-height: 0;
+  display: grid;
+  grid-template-rows: minmax(0, 1fr) minmax(220px, 0.62fr);
+  gap: 1rem;
+}
+
+.inventory-panel {
+  min-height: 0;
+}
+
+.inventory-deck-panel,
+.inventory-side-panel,
+.inventory-catalog-panel {
+  border-radius: 30px;
+  background:
+    linear-gradient(180deg, rgba(15, 20, 27, 0.88), rgba(8, 10, 14, 0.94));
+  box-shadow:
+    0 24px 52px rgba(0, 0, 0, 0.28),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.02);
+  backdrop-filter: blur(10px);
+}
+
+.inventory-deck-panel,
+.inventory-catalog-panel {
+  overflow: hidden;
+}
+
+.inventory-panel-head {
+  justify-content: space-between;
+  align-items: center;
+}
+
+.inventory-panel-head h2 {
+  font-size: 1.02rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #f1ddb2;
+}
+
+.inventory-panel-head-row {
+  justify-content: space-between;
+}
+
+.inventory-panel-kicker {
+  font-size: 0.72rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: #90b2bf;
+}
+
+.inventory-placeholder-panel {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 0.8rem;
+  text-align: center;
+  padding: 1rem;
+}
+
+.inventory-placeholder-panel strong {
+  color: #f4ddb0;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.inventory-placeholder-panel p {
+  margin: 0;
+  max-width: 260px;
+  color: #b9b1a3;
+}
+
+.inventory-placeholder-button {
+  width: min(100%, 260px);
 }
 
 .queue-status-copy strong {
@@ -4555,5 +4710,97 @@ pre {
     width: 68px;
     min-width: 68px;
     min-height: 94px;
+  }
+}
+
+@media (orientation: landscape) {
+  .inventory-stage {
+    min-height: calc(100vh - 84px - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+  }
+
+  .inventory-stage-frame {
+    min-height: calc(100vh - 84px - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+    padding: 1rem 1.15rem 1.15rem;
+  }
+
+  .inventory-layout {
+    grid-template-columns: minmax(320px, 0.56fr) minmax(0, 1.44fr);
+    gap: 1.1rem;
+  }
+
+  .inventory-left-column {
+    grid-template-rows: minmax(0, 1fr) minmax(180px, 0.54fr);
+  }
+
+  .inventory-deck-panel,
+  .inventory-side-panel,
+  .inventory-catalog-panel {
+    border-radius: 28px;
+  }
+
+  .catalog-panel {
+    gap: 0.9rem;
+  }
+
+  .catalog-toolbar {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .deck-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 0.6rem;
+  }
+
+  .catalog-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 0.65rem;
+    min-height: 0;
+    flex: 1;
+  }
+}
+
+@media (orientation: landscape) and (max-height: 560px) {
+  .inventory-stage {
+    min-height: calc(100vh - 34px - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+  }
+
+  .inventory-stage-frame {
+    min-height: calc(100vh - 34px - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+    gap: 0.7rem;
+    padding: 0.8rem 0.9rem 0.95rem;
+  }
+
+  .inventory-back-button {
+    min-width: 110px;
+    min-height: 42px;
+  }
+
+  .inventory-layout {
+    gap: 0.8rem;
+  }
+
+  .inventory-left-column {
+    grid-template-rows: minmax(0, 1fr) minmax(140px, 0.45fr);
+    gap: 0.8rem;
+  }
+
+  .inventory-deck-panel,
+  .inventory-side-panel,
+  .inventory-catalog-panel {
+    border-radius: 24px;
+  }
+
+  .inventory-panel-head h2 {
+    font-size: 0.9rem;
+  }
+
+  .deck-grid {
+    gap: 0.45rem;
+  }
+
+  .catalog-grid {
+    gap: 0.5rem;
   }
 }
