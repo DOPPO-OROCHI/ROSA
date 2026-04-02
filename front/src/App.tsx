@@ -2579,34 +2579,15 @@ export default function App() {
         )}
         {!activeBattle && tab === "inventory" && (
           <section className="inventory-hub">
-            <section
-              className="inventory-stage home-stage"
-              style={
-                {
-                  "--hero-panel-image": `url(${resolveImageSrc(selectedHeroImageKey)})`,
-                } as CSSProperties
-              }
-            >
+            <section className="inventory-stage home-stage">
               <div className="inventory-stage-backdrop home-stage-backdrop" />
               <div className="inventory-stage-frame home-stage-frame">
-                <div className="home-stage-actions inventory-stage-actions">
-                  <button className="home-corner-button" onClick={() => setTab("home")}>
+                <div className="inventory-stage-topbar">
+                  <button className="ghost-button inventory-back-button" onClick={() => setTab("home")}>
                     {"\u041d\u0410\u0417\u0410\u0414"}
                   </button>
-                  <button className="home-corner-button" onClick={() => void runTask(saveDefaultDeck)}>
-                    {"\u0421\u0422\u0410\u041d\u0414\u0410\u0420\u0422"}
-                  </button>
                 </div>
-                <button
-                  className={`avatar-trigger home-profile-trigger ${loading ? "busy" : ""}`}
-                  onClick={() => setShowProfile(true)}
-                >
-                  <span className="avatar-core">
-                    {(me?.first_name?.[0] || me?.username?.[0] || "?").toUpperCase()}
-                  </span>
-                </button>
-                <div className="inventory-menu-altar home-menu-altar">
-                  <div className="inventory-altar-grid">
+                <div className="inventory-altar-grid">
                   <section className="panel inventory-altar inventory-altar-deck">
                     <div className="inventory-altar-copy inventory-altar-copy--deck">
                       <div className="section-head inventory-panel-head inventory-panel-head-row">
@@ -2859,7 +2840,6 @@ export default function App() {
                       </div>
                     </div>
                   </section>
-                  </div>
                 </div>
               </div>
             </section>
