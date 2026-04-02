@@ -2382,15 +2382,15 @@ export default function App() {
                 <div className="home-stage-actions">
                   <button
                     className="home-corner-button"
-                    onClick={() => pushToast("Когда-нибудь, тут будут твои друзья", "info")}
+                    onClick={() => pushToast("\u041a\u043e\u0433\u0434\u0430-\u043d\u0438\u0431\u0443\u0434\u044c, \u0442\u0443\u0442 \u0431\u0443\u0434\u0443\u0442 \u0442\u0432\u043e\u0438 \u0434\u0440\u0443\u0437\u044c\u044f", "info")}
                   >
-                    ДРУЗЬЯ
+                    {"\u0414\u0420\u0423\u0417\u042c\u042f"}
                   </button>
                   <button
                     className="home-corner-button"
-                    onClick={() => pushToast("Когда-нибудь, тут будет твой баланс", "info")}
+                    onClick={() => pushToast("\u041a\u043e\u0433\u0434\u0430-\u043d\u0438\u0431\u0443\u0434\u044c, \u0442\u0443\u0442 \u0431\u0443\u0434\u0435\u0442 \u0442\u0432\u043e\u0439 \u0431\u0430\u043b\u0430\u043d\u0441", "info")}
                   >
-                    БАЛАНС
+                    {"\u0411\u0410\u041b\u0410\u041d\u0421"}
                   </button>
                 </div>
 
@@ -2444,13 +2444,13 @@ export default function App() {
                             : "РќРђР™РўР РњРђРўР§"}
                     </button>
                     <button className="home-main-button secondary" onClick={() => setTab("inventory")}>
-                      КОЛОДА КАРТ
+                      {"\u041a\u041e\u041b\u041e\u0414\u0410 \u041a\u0410\u0420\u0422"}
                     </button>
                     <button
                       className="home-main-button tertiary"
-                      onClick={() => pushToast("Когда-нибудь, тут будет магазин", "info")}
+                      onClick={() => pushToast("\u041a\u043e\u0433\u0434\u0430-\u043d\u0438\u0431\u0443\u0434\u044c, \u0442\u0443\u0442 \u0431\u0443\u0434\u0435\u0442 \u043c\u0430\u0433\u0430\u0437\u0438\u043d", "info")}
                     >
-                      МАГАЗИН
+                      {"\u041c\u0410\u0413\u0410\u0417\u0418\u041d"}
                     </button>
                   </div>
                 </div>
@@ -3132,6 +3132,7 @@ export default function App() {
     </div>
   );
 }
+
 
 
 

@@ -369,7 +369,7 @@ pre {
   position: absolute;
   top: 18px;
   left: 18px;
-  right: 18px;
+  right: 96px;
   z-index: 3;
   display: flex;
   align-items: flex-start;
@@ -4117,6 +4117,10 @@ pre {
     padding: 1.2rem 2.2rem 1.8rem;
   }
 
+  .home-stage-actions {
+    right: 118px;
+  }
+
   .home-menu-altar {
     width: min(100%, 560px);
     min-height: 500px;
@@ -4372,6 +4376,12 @@ pre {
   .home-stage-frame {
     min-height: calc(100vh - 76px - env(safe-area-inset-top) - env(safe-area-inset-bottom));
     padding: 0.85rem 1rem 1.15rem;
+  }
+
+  .home-stage-actions {
+    top: 12px;
+    left: 12px;
+    right: 84px;
   }
 
   .home-menu-altar {
