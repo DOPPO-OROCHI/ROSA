@@ -2562,14 +2562,6 @@ export default function App() {
               <button className="ghost-button" onClick={() => setTab("home")}>
                 {"<"} Back
               </button>
-              <button
-                className="ghost-button miniapp-fullscreen-toggle"
-                onClick={() => void runTask(handleToggleMiniAppFullscreen)}
-                title={miniAppFullscreen ? "Exit fullscreen" : "Open fullscreen"}
-                aria-label={miniAppFullscreen ? "Exit fullscreen" : "Open fullscreen"}
-              >
-                {miniAppFullscreen ? "Window" : "Fullscreen"}
-              </button>
             </div>
             <div className="panel inventory-panel">
               <div className="section-head">
@@ -2799,6 +2791,11 @@ export default function App() {
                   {">"}
                 </button>
               </div>
+            </div>
+            <div className="panel inventory-panel inventory-placeholder-card">
+              <span className="panel-kicker">Store</span>
+              <strong>Soon</strong>
+              <p>Скоро здесь появится магазин, новые паки карт и дополнительные предложения.</p>
             </div>
           </section>
         )}

@@ -255,7 +255,7 @@ pre {
 
 .inventory-back-row {
   display: flex;
-  justify-content: space-between;
+  justify-content: flex-start;
   align-items: center;
   gap: 0.75rem;
 }
@@ -806,10 +806,6 @@ pre {
   font-size: 0.66rem;
   line-height: 1;
   z-index: 5;
-}
-
-.miniapp-fullscreen-toggle {
-  min-width: 118px;
 }
 
 .hero-banner-top::before {
@@ -1472,6 +1468,27 @@ pre {
   grid-template-rows: repeat(2, minmax(0, 1fr));
   gap: 0.5rem;
   min-height: 296px;
+}
+
+.inventory-placeholder-card {
+  padding: 1rem 1rem 1.15rem;
+  align-items: center;
+  text-align: center;
+}
+
+.inventory-placeholder-card strong {
+  font-size: 1rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #f3ddb2;
+}
+
+.inventory-placeholder-card p {
+  margin: 0;
+  max-width: 280px;
+  color: #bcb2a0;
+  font-size: 0.84rem;
+  line-height: 1.35;
 }
 
 .catalog-grid .asset-card {
