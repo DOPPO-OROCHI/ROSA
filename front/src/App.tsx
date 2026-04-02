@@ -2292,7 +2292,7 @@ export default function App() {
     <div className={`war-shell ${activeBattle ? "battle-mode" : ""}`}>
       <main className="view-frame">
         {!activeBattle && tab === "home" && (
-          <section className="screen-grid home-grid">
+          <section className="home-hub">
             {(queueStatus.state === "searching" || queueStatus.state === "penalty") && (
               <div className={`queue-status-banner ${queueStatus.state === "penalty" ? "danger" : ""}`}>
                 <div className="queue-status-copy">
@@ -2368,181 +2368,212 @@ export default function App() {
                 </section>
               </div>
             )}
-            <div className="panel command-panel">
-              <div
-                className="hero-banner hero-banner-top"
-                style={
-                  {
-                    "--hero-panel-image": `url(${resolveImageSrc(selectedHeroImageKey)})`,
-                  } as CSSProperties
-                }
+            <div className="home-top-actions">
+              <button
+                className="home-corner-button"
+                onClick={() => pushToast(" Ó„‰‡-ÌË·Û‰¸, ÚÛÚ ·Û‰ÛÚ Ú‚ÓË ‰ÛÁ¸ˇ", "info")}
               >
+                ƒ–”«‹ﬂ
+              </button>
+              <button
+                className="home-corner-button"
+                onClick={() => pushToast(" Ó„‰‡-ÌË·Û‰¸, ÚÛÚ ·Û‰ÂÚ Ú‚ÓÈ ·‡Î‡ÌÒ", "info")}
+              >
+                ¡¿À¿Õ—
+              </button>
+            </div>
+
+            <section
+              className="home-stage"
+              style={
+                {
+                  "--hero-panel-image": `url(${resolveImageSrc(selectedHeroImageKey)})`,
+                } as CSSProperties
+              }
+            >
+              <div className="home-stage-backdrop" />
+              <div className="home-stage-frame">
                 <button
-                  className={`avatar-trigger hero-profile-mini ${loading ? "busy" : ""}`}
+                  className={`avatar-trigger home-profile-trigger ${loading ? "busy" : ""}`}
                   onClick={() => setShowProfile(true)}
                 >
                   <span className="avatar-core">
                     {(me?.first_name?.[0] || me?.username?.[0] || "?").toUpperCase()}
                   </span>
                 </button>
-                <button className="hero-portrait-stage hero-select-trigger" onClick={() => setHeroPickerOpen(true)}>
-                  {renderHeroGlyph(
-                    me?.selected_hero_code || "unassigned",
-                    selectedHeroImageKey,
-                    "large",
-                  )}
-                  <div className="hero-banner-copy overlay">
-                    <h3>{me?.first_name || me?.username || "No profile loaded"}</h3>
-                    <p className="hero-banner-role">{me?.selected_hero_name || "No Hero Assigned"}</p>
-                    <p className="muted">Rating {me?.rating ?? "-"}</p>
+
+                <button className="home-character-button" onClick={() => setHeroPickerOpen(true)}>
+                  <div className="home-character-frame">
+                    {renderHeroGlyph(
+                      me?.selected_hero_code || "unassigned",
+                      selectedHeroImageKey,
+                      "large",
+                    )}
+                  </div>
+                  <div className="home-character-meta">
+                    <strong>{me?.first_name || me?.username || "No profile loaded"}</strong>
+                    <span>{me?.selected_hero_name || "No Hero Assigned"}</span>
+                    <span className="muted">Rating {me?.rating ?? "-"}</span>
                   </div>
                 </button>
-              </div>
-              {heroPickerOpen && (
-                <div
-                  className="hero-picker"
-                  onClick={() => {
-                    setHeroPickerOpen(false);
-                    setHeldHero(null);
-                  }}
-                >
-                  <div className="hero-picker-body" onClick={(event) => event.stopPropagation()}>
-                    <button
-                      className="hero-picker-close"
-                      onClick={() => {
-                        setHeroPickerOpen(false);
-                        setHeldHero(null);
-                      }}
-                    >
-                      X
+
+                <div className="home-menu-stack">
+                  {!me && (
+                    <button className="home-main-button secondary" onClick={() => void runTask(retryTelegramAuth)}>
+                      Retry Auth
                     </button>
-                    {heldHero && (
-                      <div className="hero-preview">
-                        <div className="hero-preview-media">
-                          <AssetImage
-                            imageKey={heldHero.image_key || resolveHeroImageKey(heldHero.hero_code)}
-                            alt={heldHero.name}
-                            fallbackSrc={resolveHeroFallbackSrc()}
-                            className="hero-preview-image"
-                          />
-                        </div>
-                        <div className="hero-preview-info">
-                          <strong>{heldHero.name}</strong>
-                          <span>HP {heldHero.health_points}</span>
-                          <span>ATK {heldHero.attack_power}</span>
-                          <span>CD {heldHero.attack_cooldown}</span>
-                          <span>{heldHero.description}</span>
-                        </div>
+                  )}
+                  <button
+                    className={`home-main-button ${queueStatus.state === "penalty" ? "danger" : ""}`}
+                    onClick={() => {
+                      if (!canOpenQueuePanel) {
+                        return;
+                      }
+                      setQueuePanelOpen(true);
+                    }}
+                    disabled={!canOpenQueuePanel}
+                  >
+                    {queueStatus.state === "penalty"
+                      ? "–ü–û–ò–°–ö –ù–ï–î–û–°–¢–£–ü–ï–ù"
+                      : queueStatus.state === "pending_match"
+                        ? "–ú–ê–¢–ß –ù–ê–ô–î–ï–ù"
+                        : queueStatus.state === "searching"
+                          ? "–ü–û–ò–°–ö –ò–î–ï–¢"
+                          : "–ù–ê–ô–¢–ò –ú–ê–¢–ß"}
+                  </button>
+                  <button className="home-main-button secondary" onClick={() => setTab("inventory")}>
+                     ŒÀŒƒ¿  ¿–“
+                  </button>
+                  <button
+                    className="home-main-button tertiary"
+                    onClick={() => pushToast(" Ó„‰‡-ÌË·Û‰¸, ÚÛÚ ·Û‰ÂÚ Ï‡„‡ÁËÌ", "info")}
+                  >
+                    Ã¿√¿«»Õ
+                  </button>
+                </div>
+              </div>
+            </section>
+
+            {heroPickerOpen && (
+              <div
+                className="hero-picker"
+                onClick={() => {
+                  setHeroPickerOpen(false);
+                  setHeldHero(null);
+                }}
+              >
+                <div className="hero-picker-body" onClick={(event) => event.stopPropagation()}>
+                  <button
+                    className="hero-picker-close"
+                    onClick={() => {
+                      setHeroPickerOpen(false);
+                      setHeldHero(null);
+                    }}
+                  >
+                    X
+                  </button>
+                  {heldHero && (
+                    <div className="hero-preview">
+                      <div className="hero-preview-media">
+                        <AssetImage
+                          imageKey={heldHero.image_key || resolveHeroImageKey(heldHero.hero_code)}
+                          alt={heldHero.name}
+                          fallbackSrc={resolveHeroFallbackSrc()}
+                          className="hero-preview-image"
+                        />
                       </div>
-                    )}
-                    <div className="hero-picker-head">
-                      <strong>–í—ã–±–µ—Ä–∏ –≥–µ—Ä–æ—è</strong>
+                      <div className="hero-preview-info">
+                        <strong>{heldHero.name}</strong>
+                        <span>HP {heldHero.health_points}</span>
+                        <span>ATK {heldHero.attack_power}</span>
+                        <span>CD {heldHero.attack_cooldown}</span>
+                        <span>{heldHero.description}</span>
+                      </div>
                     </div>
-                    <div className="hero-picker-list">
-                      {heroes.map((hero) => {
-                        const selected = hero.hero_code === me?.selected_hero_code;
-                        return (
-                          <article
-                            key={hero.hero_code}
-                            className={`hero-tile ${selected ? "selected" : ""}`}
-                            onClick={() => setHeldHero(hero)}
+                  )}
+                  <div className="hero-picker-head">
+                    <strong>–í—ã–±–µ—Ä–∏ –≥–µ—Ä–æ—è</strong>
+                  </div>
+                  <div className="hero-picker-list">
+                    {heroes.map((hero) => {
+                      const selected = hero.hero_code === me?.selected_hero_code;
+                      return (
+                        <article
+                          key={hero.hero_code}
+                          className={`hero-tile ${selected ? "selected" : ""}`}
+                          onClick={() => setHeldHero(hero)}
+                        >
+                          {renderHeroGlyph(hero.hero_code, hero.image_key, "small")}
+                          <span className="hero-tile-name">{hero.name}</span>
+                          <button
+                            className="hero-tile-pick"
+                            onClick={(event) => {
+                              event.stopPropagation();
+                              void runTask(async () => {
+                                await selectHero(hero.hero_code);
+                                setHeroPickerOpen(false);
+                                setHeldHero(null);
+                              });
+                            }}
                           >
-                            {renderHeroGlyph(hero.hero_code, hero.image_key, "small")}
-                            <span className="hero-tile-name">{hero.name}</span>
-                            <button
-                              className="hero-tile-pick"
-                              onClick={(event) => {
-                                event.stopPropagation();
-                                void runTask(async () => {
-                                  await selectHero(hero.hero_code);
-                                  setHeroPickerOpen(false);
-                                  setHeldHero(null);
-                                });
-                              }}
-                            >
-                              –í—ã–±—Ä–∞—Ç—å
-                            </button>
-                          </article>
-                        );
-                      })}
-                    </div>
+                            –í—ã–±—Ä–∞—Ç—å
+                          </button>
+                        </article>
+                      );
+                    })}
                   </div>
                 </div>
-              )}
-              {queuePanelOpen && (
-                <div
-                  className="queue-mode-overlay"
-                  onClick={() => {
-                    setQueuePanelOpen(false);
-                    setSelectedQueueMode(null);
-                  }}
-                >
-                  <aside className="queue-mode-drawer" onClick={(event) => event.stopPropagation()}>
-                    <button
-                      className="queue-mode-close"
-                      onClick={() => {
-                        setQueuePanelOpen(false);
-                        setSelectedQueueMode(null);
-                      }}
-                    >
-                      X
-                    </button>
-                    <div className="queue-mode-art">
-                      <div className="queue-mode-art-placeholder">
-                        <span>ART</span>
-                      </div>
-                    </div>
-                    <div className="queue-mode-copy">
-                      <span className="panel-kicker">Matchmaking</span>
-                      <strong>Choose a queue</strong>
-                    </div>
-                    <button
-                      className={`queue-mode-option ${selectedQueueMode === "ranked" ? "selected" : ""}`}
-                      onClick={() => setSelectedQueueMode((prev) => (prev === "ranked" ? null : "ranked"))}
-                    >
-                      <span className={`queue-mode-check ${selectedQueueMode === "ranked" ? "active" : ""}`} />
-                      <span className="queue-mode-option-copy">
-                        <strong>–†–µ–π—Ç–∏–Ω–≥–æ–≤–∞—è –∏–≥—Ä–∞</strong>
-                        <span>–ë–æ–π –∑–∞ —Ä–µ–π—Ç–∏–Ω–≥ –∏ —á–µ—Å—Ç–Ω—ã–π –º–∞—Ç—á–º–µ–π–∫–∏–Ω–≥</span>
-                      </span>
-                    </button>
-                    <button
-                      className="queue-mode-confirm"
-                      disabled={!selectedQueueMode}
-                      onClick={() => void runTask(joinMatchmakingQueue)}
-                    >
-                      –ù–ê–ô–¢–ò
-                    </button>
-                  </aside>
-                </div>
-              )}
-              {!me && <button onClick={() => void runTask(retryTelegramAuth)}>Retry Auth</button>}
-              <button
-                className={`matchmaking-launch ${queueStatus.state === "penalty" ? "danger" : ""}`}
+              </div>
+            )}
+            {queuePanelOpen && (
+              <div
+                className="queue-mode-overlay"
                 onClick={() => {
-                  if (!canOpenQueuePanel) {
-                    return;
-                  }
-                  setQueuePanelOpen(true);
+                  setQueuePanelOpen(false);
+                  setSelectedQueueMode(null);
                 }}
-                disabled={!canOpenQueuePanel}
               >
-                {queueStatus.state === "penalty"
-                  ? "–ü–û–ò–°–ö –ù–ï–î–û–°–¢–£–ü–ï–ù"
-                  : queueStatus.state === "pending_match"
-                    ? "–ú–ê–¢–ß –ù–ê–ô–î–ï–ù"
-                    : queueStatus.state === "searching"
-                      ? "–ü–û–ò–°–ö –ò–î–ï–¢"
-                      : "–ù–ê–ô–¢–ò –ú–ê–¢–ß"}
-              </button>
-              <button className="open-inventory" onClick={() => setTab("inventory")}>
-                Inventory
-              </button>
-            </div>
-
+                <aside className="queue-mode-drawer" onClick={(event) => event.stopPropagation()}>
+                  <button
+                    className="queue-mode-close"
+                    onClick={() => {
+                      setQueuePanelOpen(false);
+                      setSelectedQueueMode(null);
+                    }}
+                  >
+                    X
+                  </button>
+                  <div className="queue-mode-art">
+                    <div className="queue-mode-art-placeholder">
+                      <span>ART</span>
+                    </div>
+                  </div>
+                  <div className="queue-mode-copy">
+                    <span className="panel-kicker">Matchmaking</span>
+                    <strong>Choose a queue</strong>
+                  </div>
+                  <button
+                    className={`queue-mode-option ${selectedQueueMode === "ranked" ? "selected" : ""}`}
+                    onClick={() => setSelectedQueueMode((prev) => (prev === "ranked" ? null : "ranked"))}
+                  >
+                    <span className={`queue-mode-check ${selectedQueueMode === "ranked" ? "active" : ""}`} />
+                    <span className="queue-mode-option-copy">
+                      <strong>–†–µ–π—Ç–∏–Ω–≥–æ–≤–∞—è –∏–≥—Ä–∞</strong>
+                      <span>–ë–æ–π –∑–∞ —Ä–µ–π—Ç–∏–Ω–≥ –∏ —á–µ—Å—Ç–Ω—ã–π –º–∞—Ç—á–º–µ–π–∫–∏–Ω–≥</span>
+                    </span>
+                  </button>
+                  <button
+                    className="queue-mode-confirm"
+                    disabled={!selectedQueueMode}
+                    onClick={() => void runTask(joinMatchmakingQueue)}
+                  >
+                    –ù–ê–ô–¢–ò
+                  </button>
+                </aside>
+              </div>
+            )}
           </section>
         )}
-
         {!activeBattle && tab === "inventory" && (
           <section className="screen-grid">
             <div className="inventory-back-row">
@@ -3098,4 +3129,5 @@ export default function App() {
     </div>
   );
 }
+
 

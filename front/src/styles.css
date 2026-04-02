@@ -287,6 +287,198 @@ pre {
   position: relative;
 }
 
+.home-hub {
+  position: relative;
+  min-height: calc(100vh - 118px - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.home-top-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.home-corner-button {
+  min-width: 148px;
+  min-height: 56px;
+  padding: 0.9rem 1.2rem;
+  border-radius: 18px;
+  border: 1px solid rgba(231, 219, 192, 0.08);
+  background:
+    linear-gradient(135deg, rgba(22, 28, 38, 0.96), rgba(8, 10, 15, 0.98));
+  color: #f0e3c2;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  font-weight: 700;
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.3);
+}
+
+.home-stage {
+  position: relative;
+  flex: 1;
+  min-height: 620px;
+  border-radius: 34px;
+  overflow: hidden;
+  border: 1px solid rgba(231, 219, 192, 0.1);
+  background:
+    linear-gradient(180deg, rgba(11, 15, 21, 0.96), rgba(7, 8, 12, 0.98));
+  box-shadow:
+    0 28px 64px rgba(0, 0, 0, 0.38),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.02);
+}
+
+.home-stage::before {
+  content: "";
+  position: absolute;
+  inset: -8%;
+  background-image: var(--hero-panel-image);
+  background-position: center 20%;
+  background-repeat: no-repeat;
+  background-size: cover;
+  filter: blur(30px) saturate(0.72) brightness(0.4);
+  opacity: 0.6;
+  transform: scale(1.08);
+}
+
+.home-stage::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle at 50% 28%, rgba(110, 62, 41, 0.22), transparent 26%),
+    linear-gradient(180deg, rgba(8, 11, 15, 0.14) 0%, rgba(7, 9, 13, 0.58) 52%, rgba(4, 6, 9, 0.94) 100%);
+}
+
+.home-stage-backdrop {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(90deg, rgba(6, 9, 12, 0.86), rgba(6, 9, 12, 0.12) 18%, rgba(6, 9, 12, 0.12) 82%, rgba(6, 9, 12, 0.86)),
+    linear-gradient(180deg, rgba(6, 9, 12, 0.62), rgba(6, 9, 12, 0.08) 28%, rgba(6, 9, 12, 0.72));
+  z-index: 1;
+}
+
+.home-stage-frame {
+  position: relative;
+  z-index: 2;
+  height: 100%;
+  min-height: 620px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.2rem;
+  padding: 1.5rem 1.5rem 2rem;
+}
+
+.home-profile-trigger {
+  position: absolute;
+  top: 18px;
+  right: 18px;
+  z-index: 3;
+}
+
+.home-character-button {
+  margin-top: 0.2rem;
+  padding: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.8rem;
+}
+
+.home-character-frame {
+  width: min(100%, 320px);
+  display: flex;
+  justify-content: center;
+  padding: 0.2rem 0 0;
+}
+
+.home-character-frame .hero-glyph.large {
+  width: 220px;
+  height: 220px;
+  border-radius: 30px;
+  border: 1px solid rgba(231, 219, 192, 0.16);
+  background:
+    radial-gradient(circle at 30% 28%, rgba(255, 231, 173, 0.12), transparent 24%),
+    linear-gradient(180deg, rgba(27, 32, 41, 0.84), rgba(11, 14, 19, 0.98));
+  box-shadow:
+    0 24px 44px rgba(0, 0, 0, 0.3),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.03);
+}
+
+.home-character-meta {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.18rem;
+  text-align: center;
+}
+
+.home-character-meta strong {
+  color: #f4ddb0;
+  font-size: 1.05rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.home-character-meta span {
+  color: #dbcda8;
+  font-size: 0.82rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.home-menu-stack {
+  width: min(100%, 460px);
+  display: flex;
+  flex-direction: column;
+  gap: 0.95rem;
+}
+
+.home-main-button {
+  width: 100%;
+  min-height: 62px;
+  padding: 1rem 1.3rem;
+  border-radius: 18px;
+  border: 1px solid rgba(231, 219, 192, 0.08);
+  background:
+    linear-gradient(135deg, #16394c, #2a6579);
+  color: #edf9ff;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  font-weight: 800;
+  box-shadow: 0 18px 34px rgba(0, 0, 0, 0.26);
+}
+
+.home-main-button.secondary {
+  background:
+    linear-gradient(135deg, rgba(38, 43, 54, 0.96), rgba(11, 14, 20, 0.98));
+  color: #efe3c4;
+}
+
+.home-main-button.tertiary {
+  background:
+    linear-gradient(135deg, rgba(64, 33, 18, 0.96), rgba(18, 10, 10, 0.98));
+  color: #f5d1bb;
+}
+
+.home-main-button.danger {
+  background: linear-gradient(135deg, #6d1820, #ab3142);
+}
+
+.home-main-button:disabled {
+  cursor: default;
+  opacity: 0.56;
+}
+
 .queue-status-banner {
   display: flex;
   align-items: center;
@@ -3868,6 +4060,43 @@ pre {
     align-items: stretch;
   }
 
+  .home-hub {
+    min-height: calc(100vh - 132px - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+    gap: 1.15rem;
+  }
+
+  .home-corner-button {
+    min-width: 170px;
+    min-height: 62px;
+  }
+
+  .home-stage {
+    min-height: calc(100vh - 210px - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+  }
+
+  .home-stage-frame {
+    min-height: calc(100vh - 210px - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+    padding: 1.2rem 2.2rem 1.8rem;
+  }
+
+  .home-character-frame .hero-glyph.large {
+    width: 246px;
+    height: 246px;
+  }
+
+  .home-character-meta strong {
+    font-size: 1.14rem;
+  }
+
+  .home-menu-stack {
+    width: min(100%, 420px);
+    gap: 0.8rem;
+  }
+
+  .home-main-button {
+    min-height: 58px;
+  }
+
   .queue-status-banner {
     padding: 1rem 1.15rem;
   }
@@ -4080,6 +4309,40 @@ pre {
   .war-shell {
     padding-top: calc(8px + env(safe-area-inset-top));
     padding-bottom: calc(10px + env(safe-area-inset-bottom));
+  }
+
+  .home-hub {
+    gap: 0.75rem;
+  }
+
+  .home-corner-button {
+    min-width: 140px;
+    min-height: 48px;
+    padding: 0.72rem 1rem;
+  }
+
+  .home-stage {
+    min-height: calc(100vh - 150px - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+  }
+
+  .home-stage-frame {
+    min-height: calc(100vh - 150px - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+    padding: 0.85rem 1rem 1.15rem;
+  }
+
+  .home-character-frame .hero-glyph.large {
+    width: 180px;
+    height: 180px;
+  }
+
+  .home-menu-stack {
+    width: min(100%, 390px);
+    gap: 0.7rem;
+  }
+
+  .home-main-button {
+    min-height: 50px;
+    padding: 0.8rem 1rem;
   }
 
   .view-frame {
