@@ -2589,102 +2589,6 @@ export default function App() {
                 </div>
 
                 <div className="inventory-shell-grid">
-                  <section className="panel inventory-deck-panel inventory-panel">
-                    <div className="section-head inventory-panel-head">
-                      <h2>{"\u0414\u0415\u041a\u0410 \u0418\u0413\u0420\u041e\u041a\u0410"}</h2>
-                      <span className="inventory-panel-kicker">Deck</span>
-                    </div>
-                    <div className="deck-summary inventory-deck-summary">
-                      <span>Total cards</span>
-                      <strong>{deckTotal}</strong>
-                    </div>
-                    {!deckReady && <p className="deck-warning">Дека не собрана (нужно 20 карт)</p>}
-                    <div className="inventory-deck-grid">
-                      {deckGroups.map((group) => (
-                        <button
-                          key={group.key}
-                          className="inventory-deck-tile"
-                          onClick={() => setDeckInspectorKey(group.key)}
-                        >
-                          <div className="inventory-deck-tile-media">
-                            <AssetImage
-                              imageKey={group.imageKey}
-                              alt={group.name}
-                              fallbackSrc={resolveCardFallbackSrc()}
-                              className="inventory-deck-tile-image"
-                            />
-                            <span className="inventory-deck-tile-mana">{group.mana}</span>
-                            <span className="inventory-deck-tile-count">x{group.count}</span>
-                          </div>
-                          <strong>{group.name}</strong>
-                        </button>
-                      ))}
-                      {deckGroups.length === 0 && (
-                        <article className="inventory-deck-empty">
-                          <span>Deck is empty</span>
-                        </article>
-                      )}
-                    </div>
-                    {inspectedDeckGroup && (
-                      <div className="deck-fan-overlay" onClick={() => setDeckInspectorKey(null)}>
-                        <div className="deck-fan-window" onClick={(event) => event.stopPropagation()}>
-                          <button className="deck-fan-close" onClick={() => setDeckInspectorKey(null)}>
-                            X
-                          </button>
-                          <div className="deck-fan-head">
-                            <strong>{inspectedDeckGroup.name}</strong>
-                            <span>x{inspectedDeckGroup.count}</span>
-                          </div>
-                          <div className="deck-fan-row">
-                            <div
-                              className="deck-fan-dense"
-                              style={{ "--fan-count": `${inspectedDeckGroup.count}` } as CSSProperties}
-                            >
-                              {Array.from({ length: inspectedDeckGroup.count }).map((_, index, array) => (
-                                <article
-                                  key={`${inspectedDeckGroup.key}:fan:${index}`}
-                                  className="deck-fan-card"
-                                  style={
-                                    {
-                                      "--fan-offset": `${index - (array.length - 1) / 2}`,
-                                    } as CSSProperties
-                                  }
-                                >
-                                  <AssetImage
-                                    imageKey={inspectedDeckGroup.imageKey}
-                                    alt={inspectedDeckGroup.name}
-                                    fallbackSrc={resolveCardFallbackSrc()}
-                                    className="deck-fan-media"
-                                  />
-                                  <button
-                                    className="deck-fan-remove"
-                                    onClick={() => void runTask(() => removeCardFromDeck(inspectedDeckGroup.kind, inspectedDeckGroup.templateId))}
-                                  >
-                                    X
-                                  </button>
-                                </article>
-                              ))}
-                            </div>
-                          </div>
-                          <div className="deck-fan-info">
-                            <span>DECK COPIES {inspectedDeckGroup.count}</span>
-                            <span>MANA {inspectedDeckMeta?.mana_cost ?? 0}</span>
-                            {inspectedDeckGroup.kind === "battle" ? (
-                              <span>
-                                HP {inspectedDeckMeta?.health_points ?? 0} | ATK {inspectedDeckMeta?.attack ?? 0} | CD {inspectedDeckMeta?.cooldown ?? 0} | MAX {inspectedDeckMeta?.max_copies ?? 0}
-                              </span>
-                            ) : (
-                              <span>
-                                {inspectedDeckMeta?.buff_type || "Buff"} {inspectedDeckMeta?.buff_value ?? 0} | DUR {inspectedDeckMeta?.duration ?? 0} | MAX {inspectedDeckMeta?.max_copies ?? 0}
-                              </span>
-                            )}
-                            <span>{inspectedDeckMeta?.description || "-"}</span>
-                          </div>
-                        </div>
-                      </div>
-                    )}
-                  </section>
-
                   <section className="panel inventory-catalog-panel inventory-panel">
                     <div className="section-head inventory-panel-head inventory-panel-head-row">
                       <h2>{"\u0412\u0421\u0415 \u041a\u0410\u0420\u0422\u042b \u0418\u0413\u0420\u041e\u041a\u0410"}</h2>
@@ -3156,6 +3060,7 @@ export default function App() {
     </div>
   );
 }
+
 
 
 

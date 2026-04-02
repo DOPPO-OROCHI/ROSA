@@ -5838,3 +5838,22 @@ pre {
     gap: 10px;
   }
 }
+
+/* Inventory without deck block */
+.war-shell.inventory-mode .inventory-shell-grid {
+  grid-template-columns: 260px minmax(0, 1fr) !important;
+  grid-template-rows: 1fr !important;
+  grid-template-areas: "shop catalog" !important;
+}
+
+.war-shell.inventory-mode .inventory-side-panel {
+  min-height: 0;
+  align-self: stretch;
+}
+
+@media (orientation: landscape) and (max-height: 740px) {
+  .war-shell.inventory-mode .inventory-shell-grid {
+    grid-template-columns: 240px minmax(0, 1fr) !important;
+    grid-template-rows: 1fr !important;
+  }
+}
