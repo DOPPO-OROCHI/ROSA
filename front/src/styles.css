@@ -3815,3 +3815,354 @@ pre {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
+
+@media (orientation: landscape) {
+  .war-shell {
+    width: min(100%, 1480px);
+    max-width: 1480px;
+    min-height: 100vh;
+    min-height: 100dvh;
+    padding:
+      calc(14px + env(safe-area-inset-top))
+      max(18px, calc(18px + env(safe-area-inset-right)))
+      calc(18px + env(safe-area-inset-bottom))
+      max(18px, calc(18px + env(safe-area-inset-left)));
+  }
+
+  .view-frame {
+    margin-top: 18px;
+  }
+
+  .top-frame {
+    grid-template-columns: 64px minmax(0, 1fr) auto;
+    gap: 1rem;
+    padding: 1rem 1.15rem;
+  }
+
+  .avatar-trigger {
+    width: 64px;
+    height: 64px;
+  }
+
+  .masthead strong {
+    font-size: 1.12rem;
+  }
+
+  .screen-grid {
+    grid-template-columns: minmax(420px, 0.92fr) minmax(400px, 1.08fr);
+    gap: 18px;
+    align-items: stretch;
+  }
+
+  .panel {
+    padding: 1.1rem;
+    border-radius: 26px;
+  }
+
+  .command-panel,
+  .inventory-panel {
+    min-height: calc(100vh - 170px - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+  }
+
+  .home-grid {
+    align-items: stretch;
+  }
+
+  .queue-status-banner {
+    padding: 1rem 1.15rem;
+  }
+
+  .queue-status-copy strong {
+    font-size: 1.32rem;
+  }
+
+  .hero-banner-top {
+    min-height: 340px;
+  }
+
+  .hero-select-trigger {
+    min-height: 300px;
+  }
+
+  .hero-picker-body {
+    width: min(92vw, 1160px);
+    max-height: min(88vh, 840px);
+    padding: 1.25rem;
+  }
+
+  .hero-picker-list {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  .queue-mode-drawer {
+    width: min(48vw, 560px);
+    padding:
+      calc(24px + env(safe-area-inset-top))
+      22px
+      calc(24px + env(safe-area-inset-bottom));
+  }
+
+  .match-found-overlay {
+    padding: 24px;
+  }
+
+  .match-found-panel {
+    width: min(100%, 860px);
+    padding: 1.4rem 1.4rem 1.2rem;
+    gap: 1.15rem;
+  }
+
+  .match-found-title {
+    font-size: 1.8rem;
+  }
+
+  .match-found-subtitle {
+    font-size: 1rem;
+  }
+
+  .match-found-players {
+    gap: 1rem;
+  }
+
+  .match-found-player {
+    min-height: 140px;
+  }
+
+  .match-found-actions {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .match-found-action {
+    min-height: 60px;
+  }
+
+  .inventory-back-row {
+    grid-column: 1 / -1;
+  }
+
+  .deck-grid {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+  }
+
+  .catalog-panel {
+    min-width: 0;
+  }
+
+  .catalog-toolbar {
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+  }
+
+  .catalog-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  .battle-screen {
+    grid-template-columns: 1fr;
+    gap: 0;
+    min-height: calc(100vh - 110px - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+  }
+
+  .battle-board {
+    height: calc(100vh - 80px - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+    min-height: 540px;
+    max-height: none;
+    padding: 1rem 1.1rem;
+  }
+
+  .battle-scene {
+    grid-template-rows:
+      46px
+      54px
+      116px
+      minmax(260px, 1fr)
+      118px
+      120px;
+    row-gap: 8px;
+  }
+
+  .battle-top-utility {
+    align-items: center;
+  }
+
+  .battle-enemy-hand-layer {
+    padding-top: 0;
+  }
+
+  .enemy-hand {
+    width: min(100%, 420px);
+    min-height: 52px;
+  }
+
+  .card-back {
+    width: 34px;
+    height: 50px;
+  }
+
+  .battle-field-layer {
+    padding-inline: 56px;
+  }
+
+  .battlefield-core {
+    min-height: 260px;
+    grid-template-rows: minmax(112px, 1fr) 30px minmax(112px, 1fr);
+    gap: 8px;
+    padding: 16px 12px 18px;
+  }
+
+  .battle-side-info.enemy {
+    top: 134px;
+  }
+
+  .battle-side-info.own {
+    bottom: 138px;
+  }
+
+  .battle-turn-control-layer {
+    right: 6px;
+  }
+
+  .slot {
+    height: 118px;
+  }
+
+  .hero-orb {
+    width: 96px;
+    height: 96px;
+  }
+
+  .hero-orb-avatar {
+    width: 72px;
+    height: 72px;
+  }
+
+  .hero-anchor.bottom {
+    min-height: 96px;
+  }
+
+  .hero-skill-mini {
+    left: calc(50% + 54px);
+    width: 40px;
+    height: 40px;
+    min-height: 40px;
+  }
+
+  .hero-attack-mini {
+    left: calc(50% - 92px);
+    width: 40px;
+    height: 40px;
+    min-height: 40px;
+  }
+
+  .hand-row {
+    width: min(100%, 760px);
+    min-height: 112px;
+  }
+
+  .hand-card {
+    width: 78px;
+    min-width: 78px;
+    min-height: 108px;
+  }
+
+  .battle-nav {
+    left: auto;
+    right: max(18px, calc(18px + env(safe-area-inset-right)));
+    bottom: calc(18px + env(safe-area-inset-bottom));
+    width: min(420px, calc(100vw - 36px));
+    max-width: none;
+    margin: 0;
+  }
+}
+
+@media (orientation: landscape) and (max-height: 560px) {
+  .war-shell {
+    padding-top: calc(8px + env(safe-area-inset-top));
+    padding-bottom: calc(10px + env(safe-area-inset-bottom));
+  }
+
+  .view-frame {
+    margin-top: 10px;
+  }
+
+  .panel {
+    padding: 0.9rem;
+  }
+
+  .hero-banner-top {
+    min-height: 260px;
+  }
+
+  .hero-select-trigger {
+    min-height: 220px;
+  }
+
+  .command-panel,
+  .inventory-panel {
+    min-height: calc(100vh - 120px - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+  }
+
+  .queue-status-banner {
+    padding: 0.8rem 0.95rem;
+  }
+
+  .match-found-panel {
+    width: min(100%, 760px);
+    padding: 1rem;
+  }
+
+  .match-found-player {
+    min-height: 116px;
+  }
+
+  .battle-board {
+    height: calc(100vh - 28px - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+    padding: 0.7rem 0.8rem;
+  }
+
+  .battle-scene {
+    grid-template-rows:
+      38px
+      44px
+      92px
+      minmax(220px, 1fr)
+      96px
+      96px;
+  }
+
+  .battle-field-layer {
+    padding-inline: 40px;
+  }
+
+  .battlefield-core {
+    min-height: 220px;
+    grid-template-rows: minmax(94px, 1fr) 26px minmax(94px, 1fr);
+    padding: 12px 10px 14px;
+  }
+
+  .slot {
+    height: 98px;
+  }
+
+  .hero-orb {
+    width: 84px;
+    height: 84px;
+  }
+
+  .hero-orb-avatar {
+    width: 62px;
+    height: 62px;
+  }
+
+  .hand-row {
+    width: min(100%, 660px);
+    min-height: 96px;
+  }
+
+  .hand-card {
+    width: 68px;
+    min-width: 68px;
+    min-height: 94px;
+  }
+}
