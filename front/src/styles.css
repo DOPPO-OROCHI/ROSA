@@ -385,6 +385,213 @@ pre {
   box-shadow: -24px 0 48px rgba(0, 0, 0, 0.42);
 }
 
+.match-found-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 45;
+  display: grid;
+  place-items: center;
+  padding: 16px;
+  background: rgba(3, 6, 10, 0.62);
+  backdrop-filter: blur(10px);
+}
+
+.match-found-panel {
+  width: min(100%, 420px);
+  padding: 1.15rem 1rem 1rem;
+  border-radius: 24px;
+  border: 1px solid rgba(231, 219, 192, 0.12);
+  background:
+    radial-gradient(circle at 50% 0%, rgba(68, 137, 170, 0.16), transparent 32%),
+    linear-gradient(180deg, rgba(23, 28, 37, 0.98), rgba(8, 10, 14, 0.98));
+  box-shadow:
+    0 24px 60px rgba(0, 0, 0, 0.42),
+    0 0 28px rgba(92, 174, 214, 0.08);
+  display: flex;
+  flex-direction: column;
+  gap: 0.95rem;
+  animation: match-found-in 260ms ease;
+}
+
+.match-found-kicker {
+  font-size: 0.7rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: #8bb8cb;
+}
+
+.match-found-title {
+  font-size: 1.45rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #f4ddb0;
+}
+
+.match-found-subtitle {
+  color: #b8b2a7;
+  font-size: 0.92rem;
+}
+
+.match-found-players {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.8rem;
+}
+
+.match-found-player {
+  min-height: 108px;
+  padding: 0.9rem 0.7rem;
+  border-radius: 20px;
+  border: 1px solid rgba(231, 219, 192, 0.08);
+  background:
+    linear-gradient(180deg, rgba(12, 16, 22, 0.94), rgba(8, 10, 14, 0.98));
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 0.38rem;
+  text-align: center;
+  transition:
+    transform 160ms ease,
+    border-color 160ms ease,
+    box-shadow 160ms ease,
+    background 160ms ease;
+}
+
+.match-found-player.accepted {
+  border-color: rgba(118, 225, 154, 0.42);
+  background:
+    radial-gradient(circle at 50% 20%, rgba(66, 163, 95, 0.22), transparent 34%),
+    linear-gradient(180deg, rgba(14, 42, 28, 0.94), rgba(6, 12, 10, 0.98));
+  box-shadow: 0 0 0 1px rgba(118, 225, 154, 0.12) inset;
+  transform: translateY(-2px);
+}
+
+.match-found-player-label {
+  font-size: 0.72rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: #93bed0;
+}
+
+.match-found-player.accepted .match-found-player-label {
+  color: #baf5cb;
+}
+
+.match-found-player-status {
+  font-size: 1rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #f4e8cb;
+}
+
+.match-found-deadline {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.match-found-deadline-copy {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.8rem;
+}
+
+.match-found-deadline-label {
+  font-size: 0.7rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: #92afbd;
+}
+
+.match-found-deadline-copy strong {
+  font-size: 1.18rem;
+  letter-spacing: 0.08em;
+  color: #edf9ff;
+}
+
+.match-found-timer-line {
+  position: relative;
+  height: 10px;
+  border-radius: 999px;
+  overflow: hidden;
+  background: rgba(7, 10, 13, 0.9);
+  border: 1px solid rgba(231, 219, 192, 0.08);
+}
+
+.match-found-timer-fill {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  background: linear-gradient(90deg, rgba(79, 178, 219, 0.92), rgba(137, 221, 255, 0.96));
+}
+
+.match-found-timer-fill.left {
+  left: 50%;
+  transform: translateX(-100%);
+}
+
+.match-found-timer-fill.right {
+  right: 50%;
+  transform: translateX(100%);
+}
+
+.match-found-timer-line.danger .match-found-timer-fill {
+  background: linear-gradient(90deg, rgba(205, 81, 68, 0.94), rgba(255, 148, 125, 0.98));
+}
+
+.match-found-actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem;
+}
+
+.match-found-action {
+  min-height: 54px;
+  border-radius: 16px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  transition:
+    transform 140ms ease,
+    opacity 140ms ease,
+    box-shadow 140ms ease;
+}
+
+.match-found-action.primary {
+  background: linear-gradient(135deg, #1a546b, #2d86a2);
+  color: #edf9ff;
+}
+
+.match-found-action.primary.accepted {
+  background: linear-gradient(135deg, #1a5d3e, #2b8e63);
+  color: #ecfff3;
+  cursor: default;
+}
+
+.match-found-action.danger {
+  background: linear-gradient(135deg, #6d1820, #ab3142);
+  color: #fff0f1;
+}
+
+.match-found-action:disabled {
+  opacity: 0.8;
+}
+
+@keyframes match-found-in {
+  0% {
+    opacity: 0;
+    transform: translateY(14px) scale(0.98);
+  }
+
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
 .queue-mode-close {
   align-self: flex-end;
   width: 42px;

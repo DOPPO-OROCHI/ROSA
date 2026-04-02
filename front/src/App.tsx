@@ -262,6 +262,17 @@ type QueueStatusResponse = {
   opponent_user_id?: number;
   search_duration_sec?: number;
   penalty_until?: string;
+  accept_deadline_at?: string;
+  accepted_by_me?: boolean;
+  accepted_by_opponent?: boolean;
+};
+
+type AcceptQueueResponse = {
+  state: MatchmakingState;
+};
+
+type DeclineQueueResponse = {
+  state: MatchmakingState;
 };
 
 type DragAttackState = {
@@ -533,6 +544,15 @@ function unitSkillCooldownLeft(unit: UnitState): number {
   return unit.skill_cooldown_left ?? unit.SkillCooldownLeft ?? 0;
 }
 
+function isMatchState(value: unknown): value is MatchState {
+  return Boolean(
+    value &&
+      typeof value === "object" &&
+      "match_id" in value &&
+      "players" in value,
+  );
+}
+
 function heroAbilityManaCost(player: MatchPlayer): number {
   return player.hero_ability_mana_cost ?? player.HeroAbilityManaCost ?? 0;
 }
@@ -632,6 +652,7 @@ export default function App() {
   const eventPlaybackTimerRef = useRef<number | null>(null);
   const queuePrimedRef = useRef(false);
   const lastQueuedBatchRef = useRef<string>("");
+  const previousQueueStateRef = useRef<MatchmakingState>("idle");
 
   function pushToast(message: string, tone: ToastEntry["tone"] = "info") {
     const id = toastIdRef.current++;
@@ -1217,6 +1238,17 @@ export default function App() {
   }, [queueStatus.state]);
 
   useEffect(() => {
+    const previous = previousQueueStateRef.current;
+    previousQueueStateRef.current = queueStatus.state;
+    if (activeBattle) {
+      return;
+    }
+    if (previous === "pending_match" && queueStatus.state === "idle") {
+      void refreshMatches();
+    }
+  }, [activeBattle, queueStatus.state]);
+
+  useEffect(() => {
     if (!me || activeBattle) {
       return;
     }
@@ -1374,6 +1406,37 @@ export default function App() {
     });
     setQueueStatus(next);
     setQueuePanelOpen(false);
+  }
+
+  async function acceptMatchmakingReady() {
+    const next = await apiFetch<AcceptQueueResponse | MatchState>("/queue/accept", {
+      method: "POST",
+    });
+
+    if (isMatchState(next)) {
+      setQueueStatus({ state: "idle" });
+      setSelectedMatchId(next.match_id);
+      ingestMatchState(next, "prime");
+      pushToast("Match accepted. Entering battle.");
+      return;
+    }
+
+    setQueueStatus((prev) => ({
+      ...prev,
+      ...next,
+    }));
+    await refreshQueueStatus();
+  }
+
+  async function declineMatchmakingReady() {
+    const next = await apiFetch<DeclineQueueResponse>("/queue/decline", {
+      method: "POST",
+    });
+    setQueueStatus((prev) => ({
+      ...prev,
+      ...next,
+    }));
+    await refreshQueueStatus();
   }
 
   async function handleToggleMiniAppFullscreen() {
@@ -2202,6 +2265,27 @@ export default function App() {
     }
     return "00:00";
   }, [queueStatus]);
+  const pendingAcceptSecondsLeft = useMemo(() => {
+    if (queueStatus.state !== "pending_match") {
+      return 0;
+    }
+    return penaltySecondsLeft(queueStatus.accept_deadline_at);
+  }, [queueStatus]);
+  const pendingAcceptTimerLabel = useMemo(
+    () => formatElapsedTimer(pendingAcceptSecondsLeft),
+    [pendingAcceptSecondsLeft],
+  );
+  const pendingAcceptProgress = useMemo(() => {
+    if (queueStatus.state !== "pending_match") {
+      return 0;
+    }
+    const deadline = queueStatus.accept_deadline_at ? Date.parse(queueStatus.accept_deadline_at) : Number.NaN;
+    if (!Number.isFinite(deadline)) {
+      return 0;
+    }
+    const total = 10;
+    return Math.max(0, Math.min(1, pendingAcceptSecondsLeft / total));
+  }, [pendingAcceptSecondsLeft, queueStatus]);
   const canOpenQueuePanel = queueStatus.state === "idle" || queueStatus.state === "penalty";
 
   return (
@@ -2224,6 +2308,64 @@ export default function App() {
                 >
                   Отмена
                 </button>
+              </div>
+            )}
+            {queueStatus.state === "pending_match" && (
+              <div className="match-found-overlay">
+                <section className="match-found-panel">
+                  <span className="match-found-kicker">Matchmaking</span>
+                  <strong className="match-found-title">МАТЧ НАЙДЕН</strong>
+                  <span className="match-found-subtitle">
+                    {queueStatus.accepted_by_me || queueStatus.accepted_by_opponent
+                      ? "Ожидание остальных"
+                      : "Подтвердите готовность к бою"}
+                  </span>
+
+                  <div className="match-found-players">
+                    <div className={`match-found-player ${queueStatus.accepted_by_me ? "accepted" : ""}`}>
+                      <span className="match-found-player-label">ВЫ</span>
+                      <span className="match-found-player-status">
+                        {queueStatus.accepted_by_me ? "Принято" : "Ожидание"}
+                      </span>
+                    </div>
+                    <div className={`match-found-player ${queueStatus.accepted_by_opponent ? "accepted" : ""}`}>
+                      <span className="match-found-player-label">ПРОТИВНИК</span>
+                      <span className="match-found-player-status">
+                        {queueStatus.accepted_by_opponent ? "Принято" : "Ожидание"}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="match-found-deadline">
+                    <div className="match-found-deadline-copy">
+                      <span className="match-found-deadline-label">ДЕДЛАЙН</span>
+                      <strong>{pendingAcceptTimerLabel}</strong>
+                    </div>
+                    <div className={`match-found-timer-line ${pendingAcceptSecondsLeft <= 3 ? "danger" : ""}`}>
+                      <span
+                        className="match-found-timer-fill left"
+                        style={{ width: `${pendingAcceptProgress * 50}%` }}
+                      />
+                      <span
+                        className="match-found-timer-fill right"
+                        style={{ width: `${pendingAcceptProgress * 50}%` }}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="match-found-actions">
+                    <button
+                      className={`match-found-action primary ${queueStatus.accepted_by_me ? "accepted" : ""}`}
+                      onClick={() => void runTask(acceptMatchmakingReady)}
+                      disabled={Boolean(queueStatus.accepted_by_me)}
+                    >
+                      {queueStatus.accepted_by_me ? "ОЖИДАНИЕ" : "В БОЙ"}
+                    </button>
+                    <button className="match-found-action danger" onClick={() => void runTask(declineMatchmakingReady)}>
+                      ОТКАЗ
+                    </button>
+                  </div>
+                </section>
               </div>
             )}
             <div className="panel command-panel">

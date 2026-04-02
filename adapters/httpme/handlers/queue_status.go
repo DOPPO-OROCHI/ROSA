@@ -56,9 +56,12 @@ func QueueStatus(h QueueStatusHandler) http.HandlerFunc {
 			}
 		}
 		if state == queue.MatchMakingStatePendingMatch {
-			userInQueue, ok := h.queue.GetUserInQueue(int(user.UserID))
+			acceptedByMe, acceptedByOpponent, expiresAt, opponentUserID, ok := h.queue.GetPendingAcceptanceState(int(user.UserID))
 			if ok {
-				resp.OpponentUserID = userInQueue.MatchedWithUserID
+				resp.OpponentUserID = opponentUserID
+				resp.AcceptDeadlineAt = expiresAt
+				resp.AcceptedByMe = acceptedByMe
+				resp.AcceptedByOpponent = acceptedByOpponent
 			}
 		}
 		middleware.WriteJSON(w, http.StatusOK, resp)
