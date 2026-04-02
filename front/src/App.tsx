@@ -2579,9 +2579,9 @@ export default function App() {
         )}
         {!activeBattle && tab === "inventory" && (
           <section className="inventory-hub">
-            <section className="inventory-stage">
-              <div className="inventory-stage-backdrop" />
-              <div className="inventory-stage-frame">
+            <section className="inventory-stage home-stage">
+              <div className="inventory-stage-backdrop home-stage-backdrop" />
+              <div className="inventory-stage-frame home-stage-frame">
                 <div className="inventory-stage-topbar">
                   <button className="ghost-button inventory-back-button" onClick={() => setTab("home")}>
                     {"\u041d\u0410\u0417\u0410\u0414"}
@@ -2924,6 +2924,7 @@ export default function App() {
     </div>
   );
 }
+
 
 
 

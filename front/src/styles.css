@@ -6026,3 +6026,23 @@ pre {
     padding: 1rem 1rem 1.25rem;
   }
 }
+
+/* Inventory uses exact home stage shell */
+.war-shell.inventory-mode .inventory-stage.home-stage {
+  flex: 1;
+}
+
+.war-shell.inventory-mode .inventory-stage-frame.home-stage-frame {
+  display: grid;
+  grid-template-rows: 44px minmax(0, 1fr);
+  place-items: stretch;
+}
+
+.war-shell.inventory-mode .inventory-stage-backdrop.home-stage-backdrop {
+  z-index: 1;
+}
+
+.war-shell.inventory-mode .inventory-altar-grid {
+  position: relative;
+  z-index: 2;
+}
