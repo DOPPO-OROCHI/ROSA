@@ -6096,3 +6096,188 @@ pre {
     gap: 0.45rem;
   }
 }
+
+/* Inventory aligned with home screen frame */
+.inventory-stage-actions {
+  right: 128px;
+}
+
+.inventory-menu-altar {
+  width: min(100%, 1240px);
+  min-height: min(76vh, 760px);
+  max-height: 100%;
+  padding: 1.4rem;
+}
+
+.inventory-menu-altar.home-menu-altar {
+  width: min(100%, 1240px);
+  min-height: min(76vh, 760px);
+  justify-content: stretch;
+}
+
+.war-shell.inventory-mode .inventory-stage.home-stage {
+  min-height: calc(100vh - 108px - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+  min-height: calc(100dvh - 108px - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+}
+
+.war-shell.inventory-mode .inventory-stage-frame.home-stage-frame {
+  min-height: calc(100vh - 108px - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+  min-height: calc(100dvh - 108px - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+  display: grid;
+  place-items: center;
+  padding: 1.5rem 1.5rem 2rem;
+}
+
+.war-shell.inventory-mode .inventory-altar-grid {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  flex: 1;
+}
+
+.war-shell.inventory-mode .inventory-altar {
+  backdrop-filter: blur(12px);
+}
+
+.war-shell.inventory-mode .inventory-altar-copy--deck,
+.war-shell.inventory-mode .inventory-altar-copy--cards {
+  grid-template-rows: auto auto auto minmax(0, 1fr) auto;
+}
+
+.war-shell.inventory-mode .inventory-altar-copy--shop {
+  grid-template-rows: auto minmax(0, 1fr);
+}
+
+.war-shell.inventory-mode .inventory-altar-copy--deck .inventory-deck-grid,
+.war-shell.inventory-mode .inventory-altar-copy--cards .inventory-collection-grid {
+  min-height: 0;
+}
+
+.war-shell.inventory-mode .inventory-panel-head h2 {
+  font-size: 0.94rem;
+}
+
+.war-shell.inventory-mode .inventory-placeholder-panel {
+  height: 100%;
+}
+
+@media (max-width: 1180px) {
+  .inventory-menu-altar,
+  .inventory-menu-altar.home-menu-altar {
+    width: min(100%, 1040px);
+    min-height: min(78vh, 820px);
+    padding: 1.15rem;
+  }
+
+  .inventory-stage-actions {
+    right: 108px;
+  }
+
+  .inventory-altar-grid {
+    grid-template-columns: 0.82fr 1.18fr;
+    gap: 14px;
+  }
+}
+
+@media (max-width: 940px) {
+  .inventory-stage-actions {
+    right: 92px;
+    gap: 0.7rem;
+  }
+
+  .inventory-stage-actions .home-corner-button {
+    min-width: 132px;
+    min-height: 52px;
+    padding: 0.8rem 1rem;
+  }
+
+  .inventory-menu-altar,
+  .inventory-menu-altar.home-menu-altar {
+    width: 100%;
+    min-height: auto;
+    padding: 1rem;
+  }
+
+  .inventory-altar-grid {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto auto auto;
+    grid-template-areas:
+      "deck"
+      "cards"
+      "shop";
+    overflow: auto;
+    padding-right: 0.2rem;
+  }
+
+  .war-shell.inventory-mode .inventory-stage-frame.home-stage-frame {
+    place-items: stretch;
+    padding-top: 5.5rem;
+  }
+
+  .war-shell.inventory-mode .inventory-stage.home-stage {
+    overflow: auto;
+  }
+
+  .war-shell.inventory-mode .inventory-altar-copy--deck .inventory-deck-grid,
+  .war-shell.inventory-mode .inventory-altar-copy--cards .inventory-collection-grid {
+    overflow: visible;
+  }
+}
+
+@media (max-width: 720px) {
+  .inventory-stage-actions {
+    left: 14px;
+    right: 84px;
+    gap: 0.55rem;
+  }
+
+  .inventory-stage-actions .home-corner-button {
+    min-width: 0;
+    flex: 1;
+    font-size: 0.72rem;
+    letter-spacing: 0.12em;
+  }
+
+  .inventory-menu-altar,
+  .inventory-menu-altar.home-menu-altar {
+    border-radius: 28px;
+    padding: 0.85rem;
+  }
+
+  .inventory-altar-grid {
+    gap: 12px;
+  }
+
+  .war-shell.inventory-mode .inventory-collection-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-rows: none;
+    gap: 10px;
+  }
+
+  .war-shell.inventory-mode .inventory-deck-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-auto-rows: 104px;
+  }
+
+  .war-shell.inventory-mode .inventory-catalog-toolbar {
+    grid-template-columns: 1fr;
+  }
+
+  .war-shell.inventory-mode .catalog-sort {
+    justify-self: stretch;
+  }
+
+  .war-shell.inventory-mode .catalog-sort select {
+    min-width: 0;
+    width: 100%;
+  }
+
+  .war-shell.inventory-mode .inventory-placeholder-panel {
+    grid-template-columns: 1fr;
+  }
+
+  .war-shell.inventory-mode .inventory-placeholder-button {
+    width: 100%;
+    min-width: 0;
+  }
+}

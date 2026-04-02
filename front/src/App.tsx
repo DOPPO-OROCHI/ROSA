@@ -331,49 +331,49 @@ type SkillMeta = {
 
 const skillFallbackByTemplate: Record<string, SkillMeta> = {
   imperial_guardian: {
-    name: "Осколочные гранаты",
+    name: "РћСЃРєРѕР»РѕС‡РЅС‹Рµ РіСЂР°РЅР°С‚С‹",
     code: "damage_splash",
     trigger: SKILL_TRIGGER_ACTIVE,
     target: TARGET_ENEMY_SPLASH,
     cooldown: 2,
   },
   apply_buff: {
-    name: "Крупнокалиберные боеприпасы",
+    name: "РљСЂСѓРїРЅРѕРєР°Р»РёР±РµСЂРЅС‹Рµ Р±РѕРµРїСЂРёРїР°СЃС‹",
     code: "apply_buff",
     trigger: SKILL_TRIGGER_ACTIVE,
     target: TARGET_SELF,
     cooldown: 3,
   },
   machine_gun_crew: {
-    name: "Крупнокалиберные боеприпасы",
+    name: "РљСЂСѓРїРЅРѕРєР°Р»РёР±РµСЂРЅС‹Рµ Р±РѕРµРїСЂРёРїР°СЃС‹",
     code: "apply_buff",
     trigger: SKILL_TRIGGER_ACTIVE,
     target: TARGET_SELF,
     cooldown: 3,
   },
   snipers: {
-    name: "Устранение",
+    name: "РЈСЃС‚СЂР°РЅРµРЅРёРµ",
     code: "damage_single",
     trigger: SKILL_TRIGGER_ACTIVE,
     target: TARGET_ENEMY_UNIT,
     cooldown: 5,
   },
   cursed_pack: {
-    name: "Рваные раны",
+    name: "Р РІР°РЅС‹Рµ СЂР°РЅС‹",
     code: "apply_debuff",
     trigger: SKILL_TRIGGER_ACTIVE,
     target: TARGET_ENEMY_UNIT,
     cooldown: 3,
   },
   cyber_scout: {
-    name: "Сканирование местности",
+    name: "РЎРєР°РЅРёСЂРѕРІР°РЅРёРµ РјРµСЃС‚РЅРѕСЃС‚Рё",
     code: "reveal_enemy_hand",
     trigger: SKILL_TRIGGER_ACTIVE,
     target: TARGET_NONE,
     cooldown: 3,
   },
   succubus: {
-    name: "Ужас",
+    name: "РЈР¶Р°СЃ",
     code: "inc_enemy_cd_single",
     trigger: SKILL_TRIGGER_ACTIVE,
     target: TARGET_ENEMY_UNIT,
@@ -2039,7 +2039,7 @@ export default function App() {
               }
               void runTask(() => startSkillCast(unit));
             }}
-            title={`${skillName || "Skill"}${skillTarget ? ` • ${targetLabel(skillTarget)}` : ""}`}
+            title={`${skillName || "Skill"}${skillTarget ? ` вЂў ${targetLabel(skillTarget)}` : ""}`}
             role="button"
             tabIndex={0}
             onKeyDown={(event) => {
@@ -2297,7 +2297,7 @@ export default function App() {
               <div className={`queue-status-banner ${queueStatus.state === "penalty" ? "danger" : ""}`}>
                 <div className="queue-status-copy">
                   <span className="queue-status-kicker">
-                    {queueStatus.state === "searching" ? "ПОИСК МАТЧА" : "ПОИСК НЕДОСТУПЕН"}
+                    {queueStatus.state === "searching" ? "РџРћРРЎРљ РњРђРўР§Рђ" : "РџРћРРЎРљ РќР•Р”РћРЎРўРЈРџР•Рќ"}
                   </span>
                   <strong>{matchmakingTimerLabel}</strong>
                 </div>
@@ -2306,7 +2306,7 @@ export default function App() {
                   onClick={() => void runTask(leaveMatchmakingQueue)}
                   disabled={queueStatus.state === "penalty"}
                 >
-                  Отмена
+                  РћС‚РјРµРЅР°
                 </button>
               </div>
             )}
@@ -2314,31 +2314,31 @@ export default function App() {
               <div className="match-found-overlay">
                 <section className="match-found-panel">
                   <span className="match-found-kicker">Matchmaking</span>
-                  <strong className="match-found-title">МАТЧ НАЙДЕН</strong>
+                  <strong className="match-found-title">РњРђРўР§ РќРђР™Р”Р•Рќ</strong>
                   <span className="match-found-subtitle">
                     {queueStatus.accepted_by_me || queueStatus.accepted_by_opponent
-                      ? "Ожидание остальных"
-                      : "Подтвердите готовность к бою"}
+                      ? "РћР¶РёРґР°РЅРёРµ РѕСЃС‚Р°Р»СЊРЅС‹С…"
+                      : "РџРѕРґС‚РІРµСЂРґРёС‚Рµ РіРѕС‚РѕРІРЅРѕСЃС‚СЊ Рє Р±РѕСЋ"}
                   </span>
 
                   <div className="match-found-players">
                     <div className={`match-found-player ${queueStatus.accepted_by_me ? "accepted" : ""}`}>
-                      <span className="match-found-player-label">ВЫ</span>
+                      <span className="match-found-player-label">Р’Р«</span>
                       <span className="match-found-player-status">
-                        {queueStatus.accepted_by_me ? "Принято" : "Ожидание"}
+                        {queueStatus.accepted_by_me ? "РџСЂРёРЅСЏС‚Рѕ" : "РћР¶РёРґР°РЅРёРµ"}
                       </span>
                     </div>
                     <div className={`match-found-player ${queueStatus.accepted_by_opponent ? "accepted" : ""}`}>
-                      <span className="match-found-player-label">ПРОТИВНИК</span>
+                      <span className="match-found-player-label">РџР РћРўРР’РќРРљ</span>
                       <span className="match-found-player-status">
-                        {queueStatus.accepted_by_opponent ? "Принято" : "Ожидание"}
+                        {queueStatus.accepted_by_opponent ? "РџСЂРёРЅСЏС‚Рѕ" : "РћР¶РёРґР°РЅРёРµ"}
                       </span>
                     </div>
                   </div>
 
                   <div className="match-found-deadline">
                     <div className="match-found-deadline-copy">
-                      <span className="match-found-deadline-label">ДЕДЛАЙН</span>
+                      <span className="match-found-deadline-label">Р”Р•Р”Р›РђР™Рќ</span>
                       <strong>{pendingAcceptTimerLabel}</strong>
                     </div>
                     <div className={`match-found-timer-line ${pendingAcceptSecondsLeft <= 3 ? "danger" : ""}`}>
@@ -2359,10 +2359,10 @@ export default function App() {
                       onClick={() => void runTask(acceptMatchmakingReady)}
                       disabled={Boolean(queueStatus.accepted_by_me)}
                     >
-                      {queueStatus.accepted_by_me ? "ОЖИДАНИЕ" : "В БОЙ"}
+                      {queueStatus.accepted_by_me ? "РћР–РР”РђРќРР•" : "Р’ Р‘РћР™"}
                     </button>
                     <button className="match-found-action danger" onClick={() => void runTask(declineMatchmakingReady)}>
-                      ОТКАЗ
+                      РћРўРљРђР—
                     </button>
                   </div>
                 </section>
@@ -2436,12 +2436,12 @@ export default function App() {
                       disabled={!canOpenQueuePanel}
                     >
                       {queueStatus.state === "penalty"
-                        ? "ПОИСК НЕДОСТУПЕН"
+                        ? "РџРћРРЎРљ РќР•Р”РћРЎРўРЈРџР•Рќ"
                         : queueStatus.state === "pending_match"
-                          ? "МАТЧ НАЙДЕН"
+                          ? "РњРђРўР§ РќРђР™Р”Р•Рќ"
                           : queueStatus.state === "searching"
-                            ? "ПОИСК ИДЕТ"
-                            : "НАЙТИ МАТЧ"}
+                            ? "РџРћРРЎРљ РР”Р•Рў"
+                            : "РќРђР™РўР РњРђРўР§"}
                     </button>
                     <button className="home-main-button secondary" onClick={() => setTab("inventory")}>
                       {"\u041a\u041e\u041b\u041e\u0414\u0410 \u041a\u0410\u0420\u0422"}
@@ -2495,7 +2495,7 @@ export default function App() {
                     </div>
                   )}
                   <div className="hero-picker-head">
-                    <strong>Выбери героя</strong>
+                    <strong>Р’С‹Р±РµСЂРё РіРµСЂРѕСЏ</strong>
                   </div>
                   <div className="hero-picker-list">
                     {heroes.map((hero) => {
@@ -2519,7 +2519,7 @@ export default function App() {
                               });
                             }}
                           >
-                            Выбрать
+                            Р’С‹Р±СЂР°С‚СЊ
                           </button>
                         </article>
                       );
@@ -2561,8 +2561,8 @@ export default function App() {
                   >
                     <span className={`queue-mode-check ${selectedQueueMode === "ranked" ? "active" : ""}`} />
                     <span className="queue-mode-option-copy">
-                      <strong>Рейтинговая игра</strong>
-                      <span>Бой за рейтинг и честный матчмейкинг</span>
+                      <strong>Р РµР№С‚РёРЅРіРѕРІР°СЏ РёРіСЂР°</strong>
+                      <span>Р‘РѕР№ Р·Р° СЂРµР№С‚РёРЅРі Рё С‡РµСЃС‚РЅС‹Р№ РјР°С‚С‡РјРµР№РєРёРЅРі</span>
                     </span>
                   </button>
                   <button
@@ -2570,7 +2570,7 @@ export default function App() {
                     disabled={!selectedQueueMode}
                     onClick={() => void runTask(joinMatchmakingQueue)}
                   >
-                    НАЙТИ
+                    РќРђР™РўР
                   </button>
                 </aside>
               </div>
@@ -2579,15 +2579,34 @@ export default function App() {
         )}
         {!activeBattle && tab === "inventory" && (
           <section className="inventory-hub">
-            <section className="inventory-stage home-stage">
+            <section
+              className="inventory-stage home-stage"
+              style={
+                {
+                  "--hero-panel-image": `url(${resolveImageSrc(selectedHeroImageKey)})`,
+                } as CSSProperties
+              }
+            >
               <div className="inventory-stage-backdrop home-stage-backdrop" />
               <div className="inventory-stage-frame home-stage-frame">
-                <div className="inventory-stage-topbar">
-                  <button className="ghost-button inventory-back-button" onClick={() => setTab("home")}>
+                <div className="home-stage-actions inventory-stage-actions">
+                  <button className="home-corner-button" onClick={() => setTab("home")}>
                     {"\u041d\u0410\u0417\u0410\u0414"}
                   </button>
+                  <button className="home-corner-button" onClick={() => void runTask(saveDefaultDeck)}>
+                    {"\u0421\u0422\u0410\u041d\u0414\u0410\u0420\u0422"}
+                  </button>
                 </div>
-                <div className="inventory-altar-grid">
+                <button
+                  className={`avatar-trigger home-profile-trigger ${loading ? "busy" : ""}`}
+                  onClick={() => setShowProfile(true)}
+                >
+                  <span className="avatar-core">
+                    {(me?.first_name?.[0] || me?.username?.[0] || "?").toUpperCase()}
+                  </span>
+                </button>
+                <div className="inventory-menu-altar home-menu-altar">
+                  <div className="inventory-altar-grid">
                   <section className="panel inventory-altar inventory-altar-deck">
                     <div className="inventory-altar-copy inventory-altar-copy--deck">
                       <div className="section-head inventory-panel-head inventory-panel-head-row">
@@ -2833,13 +2852,14 @@ export default function App() {
                         </div>
                         <button
                           className="home-main-button tertiary inventory-placeholder-button"
-                          onClick={() => pushToast("�����-������, ����� ����� �������", "info")}
+                          onClick={() => pushToast("Когда-нибудь, здесь будет магазин", "info")}
                         >
                           {"\u041D\u0415 \u0421\u0415\u0419\u0427\u0410\u0421"}
                         </button>
                       </div>
                     </div>
                   </section>
+                  </div>
                 </div>
               </div>
             </section>
