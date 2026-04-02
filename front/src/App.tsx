@@ -2378,6 +2378,14 @@ export default function App() {
                 }
               >
                 <button
+                  className="ghost-button miniapp-fullscreen-button"
+                  onClick={() => void runTask(handleToggleMiniAppFullscreen)}
+                  title={miniAppFullscreen ? "Exit fullscreen" : "Open fullscreen"}
+                  aria-label={miniAppFullscreen ? "Exit fullscreen" : "Open fullscreen"}
+                >
+                  {miniAppFullscreen ? "WIN" : "FULL"}
+                </button>
+                <button
                   className={`avatar-trigger hero-profile-mini ${loading ? "busy" : ""}`}
                   onClick={() => setShowProfile(true)}
                 >
@@ -2548,6 +2556,14 @@ export default function App() {
             <div className="inventory-back-row">
               <button className="ghost-button" onClick={() => setTab("home")}>
                 {"<"} Back
+              </button>
+              <button
+                className="ghost-button miniapp-fullscreen-toggle"
+                onClick={() => void runTask(handleToggleMiniAppFullscreen)}
+                title={miniAppFullscreen ? "Exit fullscreen" : "Open fullscreen"}
+                aria-label={miniAppFullscreen ? "Exit fullscreen" : "Open fullscreen"}
+              >
+                {miniAppFullscreen ? "Window" : "Fullscreen"}
               </button>
             </div>
             <div className="panel inventory-panel">

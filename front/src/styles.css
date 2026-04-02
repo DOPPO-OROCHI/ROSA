@@ -255,7 +255,9 @@ pre {
 
 .inventory-back-row {
   display: flex;
-  justify-content: flex-start;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.75rem;
 }
 
 .view-frame {
@@ -788,6 +790,26 @@ pre {
 
 .hero-profile-mini .avatar-core {
   font-size: 0.82rem;
+}
+
+.miniapp-fullscreen-button {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  min-width: 52px;
+  min-height: 38px;
+  padding: 0.45rem 0.55rem !important;
+  border-radius: 999px !important;
+  background: rgba(7, 10, 13, 0.76) !important;
+  color: #f1e2bd !important;
+  letter-spacing: 0.08em;
+  font-size: 0.66rem;
+  line-height: 1;
+  z-index: 5;
+}
+
+.miniapp-fullscreen-toggle {
+  min-width: 118px;
 }
 
 .hero-banner-top::before {
