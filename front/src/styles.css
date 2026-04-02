@@ -6046,3 +6046,53 @@ pre {
   position: relative;
   z-index: 2;
 }
+
+/* Inventory altar content */
+.inventory-altar-copy {
+  align-items: stretch;
+  justify-content: flex-start;
+  text-align: left;
+}
+
+.inventory-altar-copy--deck,
+.inventory-altar-copy--cards {
+  display: grid;
+  grid-template-rows: auto auto auto minmax(0, 1fr) auto;
+  gap: 0.85rem;
+}
+
+.inventory-altar-copy--deck {
+  grid-template-rows: auto auto auto minmax(0, 1fr);
+}
+
+.inventory-altar-copy--shop {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  gap: 0.7rem;
+}
+
+.inventory-altar-copy--deck .inventory-deck-grid {
+  min-height: 0;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.6rem;
+  align-content: start;
+}
+
+.inventory-altar-copy--cards .inventory-collection-grid {
+  min-height: 0;
+}
+
+.inventory-altar-copy--shop .inventory-placeholder-panel {
+  flex: 1;
+}
+
+@media (orientation: landscape) and (max-height: 740px) {
+  .inventory-altar-copy--deck,
+  .inventory-altar-copy--cards {
+    gap: 0.65rem;
+  }
+
+  .inventory-altar-copy--deck .inventory-deck-grid {
+    gap: 0.45rem;
+  }
+}
