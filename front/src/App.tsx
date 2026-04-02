@@ -2402,54 +2402,56 @@ export default function App() {
                   </span>
                 </button>
 
-                <button className="home-character-button" onClick={() => setHeroPickerOpen(true)}>
-                  <div className="home-character-frame">
-                    {renderHeroGlyph(
-                      me?.selected_hero_code || "unassigned",
-                      selectedHeroImageKey,
-                      "large",
-                    )}
-                  </div>
-                  <div className="home-character-meta">
-                    <strong>{me?.first_name || me?.username || "No profile loaded"}</strong>
-                    <span>{me?.selected_hero_name || "No Hero Assigned"}</span>
-                    <span className="muted">Rating {me?.rating ?? "-"}</span>
-                  </div>
-                </button>
+                <div className="home-menu-altar">
+                  <button className="home-character-button" onClick={() => setHeroPickerOpen(true)}>
+                    <div className="home-character-frame">
+                      {renderHeroGlyph(
+                        me?.selected_hero_code || "unassigned",
+                        selectedHeroImageKey,
+                        "large",
+                      )}
+                    </div>
+                    <div className="home-character-meta">
+                      <strong>{me?.first_name || me?.username || "No profile loaded"}</strong>
+                      <span>{me?.selected_hero_name || "No Hero Assigned"}</span>
+                      <span className="muted">Rating {me?.rating ?? "-"}</span>
+                    </div>
+                  </button>
 
-                <div className="home-menu-stack">
-                  {!me && (
-                    <button className="home-main-button secondary" onClick={() => void runTask(retryTelegramAuth)}>
-                      Retry Auth
+                  <div className="home-menu-stack">
+                    {!me && (
+                      <button className="home-main-button secondary" onClick={() => void runTask(retryTelegramAuth)}>
+                        Retry Auth
+                      </button>
+                    )}
+                    <button
+                      className={`home-main-button ${queueStatus.state === "penalty" ? "danger" : ""}`}
+                      onClick={() => {
+                        if (!canOpenQueuePanel) {
+                          return;
+                        }
+                        setQueuePanelOpen(true);
+                      }}
+                      disabled={!canOpenQueuePanel}
+                    >
+                      {queueStatus.state === "penalty"
+                        ? "–ü–û–ò–°–ö –ù–ï–î–û–°–¢–£–ü–ï–ù"
+                        : queueStatus.state === "pending_match"
+                          ? "–ú–ê–¢–ß –ù–ê–ô–î–ï–ù"
+                          : queueStatus.state === "searching"
+                            ? "–ü–û–ò–°–ö –ò–î–ï–¢"
+                            : "–ù–ê–ô–¢–ò –ú–ê–¢–ß"}
                     </button>
-                  )}
-                  <button
-                    className={`home-main-button ${queueStatus.state === "penalty" ? "danger" : ""}`}
-                    onClick={() => {
-                      if (!canOpenQueuePanel) {
-                        return;
-                      }
-                      setQueuePanelOpen(true);
-                    }}
-                    disabled={!canOpenQueuePanel}
-                  >
-                    {queueStatus.state === "penalty"
-                      ? "–ü–û–ò–°–ö –ù–ï–î–û–°–¢–£–ü–ï–ù"
-                      : queueStatus.state === "pending_match"
-                        ? "–ú–ê–¢–ß –ù–ê–ô–î–ï–ù"
-                        : queueStatus.state === "searching"
-                          ? "–ü–û–ò–°–ö –ò–î–ï–¢"
-                          : "–ù–ê–ô–¢–ò –ú–ê–¢–ß"}
-                  </button>
-                  <button className="home-main-button secondary" onClick={() => setTab("inventory")}>
-                     ŒÀŒƒ¿  ¿–“
-                  </button>
-                  <button
-                    className="home-main-button tertiary"
-                    onClick={() => pushToast(" Ó„‰‡-ÌË·Û‰¸, ÚÛÚ ·Û‰ÂÚ Ï‡„‡ÁËÌ", "info")}
-                  >
-                    Ã¿√¿«»Õ
-                  </button>
+                    <button className="home-main-button secondary" onClick={() => setTab("inventory")}>
+                       ŒÀŒƒ¿  ¿–“
+                    </button>
+                    <button
+                      className="home-main-button tertiary"
+                      onClick={() => pushToast(" Ó„‰‡-ÌË·Û‰¸, ÚÛÚ ·Û‰ÂÚ Ï‡„‡ÁËÌ", "info")}
+                    >
+                      Ã¿√¿«»Õ
+                    </button>
+                  </div>
                 </div>
               </div>
             </section>
@@ -3129,5 +3131,6 @@ export default function App() {
     </div>
   );
 }
+
 
 

@@ -367,11 +367,8 @@ pre {
   z-index: 2;
   height: 100%;
   min-height: 620px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1.2rem;
+  display: grid;
+  place-items: center;
   padding: 1.5rem 1.5rem 2rem;
 }
 
@@ -382,8 +379,40 @@ pre {
   z-index: 3;
 }
 
+.home-menu-altar {
+  position: relative;
+  width: min(100%, 620px);
+  min-height: 520px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1.05rem;
+  padding: 1.6rem 1.8rem 1.7rem;
+  border-radius: 36px;
+  border: 1px solid rgba(231, 219, 192, 0.12);
+  background:
+    radial-gradient(circle at 50% 0%, rgba(139, 92, 56, 0.18), transparent 30%),
+    linear-gradient(180deg, rgba(15, 20, 27, 0.84), rgba(8, 10, 14, 0.92));
+  box-shadow:
+    0 28px 64px rgba(0, 0, 0, 0.36),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.02);
+  backdrop-filter: blur(10px);
+}
+
+.home-menu-altar::before {
+  content: "";
+  position: absolute;
+  inset: auto 22px 18px 22px;
+  height: 26px;
+  border-radius: 999px;
+  background: radial-gradient(circle at center, rgba(236, 182, 116, 0.12), transparent 72%);
+  pointer-events: none;
+}
+
 .home-character-button {
-  margin-top: 0.2rem;
+  position: relative;
+  margin-top: 0;
   padding: 0;
   border-radius: 0;
   background: transparent;
@@ -398,7 +427,7 @@ pre {
   width: min(100%, 320px);
   display: flex;
   justify-content: center;
-  padding: 0.2rem 0 0;
+  padding: 0.15rem 0 0;
 }
 
 .home-character-frame .hero-glyph.large {
@@ -437,7 +466,7 @@ pre {
 }
 
 .home-menu-stack {
-  width: min(100%, 460px);
+  width: min(100%, 360px);
   display: flex;
   flex-direction: column;
   gap: 0.95rem;
@@ -4079,6 +4108,12 @@ pre {
     padding: 1.2rem 2.2rem 1.8rem;
   }
 
+  .home-menu-altar {
+    width: min(100%, 560px);
+    min-height: 500px;
+    padding: 1.45rem 1.7rem 1.55rem;
+  }
+
   .home-character-frame .hero-glyph.large {
     width: 246px;
     height: 246px;
@@ -4089,7 +4124,7 @@ pre {
   }
 
   .home-menu-stack {
-    width: min(100%, 420px);
+    width: min(100%, 340px);
     gap: 0.8rem;
   }
 
@@ -4330,13 +4365,21 @@ pre {
     padding: 0.85rem 1rem 1.15rem;
   }
 
+  .home-menu-altar {
+    width: min(100%, 470px);
+    min-height: 390px;
+    gap: 0.8rem;
+    padding: 1.05rem 1.15rem 1.15rem;
+    border-radius: 28px;
+  }
+
   .home-character-frame .hero-glyph.large {
     width: 180px;
     height: 180px;
   }
 
   .home-menu-stack {
-    width: min(100%, 390px);
+    width: min(100%, 290px);
     gap: 0.7rem;
   }
 
