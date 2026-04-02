@@ -2587,12 +2587,23 @@ export default function App() {
                     {"\u041d\u0410\u0417\u0410\u0414"}
                   </button>
                 </div>
-                <section className="panel inventory-blank-panel inventory-panel">
-                  <div className="inventory-blank-copy">
-                    <strong>{"\u042d\u041a\u0420\u0410\u041d \u041f\u0415\u0420\u0415\u0421\u0411\u041e\u0420\u041a\u0418"}</strong>
-                    <p>{"\u0421\u0442\u0430\u0440\u044b\u0439 \u0440\u0430\u0437\u0434\u0435\u043b \u043a\u043e\u043b\u043e\u0434 \u0438 \u043a\u0430\u0440\u0442 \u0443\u0431\u0440\u0430\u043d. \u0421\u043b\u0435\u0434\u0443\u044e\u0449\u0438\u043c \u0448\u0430\u0433\u043e\u043c \u0441\u043e\u0431\u0435\u0440\u0435\u043c \u0435\u0433\u043e \u0437\u0430\u043d\u043e\u0432\u043e \u043f\u043e\u0434 fullscreen-\u0433\u0435\u043e\u043c\u0435\u0442\u0440\u0438\u044e."}</p>
-                  </div>
-                </section>
+                <div className="inventory-altar-grid">
+                  <section className="panel inventory-altar inventory-altar-deck">
+                    <div className="inventory-altar-copy">
+                      <strong>{"\u0414\u0415\u041a\u0410 \u0418\u0413\u0420\u041e\u041a\u0410"}</strong>
+                    </div>
+                  </section>
+                  <section className="panel inventory-altar inventory-altar-cards">
+                    <div className="inventory-altar-copy">
+                      <strong>{"\u0412\u0421\u0415 \u041a\u0410\u0420\u0422\u042b \u0418\u0413\u0420\u041e\u041a\u0410"}</strong>
+                    </div>
+                  </section>
+                  <section className="panel inventory-altar inventory-altar-shop">
+                    <div className="inventory-altar-copy">
+                      <strong>{"\u041c\u0410\u0413\u0410\u0417\u0418\u041d"}</strong>
+                    </div>
+                  </section>
+                </div>
               </div>
             </section>
           </section>
