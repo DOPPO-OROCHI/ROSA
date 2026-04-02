@@ -2289,7 +2289,7 @@ export default function App() {
   const canOpenQueuePanel = queueStatus.state === "idle" || queueStatus.state === "penalty";
 
   return (
-    <div className={`war-shell ${activeBattle ? "battle-mode" : ""}`}>
+    <div className={`war-shell ${activeBattle ? "battle-mode" : ""} ${!activeBattle && tab === "home" ? "home-mode" : ""}`}>
       <main className="view-frame">
         {!activeBattle && tab === "home" && (
           <section className="home-hub">
@@ -3132,6 +3132,7 @@ export default function App() {
     </div>
   );
 }
+
 
 
 
