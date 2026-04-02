@@ -6103,6 +6103,8 @@ pre {
 }
 
 .inventory-menu-altar {
+  grid-row: 2;
+  align-self: stretch;
   width: min(100%, 1240px);
   min-height: min(76vh, 760px);
   max-height: 100%;
@@ -6123,8 +6125,6 @@ pre {
 .war-shell.inventory-mode .inventory-stage-frame.home-stage-frame {
   min-height: calc(100vh - 108px - env(safe-area-inset-top) - env(safe-area-inset-bottom));
   min-height: calc(100dvh - 108px - env(safe-area-inset-top) - env(safe-area-inset-bottom));
-  display: grid;
-  place-items: center;
   padding: 1.5rem 1.5rem 2rem;
 }
 
