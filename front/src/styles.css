@@ -684,8 +684,8 @@ pre {
   min-height: 0;
   display: grid;
   grid-template-rows: auto 1fr;
-  gap: 0.85rem;
-  padding: 0.85rem 1rem 0.9rem;
+  gap: 0.55rem;
+  padding: 0.55rem 0.7rem 0.65rem;
 }
 
 .inventory-stage-topbar {
@@ -694,8 +694,10 @@ pre {
 }
 
 .inventory-back-button {
-  min-width: 112px;
-  min-height: 44px;
+  min-width: 96px;
+  min-height: 36px;
+  padding: 0.45rem 0.7rem;
+  font-size: 0.72rem;
   letter-spacing: 0.14em;
   text-transform: uppercase;
 }
@@ -704,18 +706,19 @@ pre {
   min-height: 0;
   display: grid;
   grid-template-columns: minmax(300px, 0.6fr) minmax(0, 1.4fr);
-  gap: 0.85rem;
+  gap: 0.55rem;
 }
 
 .inventory-left-column {
   min-height: 0;
   display: grid;
-  grid-template-rows: minmax(0, 1fr) minmax(120px, 0.34fr);
-  gap: 0.85rem;
+  grid-template-rows: minmax(0, 1fr) minmax(90px, 0.22fr);
+  gap: 0.55rem;
 }
 
 .inventory-panel {
   min-height: 0;
+  padding: 0.72rem;
 }
 
 .inventory-deck-panel,
@@ -778,7 +781,7 @@ pre {
 }
 
 .inventory-panel-head h2 {
-  font-size: 0.9rem;
+  font-size: 0.8rem;
   letter-spacing: 0.12em;
   text-transform: uppercase;
   color: #f1ddb2;
@@ -789,7 +792,7 @@ pre {
 }
 
 .inventory-panel-kicker {
-  font-size: 0.72rem;
+  font-size: 0.62rem;
   letter-spacing: 0.18em;
   text-transform: uppercase;
   color: #90b2bf;
@@ -801,9 +804,9 @@ pre {
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  gap: 0.8rem;
+  gap: 0.5rem;
   text-align: center;
-  padding: 1rem;
+  padding: 0.6rem;
 }
 
 .inventory-catalog-panel {
@@ -2047,6 +2050,126 @@ pre {
 
 .asset-frame.compact {
   min-height: 54px;
+}
+
+.deck-summary {
+  padding: 0.65rem 0.8rem;
+}
+
+.deck-summary span {
+  font-size: 0.74rem;
+}
+
+.deck-summary strong {
+  font-size: 1rem;
+}
+
+.deck-warning {
+  margin: 0;
+  font-size: 0.68rem;
+  line-height: 1.2;
+}
+
+.catalog-kind-switch .nav-pill {
+  min-height: 34px;
+  padding: 0.45rem 0.6rem;
+  font-size: 0.64rem;
+}
+
+.catalog-sort {
+  font-size: 0.64rem;
+}
+
+.catalog-sort select {
+  min-width: 124px;
+  padding: 0.35rem 0.45rem;
+  font-size: 0.7rem;
+}
+
+.catalog-pager {
+  gap: 0.45rem;
+}
+
+.catalog-pager .ghost-button {
+  min-width: 36px;
+  min-height: 30px;
+}
+
+.catalog-pager span {
+  font-size: 0.68rem;
+}
+
+@media (orientation: landscape) {
+  .inventory-layout {
+    grid-template-columns: minmax(270px, 0.52fr) minmax(0, 1.48fr);
+    gap: 0.5rem;
+  }
+
+  .inventory-left-column {
+    grid-template-rows: minmax(0, 1fr) minmax(82px, 0.18fr);
+    gap: 0.5rem;
+  }
+
+  .inventory-panel {
+    padding: 0.6rem;
+  }
+
+  .inventory-panel-head h2 {
+    font-size: 0.74rem;
+  }
+
+  .catalog-panel {
+    gap: 0.35rem;
+  }
+
+  .catalog-toolbar {
+    gap: 0.45rem;
+  }
+}
+
+@media (orientation: landscape) and (max-height: 560px) {
+  .inventory-stage-frame {
+    gap: 0.42rem;
+    padding: 0.42rem 0.58rem 0.5rem;
+  }
+
+  .inventory-back-button {
+    min-width: 84px;
+    min-height: 32px;
+    font-size: 0.66rem;
+  }
+
+  .inventory-layout {
+    grid-template-columns: minmax(248px, 0.5fr) minmax(0, 1.5fr);
+    gap: 0.42rem;
+  }
+
+  .inventory-left-column {
+    grid-template-rows: minmax(0, 1fr) minmax(72px, 0.14fr);
+    gap: 0.42rem;
+  }
+
+  .inventory-panel {
+    padding: 0.48rem;
+  }
+
+  .inventory-panel-head h2 {
+    font-size: 0.68rem;
+  }
+
+  .catalog-kind-switch .nav-pill {
+    min-height: 30px;
+    font-size: 0.58rem;
+  }
+
+  .catalog-sort {
+    font-size: 0.58rem;
+  }
+
+  .catalog-sort select {
+    min-width: 108px;
+    font-size: 0.64rem;
+  }
 }
 
 .deck-summary {
