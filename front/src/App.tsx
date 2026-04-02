@@ -613,6 +613,7 @@ export default function App() {
   const [cards, setCards] = useState<CardsResponse | null>(null);
   const [deckEntries, setDeckEntries] = useState<DeckEntry[]>(defaultDeck);
   const [deckInspectorKey, setDeckInspectorKey] = useState<string | null>(null);
+  const [deckOverviewOpen, setDeckOverviewOpen] = useState(false);
   const [heroPickerOpen, setHeroPickerOpen] = useState(false);
   const [heldHero, setHeldHero] = useState<OwnedHero | null>(null);
   const [cardPreview, setCardPreview] = useState<CardPreview | null>(null);
@@ -2219,6 +2220,8 @@ export default function App() {
   }, [cardCatalog, deckEntries]);
   const inspectedDeckGroup = deckGroups.find((group) => group.key === deckInspectorKey) ?? null;
   const inspectedDeckMeta = inspectedDeckGroup ? cardCatalog.get(inspectedDeckGroup.templateId) : undefined;
+  const deckPreviewGroups = deckGroups.slice(0, 4);
+  const hiddenDeckGroups = Math.max(0, deckGroups.length - deckPreviewGroups.length);
   const deckCountMap = useMemo(() => {
     const next = new Map<string, number>();
     for (const entry of deckEntries) {
@@ -2572,12 +2575,19 @@ export default function App() {
                 <strong>{deckTotal}</strong>
               </div>
               {!deckReady && <p className="deck-warning">Дека не собрана (нужно 20 карт)</p>}
-              <div className="deck-grid">
-                {deckGroups.map((group) => (
+              <button
+                className={`deck-preview-shell ${deckGroups.length === 0 ? "empty" : ""}`}
+                onClick={() => setDeckOverviewOpen(true)}
+              >
+                <div className="deck-grid deck-grid-preview">
+                {deckPreviewGroups.map((group) => (
                   <button
                     key={group.key}
                     className="deck-slot filled interactive"
-                    onClick={() => setDeckInspectorKey(group.key)}
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      setDeckOverviewOpen(true);
+                    }}
                   >
                     <AssetImage
                       imageKey={group.imageKey}
@@ -2592,12 +2602,52 @@ export default function App() {
                     <span className="deck-slot-count">x{group.count}</span>
                   </button>
                 ))}
+                {hiddenDeckGroups > 0 && (
+                  <article className="deck-slot deck-slot-more">
+                    <span>+{hiddenDeckGroups}</span>
+                  </article>
+                )}
                 {deckGroups.length === 0 && (
                   <article className="deck-slot empty deck-slot-empty-wide">
                     <span>Deck is empty</span>
                   </article>
                 )}
-              </div>
+                </div>
+              </button>
+              {deckOverviewOpen && (
+                <div className="deck-overview-overlay" onClick={() => setDeckOverviewOpen(false)}>
+                  <div className="deck-overview-window" onClick={(event) => event.stopPropagation()}>
+                    <button className="deck-overview-close" onClick={() => setDeckOverviewOpen(false)}>
+                      X
+                    </button>
+                    <div className="deck-overview-head">
+                      <strong>Deck Doctrine</strong>
+                      <span>{deckTotal} cards</span>
+                    </div>
+                    <div className="deck-grid deck-grid-overview">
+                      {deckGroups.map((group) => (
+                        <button
+                          key={`${group.key}:overview`}
+                          className="deck-slot filled interactive"
+                          onClick={() => setDeckInspectorKey(group.key)}
+                        >
+                          <AssetImage
+                            imageKey={group.imageKey}
+                            alt={group.name}
+                            fallbackSrc={resolveCardFallbackSrc()}
+                            className="deck-slot-media"
+                          />
+                          <div className="deck-slot-meta">
+                            <span className="deck-slot-mana">{group.mana}</span>
+                            <strong>{group.name}</strong>
+                          </div>
+                          <span className="deck-slot-count">x{group.count}</span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
               {inspectedDeckGroup && (
                 <div className="deck-fan-overlay" onClick={() => setDeckInspectorKey(null)}>
                   <div className="deck-fan-window" onClick={(event) => event.stopPropagation()}>

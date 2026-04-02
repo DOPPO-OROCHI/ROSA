@@ -1640,6 +1640,100 @@ pre {
   gap: 0.55rem;
 }
 
+.deck-preview-shell {
+  width: 100%;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  text-align: left;
+}
+
+.deck-grid-preview {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.deck-grid-preview .deck-slot {
+  min-height: 112px;
+}
+
+.deck-slot-more {
+  display: grid;
+  place-items: center;
+  min-height: 112px;
+  background:
+    linear-gradient(180deg, rgba(19, 24, 31, 0.94), rgba(8, 10, 14, 0.96));
+  color: #f2dfb6;
+  font-size: 1rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+}
+
+.deck-overview-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 43;
+  display: grid;
+  place-items: center;
+  padding: 12px;
+  background: rgba(6, 9, 13, 0.54);
+  backdrop-filter: blur(8px);
+}
+
+.deck-overview-window {
+  position: relative;
+  width: min(100%, 460px);
+  max-height: min(86vh, 760px);
+  overflow: auto;
+  border-radius: 22px;
+  padding: 1rem 0.9rem 0.95rem;
+  background:
+    linear-gradient(180deg, rgba(21, 25, 33, 0.98), rgba(8, 10, 14, 0.98));
+  border: 1px solid rgba(231, 219, 192, 0.08);
+  box-shadow: 0 24px 54px rgba(0, 0, 0, 0.42);
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+}
+
+.deck-overview-close {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 30px;
+  height: 30px;
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+  background: rgba(123, 41, 49, 0.9);
+  color: #ffe2de;
+}
+
+.deck-overview-head {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.2rem;
+  padding-top: 0.15rem;
+  text-align: center;
+}
+
+.deck-overview-head strong {
+  font-size: 1.08rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #f3ddb2;
+}
+
+.deck-overview-head span {
+  color: #bfb5a3;
+  font-size: 0.82rem;
+}
+
+.deck-grid-overview {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  align-content: start;
+}
+
 .deck-slot {
   position: relative;
   min-height: 112px;
@@ -3837,6 +3931,15 @@ pre {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 
+  .deck-grid-preview {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  .deck-grid-preview .deck-slot,
+  .deck-slot-more {
+    min-height: 96px;
+  }
+
   .deck-inspector-grid {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
@@ -3851,6 +3954,10 @@ pre {
 
   .deck-fan-dense {
     width: min(100%, 310px);
+  }
+
+  .deck-grid-overview {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 
   .hero-picker-list {
