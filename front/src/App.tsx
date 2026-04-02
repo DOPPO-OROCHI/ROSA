@@ -331,49 +331,49 @@ type SkillMeta = {
 
 const skillFallbackByTemplate: Record<string, SkillMeta> = {
   imperial_guardian: {
-    name: "РћСЃРєРѕР»РѕС‡РЅС‹Рµ РіСЂР°РЅР°С‚С‹",
+    name: "Осколочные гранаты",
     code: "damage_splash",
     trigger: SKILL_TRIGGER_ACTIVE,
     target: TARGET_ENEMY_SPLASH,
     cooldown: 2,
   },
   apply_buff: {
-    name: "РљСЂСѓРїРЅРѕРєР°Р»РёР±РµСЂРЅС‹Рµ Р±РѕРµРїСЂРёРїР°СЃС‹",
+    name: "Крупнокалиберные боеприпасы",
     code: "apply_buff",
     trigger: SKILL_TRIGGER_ACTIVE,
     target: TARGET_SELF,
     cooldown: 3,
   },
   machine_gun_crew: {
-    name: "РљСЂСѓРїРЅРѕРєР°Р»РёР±РµСЂРЅС‹Рµ Р±РѕРµРїСЂРёРїР°СЃС‹",
+    name: "Крупнокалиберные боеприпасы",
     code: "apply_buff",
     trigger: SKILL_TRIGGER_ACTIVE,
     target: TARGET_SELF,
     cooldown: 3,
   },
   snipers: {
-    name: "РЈСЃС‚СЂР°РЅРµРЅРёРµ",
+    name: "Устранение",
     code: "damage_single",
     trigger: SKILL_TRIGGER_ACTIVE,
     target: TARGET_ENEMY_UNIT,
     cooldown: 5,
   },
   cursed_pack: {
-    name: "Р РІР°РЅС‹Рµ СЂР°РЅС‹",
+    name: "Рваные раны",
     code: "apply_debuff",
     trigger: SKILL_TRIGGER_ACTIVE,
     target: TARGET_ENEMY_UNIT,
     cooldown: 3,
   },
   cyber_scout: {
-    name: "РЎРєР°РЅРёСЂРѕРІР°РЅРёРµ РјРµСЃС‚РЅРѕСЃС‚Рё",
+    name: "Сканирование местности",
     code: "reveal_enemy_hand",
     trigger: SKILL_TRIGGER_ACTIVE,
     target: TARGET_NONE,
     cooldown: 3,
   },
   succubus: {
-    name: "РЈР¶Р°СЃ",
+    name: "Ужас",
     code: "inc_enemy_cd_single",
     trigger: SKILL_TRIGGER_ACTIVE,
     target: TARGET_ENEMY_UNIT,
@@ -2039,7 +2039,7 @@ export default function App() {
               }
               void runTask(() => startSkillCast(unit));
             }}
-            title={`${skillName || "Skill"}${skillTarget ? ` вЂў ${targetLabel(skillTarget)}` : ""}`}
+            title={`${skillName || "Skill"}${skillTarget ? ` • ${targetLabel(skillTarget)}` : ""}`}
             role="button"
             tabIndex={0}
             onKeyDown={(event) => {
@@ -2248,13 +2248,13 @@ export default function App() {
     buff.sort((a, b) => a.mana_cost - b.mana_cost || a.name.localeCompare(b.name));
     return buff;
   }, [cards, catalogKind, catalogSort]);
-  const catalogPages = Math.max(1, Math.ceil(catalogCards.length / 8));
+  const catalogPages = Math.max(1, Math.ceil(catalogCards.length / 6));
   useEffect(() => {
     setCatalogPage((prev) => Math.min(prev, catalogPages - 1));
   }, [catalogPages]);
   const catalogPageItems = useMemo(() => {
-    const from = catalogPage * 8;
-    return catalogCards.slice(from, from + 8);
+    const from = catalogPage * 6;
+    return catalogCards.slice(from, from + 6);
   }, [catalogCards, catalogPage]);
   const matchmakingTimerLabel = useMemo(() => {
     if (queueStatus.state === "searching") {
@@ -2289,15 +2289,15 @@ export default function App() {
   const canOpenQueuePanel = queueStatus.state === "idle" || queueStatus.state === "penalty";
 
   return (
-    <div className={`war-shell ${activeBattle ? "battle-mode" : ""} ${!activeBattle && tab === "home" ? "home-mode" : ""} ${!activeBattle && tab === "inventory" ? "inventory-mode" : ""}`}>
+    <div className={`war-shell ${activeBattle ? "battle-mode" : ""}`}>
       <main className="view-frame">
         {!activeBattle && tab === "home" && (
-          <section className="home-hub">
+          <section className="screen-grid home-grid">
             {(queueStatus.state === "searching" || queueStatus.state === "penalty") && (
               <div className={`queue-status-banner ${queueStatus.state === "penalty" ? "danger" : ""}`}>
                 <div className="queue-status-copy">
                   <span className="queue-status-kicker">
-                    {queueStatus.state === "searching" ? "РџРћРРЎРљ РњРђРўР§Рђ" : "РџРћРРЎРљ РќР•Р”РћРЎРўРЈРџР•Рќ"}
+                    {queueStatus.state === "searching" ? "ПОИСК МАТЧА" : "ПОИСК НЕДОСТУПЕН"}
                   </span>
                   <strong>{matchmakingTimerLabel}</strong>
                 </div>
@@ -2306,7 +2306,7 @@ export default function App() {
                   onClick={() => void runTask(leaveMatchmakingQueue)}
                   disabled={queueStatus.state === "penalty"}
                 >
-                  РћС‚РјРµРЅР°
+                  Отмена
                 </button>
               </div>
             )}
@@ -2314,31 +2314,31 @@ export default function App() {
               <div className="match-found-overlay">
                 <section className="match-found-panel">
                   <span className="match-found-kicker">Matchmaking</span>
-                  <strong className="match-found-title">РњРђРўР§ РќРђР™Р”Р•Рќ</strong>
+                  <strong className="match-found-title">МАТЧ НАЙДЕН</strong>
                   <span className="match-found-subtitle">
                     {queueStatus.accepted_by_me || queueStatus.accepted_by_opponent
-                      ? "РћР¶РёРґР°РЅРёРµ РѕСЃС‚Р°Р»СЊРЅС‹С…"
-                      : "РџРѕРґС‚РІРµСЂРґРёС‚Рµ РіРѕС‚РѕРІРЅРѕСЃС‚СЊ Рє Р±РѕСЋ"}
+                      ? "Ожидание остальных"
+                      : "Подтвердите готовность к бою"}
                   </span>
 
                   <div className="match-found-players">
                     <div className={`match-found-player ${queueStatus.accepted_by_me ? "accepted" : ""}`}>
-                      <span className="match-found-player-label">Р’Р«</span>
+                      <span className="match-found-player-label">ВЫ</span>
                       <span className="match-found-player-status">
-                        {queueStatus.accepted_by_me ? "РџСЂРёРЅСЏС‚Рѕ" : "РћР¶РёРґР°РЅРёРµ"}
+                        {queueStatus.accepted_by_me ? "Принято" : "Ожидание"}
                       </span>
                     </div>
                     <div className={`match-found-player ${queueStatus.accepted_by_opponent ? "accepted" : ""}`}>
-                      <span className="match-found-player-label">РџР РћРўРР’РќРРљ</span>
+                      <span className="match-found-player-label">ПРОТИВНИК</span>
                       <span className="match-found-player-status">
-                        {queueStatus.accepted_by_opponent ? "РџСЂРёРЅСЏС‚Рѕ" : "РћР¶РёРґР°РЅРёРµ"}
+                        {queueStatus.accepted_by_opponent ? "Принято" : "Ожидание"}
                       </span>
                     </div>
                   </div>
 
                   <div className="match-found-deadline">
                     <div className="match-found-deadline-copy">
-                      <span className="match-found-deadline-label">Р”Р•Р”Р›РђР™Рќ</span>
+                      <span className="match-found-deadline-label">ДЕДЛАЙН</span>
                       <strong>{pendingAcceptTimerLabel}</strong>
                     </div>
                     <div className={`match-found-timer-line ${pendingAcceptSecondsLeft <= 3 ? "danger" : ""}`}>
@@ -2359,492 +2359,429 @@ export default function App() {
                       onClick={() => void runTask(acceptMatchmakingReady)}
                       disabled={Boolean(queueStatus.accepted_by_me)}
                     >
-                      {queueStatus.accepted_by_me ? "РћР–РР”РђРќРР•" : "Р’ Р‘РћР™"}
+                      {queueStatus.accepted_by_me ? "ОЖИДАНИЕ" : "В БОЙ"}
                     </button>
                     <button className="match-found-action danger" onClick={() => void runTask(declineMatchmakingReady)}>
-                      РћРўРљРђР—
+                      ОТКАЗ
                     </button>
                   </div>
                 </section>
               </div>
             )}
-
-            <section
-              className="home-stage"
-              style={
-                {
-                  "--hero-panel-image": `url(${resolveImageSrc(selectedHeroImageKey)})`,
-                } as CSSProperties
-              }
-            >
-              <div className="home-stage-backdrop" />
-              <div className="home-stage-frame">
-                <div className="home-stage-actions">
-                  <button
-                    className="home-corner-button"
-                    onClick={() => pushToast("\u041a\u043e\u0433\u0434\u0430-\u043d\u0438\u0431\u0443\u0434\u044c, \u0442\u0443\u0442 \u0431\u0443\u0434\u0443\u0442 \u0442\u0432\u043e\u0438 \u0434\u0440\u0443\u0437\u044c\u044f", "info")}
-                  >
-                    {"\u0414\u0420\u0423\u0417\u042c\u042f"}
-                  </button>
-                  <button
-                    className="home-corner-button"
-                    onClick={() => pushToast("\u041a\u043e\u0433\u0434\u0430-\u043d\u0438\u0431\u0443\u0434\u044c, \u0442\u0443\u0442 \u0431\u0443\u0434\u0435\u0442 \u0442\u0432\u043e\u0439 \u0431\u0430\u043b\u0430\u043d\u0441", "info")}
-                  >
-                    {"\u0411\u0410\u041b\u0410\u041d\u0421"}
-                  </button>
-                </div>
-
+            <div className="panel command-panel">
+              <div
+                className="hero-banner hero-banner-top"
+                style={
+                  {
+                    "--hero-panel-image": `url(${resolveImageSrc(selectedHeroImageKey)})`,
+                  } as CSSProperties
+                }
+              >
                 <button
-                  className={`avatar-trigger home-profile-trigger ${loading ? "busy" : ""}`}
+                  className={`avatar-trigger hero-profile-mini ${loading ? "busy" : ""}`}
                   onClick={() => setShowProfile(true)}
                 >
                   <span className="avatar-core">
                     {(me?.first_name?.[0] || me?.username?.[0] || "?").toUpperCase()}
                   </span>
                 </button>
-
-                <div className="home-menu-altar">
-                  <button className="home-character-button" onClick={() => setHeroPickerOpen(true)}>
-                    <div className="home-character-frame">
-                      {renderHeroGlyph(
-                        me?.selected_hero_code || "unassigned",
-                        selectedHeroImageKey,
-                        "large",
-                      )}
-                    </div>
-                    <div className="home-character-meta">
-                      <strong>{me?.first_name || me?.username || "No profile loaded"}</strong>
-                      <span>{me?.selected_hero_name || "No Hero Assigned"}</span>
-                      <span className="muted">Rating {me?.rating ?? "-"}</span>
-                    </div>
-                  </button>
-
-                  <div className="home-menu-stack">
-                    {!me && (
-                      <button className="home-main-button secondary" onClick={() => void runTask(retryTelegramAuth)}>
-                        Retry Auth
-                      </button>
-                    )}
-                    <button
-                      className={`home-main-button ${queueStatus.state === "penalty" ? "danger" : ""}`}
-                      onClick={() => {
-                        if (!canOpenQueuePanel) {
-                          return;
-                        }
-                        setQueuePanelOpen(true);
-                      }}
-                      disabled={!canOpenQueuePanel}
-                    >
-                      {queueStatus.state === "penalty"
-                        ? "РџРћРРЎРљ РќР•Р”РћРЎРўРЈРџР•Рќ"
-                        : queueStatus.state === "pending_match"
-                          ? "РњРђРўР§ РќРђР™Р”Р•Рќ"
-                          : queueStatus.state === "searching"
-                            ? "РџРћРРЎРљ РР”Р•Рў"
-                            : "РќРђР™РўР РњРђРўР§"}
-                    </button>
-                    <button className="home-main-button secondary" onClick={() => setTab("inventory")}>
-                      {"\u041a\u041e\u041b\u041e\u0414\u0410 \u041a\u0410\u0420\u0422"}
-                    </button>
-                    <button
-                      className="home-main-button tertiary"
-                      onClick={() => pushToast("\u041a\u043e\u0433\u0434\u0430-\u043d\u0438\u0431\u0443\u0434\u044c, \u0442\u0443\u0442 \u0431\u0443\u0434\u0435\u0442 \u043c\u0430\u0433\u0430\u0437\u0438\u043d", "info")}
-                    >
-                      {"\u041c\u0410\u0413\u0410\u0417\u0418\u041d"}
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </section>
-
-            {heroPickerOpen && (
-              <div
-                className="hero-picker"
-                onClick={() => {
-                  setHeroPickerOpen(false);
-                  setHeldHero(null);
-                }}
-              >
-                <div className="hero-picker-body" onClick={(event) => event.stopPropagation()}>
-                  <button
-                    className="hero-picker-close"
-                    onClick={() => {
-                      setHeroPickerOpen(false);
-                      setHeldHero(null);
-                    }}
-                  >
-                    X
-                  </button>
-                  {heldHero && (
-                    <div className="hero-preview">
-                      <div className="hero-preview-media">
-                        <AssetImage
-                          imageKey={heldHero.image_key || resolveHeroImageKey(heldHero.hero_code)}
-                          alt={heldHero.name}
-                          fallbackSrc={resolveHeroFallbackSrc()}
-                          className="hero-preview-image"
-                        />
-                      </div>
-                      <div className="hero-preview-info">
-                        <strong>{heldHero.name}</strong>
-                        <span>HP {heldHero.health_points}</span>
-                        <span>ATK {heldHero.attack_power}</span>
-                        <span>CD {heldHero.attack_cooldown}</span>
-                        <span>{heldHero.description}</span>
-                      </div>
-                    </div>
+                <button className="hero-portrait-stage hero-select-trigger" onClick={() => setHeroPickerOpen(true)}>
+                  {renderHeroGlyph(
+                    me?.selected_hero_code || "unassigned",
+                    selectedHeroImageKey,
+                    "large",
                   )}
-                  <div className="hero-picker-head">
-                    <strong>Р’С‹Р±РµСЂРё РіРµСЂРѕСЏ</strong>
+                  <div className="hero-banner-copy overlay">
+                    <h3>{me?.first_name || me?.username || "No profile loaded"}</h3>
+                    <p className="hero-banner-role">{me?.selected_hero_name || "No Hero Assigned"}</p>
+                    <p className="muted">Rating {me?.rating ?? "-"}</p>
                   </div>
-                  <div className="hero-picker-list">
-                    {heroes.map((hero) => {
-                      const selected = hero.hero_code === me?.selected_hero_code;
-                      return (
-                        <article
-                          key={hero.hero_code}
-                          className={`hero-tile ${selected ? "selected" : ""}`}
-                          onClick={() => setHeldHero(hero)}
-                        >
-                          {renderHeroGlyph(hero.hero_code, hero.image_key, "small")}
-                          <span className="hero-tile-name">{hero.name}</span>
-                          <button
-                            className="hero-tile-pick"
-                            onClick={(event) => {
-                              event.stopPropagation();
-                              void runTask(async () => {
-                                await selectHero(hero.hero_code);
-                                setHeroPickerOpen(false);
-                                setHeldHero(null);
-                              });
-                            }}
-                          >
-                            Р’С‹Р±СЂР°С‚СЊ
-                          </button>
-                        </article>
-                      );
-                    })}
-                  </div>
-                </div>
+                </button>
               </div>
-            )}
-            {queuePanelOpen && (
-              <div
-                className="queue-mode-overlay"
-                onClick={() => {
-                  setQueuePanelOpen(false);
-                  setSelectedQueueMode(null);
-                }}
-              >
-                <aside className="queue-mode-drawer" onClick={(event) => event.stopPropagation()}>
-                  <button
-                    className="queue-mode-close"
-                    onClick={() => {
-                      setQueuePanelOpen(false);
-                      setSelectedQueueMode(null);
-                    }}
-                  >
-                    X
-                  </button>
-                  <div className="queue-mode-art">
-                    <div className="queue-mode-art-placeholder">
-                      <span>ART</span>
+              {heroPickerOpen && (
+                <div
+                  className="hero-picker"
+                  onClick={() => {
+                    setHeroPickerOpen(false);
+                    setHeldHero(null);
+                  }}
+                >
+                  <div className="hero-picker-body" onClick={(event) => event.stopPropagation()}>
+                    <button
+                      className="hero-picker-close"
+                      onClick={() => {
+                        setHeroPickerOpen(false);
+                        setHeldHero(null);
+                      }}
+                    >
+                      X
+                    </button>
+                    {heldHero && (
+                      <div className="hero-preview">
+                        <div className="hero-preview-media">
+                          <AssetImage
+                            imageKey={heldHero.image_key || resolveHeroImageKey(heldHero.hero_code)}
+                            alt={heldHero.name}
+                            fallbackSrc={resolveHeroFallbackSrc()}
+                            className="hero-preview-image"
+                          />
+                        </div>
+                        <div className="hero-preview-info">
+                          <strong>{heldHero.name}</strong>
+                          <span>HP {heldHero.health_points}</span>
+                          <span>ATK {heldHero.attack_power}</span>
+                          <span>CD {heldHero.attack_cooldown}</span>
+                          <span>{heldHero.description}</span>
+                        </div>
+                      </div>
+                    )}
+                    <div className="hero-picker-head">
+                      <strong>Выбери героя</strong>
+                    </div>
+                    <div className="hero-picker-list">
+                      {heroes.map((hero) => {
+                        const selected = hero.hero_code === me?.selected_hero_code;
+                        return (
+                          <article
+                            key={hero.hero_code}
+                            className={`hero-tile ${selected ? "selected" : ""}`}
+                            onClick={() => setHeldHero(hero)}
+                          >
+                            {renderHeroGlyph(hero.hero_code, hero.image_key, "small")}
+                            <span className="hero-tile-name">{hero.name}</span>
+                            <button
+                              className="hero-tile-pick"
+                              onClick={(event) => {
+                                event.stopPropagation();
+                                void runTask(async () => {
+                                  await selectHero(hero.hero_code);
+                                  setHeroPickerOpen(false);
+                                  setHeldHero(null);
+                                });
+                              }}
+                            >
+                              Выбрать
+                            </button>
+                          </article>
+                        );
+                      })}
                     </div>
                   </div>
-                  <div className="queue-mode-copy">
-                    <span className="panel-kicker">Matchmaking</span>
-                    <strong>Choose a queue</strong>
-                  </div>
-                  <button
-                    className={`queue-mode-option ${selectedQueueMode === "ranked" ? "selected" : ""}`}
-                    onClick={() => setSelectedQueueMode((prev) => (prev === "ranked" ? null : "ranked"))}
-                  >
-                    <span className={`queue-mode-check ${selectedQueueMode === "ranked" ? "active" : ""}`} />
-                    <span className="queue-mode-option-copy">
-                      <strong>Р РµР№С‚РёРЅРіРѕРІР°СЏ РёРіСЂР°</strong>
-                      <span>Р‘РѕР№ Р·Р° СЂРµР№С‚РёРЅРі Рё С‡РµСЃС‚РЅС‹Р№ РјР°С‚С‡РјРµР№РєРёРЅРі</span>
-                    </span>
-                  </button>
-                  <button
-                    className="queue-mode-confirm"
-                    disabled={!selectedQueueMode}
-                    onClick={() => void runTask(joinMatchmakingQueue)}
-                  >
-                    РќРђР™РўР
-                  </button>
-                </aside>
-              </div>
-            )}
+                </div>
+              )}
+              {queuePanelOpen && (
+                <div
+                  className="queue-mode-overlay"
+                  onClick={() => {
+                    setQueuePanelOpen(false);
+                    setSelectedQueueMode(null);
+                  }}
+                >
+                  <aside className="queue-mode-drawer" onClick={(event) => event.stopPropagation()}>
+                    <button
+                      className="queue-mode-close"
+                      onClick={() => {
+                        setQueuePanelOpen(false);
+                        setSelectedQueueMode(null);
+                      }}
+                    >
+                      X
+                    </button>
+                    <div className="queue-mode-art">
+                      <div className="queue-mode-art-placeholder">
+                        <span>ART</span>
+                      </div>
+                    </div>
+                    <div className="queue-mode-copy">
+                      <span className="panel-kicker">Matchmaking</span>
+                      <strong>Choose a queue</strong>
+                    </div>
+                    <button
+                      className={`queue-mode-option ${selectedQueueMode === "ranked" ? "selected" : ""}`}
+                      onClick={() => setSelectedQueueMode((prev) => (prev === "ranked" ? null : "ranked"))}
+                    >
+                      <span className={`queue-mode-check ${selectedQueueMode === "ranked" ? "active" : ""}`} />
+                      <span className="queue-mode-option-copy">
+                        <strong>Рейтинговая игра</strong>
+                        <span>Бой за рейтинг и честный матчмейкинг</span>
+                      </span>
+                    </button>
+                    <button
+                      className="queue-mode-confirm"
+                      disabled={!selectedQueueMode}
+                      onClick={() => void runTask(joinMatchmakingQueue)}
+                    >
+                      НАЙТИ
+                    </button>
+                  </aside>
+                </div>
+              )}
+              {!me && <button onClick={() => void runTask(retryTelegramAuth)}>Retry Auth</button>}
+              <button
+                className={`matchmaking-launch ${queueStatus.state === "penalty" ? "danger" : ""}`}
+                onClick={() => {
+                  if (!canOpenQueuePanel) {
+                    return;
+                  }
+                  setQueuePanelOpen(true);
+                }}
+                disabled={!canOpenQueuePanel}
+              >
+                {queueStatus.state === "penalty"
+                  ? "ПОИСК НЕДОСТУПЕН"
+                  : queueStatus.state === "pending_match"
+                    ? "МАТЧ НАЙДЕН"
+                    : queueStatus.state === "searching"
+                      ? "ПОИСК ИДЕТ"
+                      : "НАЙТИ МАТЧ"}
+              </button>
+              <button className="open-inventory" onClick={() => setTab("inventory")}>
+                Inventory
+              </button>
+            </div>
+
           </section>
         )}
+
         {!activeBattle && tab === "inventory" && (
-          <section className="inventory-hub">
-            <section className="inventory-stage home-stage">
-              <div className="inventory-stage-backdrop home-stage-backdrop" />
-              <div className="inventory-stage-frame home-stage-frame">
-                <div className="inventory-stage-topbar">
-                  <button className="ghost-button inventory-back-button" onClick={() => setTab("home")}>
-                    {"\u041d\u0410\u0417\u0410\u0414"}
+          <section className="screen-grid">
+            <div className="inventory-back-row">
+              <button className="ghost-button" onClick={() => setTab("home")}>
+                {"<"} Back
+              </button>
+            </div>
+            <div className="panel inventory-panel">
+              <div className="section-head">
+                <h2>Deck Doctrine</h2>
+              </div>
+              <div className="deck-summary">
+                <span>Total cards</span>
+                <strong>{deckTotal}</strong>
+              </div>
+              {!deckReady && <p className="deck-warning">Дека не собрана (нужно 20 карт)</p>}
+              <div className="deck-grid">
+                {deckGroups.map((group) => (
+                  <button
+                    key={group.key}
+                    className="deck-slot filled interactive"
+                    onClick={() => setDeckInspectorKey(group.key)}
+                  >
+                    <AssetImage
+                      imageKey={group.imageKey}
+                      alt={group.name}
+                      fallbackSrc={resolveCardFallbackSrc()}
+                      className="deck-slot-media"
+                    />
+                    <div className="deck-slot-meta">
+                      <span className="deck-slot-mana">{group.mana}</span>
+                      <strong>{group.name}</strong>
+                    </div>
+                    <span className="deck-slot-count">x{group.count}</span>
                   </button>
-                </div>
-                <div className="inventory-altar-grid">
-                  <section className="panel inventory-altar inventory-altar-deck">
-                    <div className="inventory-altar-copy inventory-altar-copy--deck">
-                      <div className="section-head inventory-panel-head inventory-panel-head-row">
-                        <h2>{"\u0414\u0415\u041a\u0410 \u0418\u0413\u0420\u041e\u041a\u0410"}</h2>
-                        <span className="inventory-panel-kicker">Deck</span>
-                      </div>
-                      <div className="deck-summary inventory-deck-summary">
-                        <span>Total cards</span>
-                        <strong>{deckTotal}</strong>
-                      </div>
-                      {!deckReady && <p className="deck-warning">{"\u041d\u0443\u0436\u043d\u043e 20 \u043a\u0430\u0440\u0442 \u0434\u043b\u044f \u0433\u043e\u0442\u043e\u0432\u043e\u0439 \u0434\u0435\u043a\u0438"}</p>}
-                      <div className="inventory-deck-grid">
-                        {deckGroups.map((group) => (
-                          <button
-                            key={group.key}
-                            className="inventory-deck-tile"
-                            onClick={() => setDeckInspectorKey(group.key)}
+                ))}
+                {deckGroups.length === 0 && (
+                  <article className="deck-slot empty deck-slot-empty-wide">
+                    <span>Deck is empty</span>
+                  </article>
+                )}
+              </div>
+              {inspectedDeckGroup && (
+                <div className="deck-fan-overlay" onClick={() => setDeckInspectorKey(null)}>
+                  <div className="deck-fan-window" onClick={(event) => event.stopPropagation()}>
+                    <button className="deck-fan-close" onClick={() => setDeckInspectorKey(null)}>
+                      X
+                    </button>
+                    <div className="deck-fan-head">
+                      <strong>{inspectedDeckGroup.name}</strong>
+                      <span>x{inspectedDeckGroup.count}</span>
+                    </div>
+                    <div className="deck-fan-row">
+                      <div
+                        className="deck-fan-dense"
+                        style={{ "--fan-count": `${inspectedDeckGroup.count}` } as CSSProperties}
+                      >
+                        {Array.from({ length: inspectedDeckGroup.count }).map((_, index, array) => (
+                          <article
+                            key={`${inspectedDeckGroup.key}:fan:${index}`}
+                            className="deck-fan-card"
+                            style={
+                              {
+                                "--fan-offset": `${index - (array.length - 1) / 2}`,
+                              } as CSSProperties
+                            }
                           >
-                            <div className="inventory-deck-tile-media">
-                              <AssetImage
-                                imageKey={group.imageKey}
-                                alt={group.name}
-                                fallbackSrc={resolveCardFallbackSrc()}
-                                className="inventory-deck-tile-image"
-                              />
-                              <span className="inventory-deck-tile-mana">{group.mana}</span>
-                              <span className="inventory-deck-tile-count">x{group.count}</span>
-                            </div>
-                            <strong>{group.name}</strong>
-                          </button>
-                        ))}
-                        {deckGroups.length === 0 && (
-                          <article className="inventory-deck-empty">
-                            <span>Deck is empty</span>
-                          </article>
-                        )}
-                      </div>
-                      {inspectedDeckGroup && (
-                        <div className="deck-fan-overlay" onClick={() => setDeckInspectorKey(null)}>
-                          <div className="deck-fan-window" onClick={(event) => event.stopPropagation()}>
-                            <button className="deck-fan-close" onClick={() => setDeckInspectorKey(null)}>
+                            <AssetImage
+                              imageKey={inspectedDeckGroup.imageKey}
+                              alt={inspectedDeckGroup.name}
+                              fallbackSrc={resolveCardFallbackSrc()}
+                              className="deck-fan-media"
+                            />
+                            <button
+                              className="deck-fan-remove"
+                              onClick={() => void runTask(() => removeCardFromDeck(inspectedDeckGroup.kind, inspectedDeckGroup.templateId))}
+                            >
                               X
                             </button>
-                            <div className="deck-fan-head">
-                              <strong>{inspectedDeckGroup.name}</strong>
-                              <span>x{inspectedDeckGroup.count}</span>
-                            </div>
-                            <div className="deck-fan-row">
-                              <div
-                                className="deck-fan-dense"
-                                style={{ "--fan-count": `${inspectedDeckGroup.count}` } as CSSProperties}
-                              >
-                                {Array.from({ length: inspectedDeckGroup.count }).map((_, index, array) => (
-                                  <article
-                                    key={`${inspectedDeckGroup.key}:fan:${index}`}
-                                    className="deck-fan-card"
-                                    style={
-                                      {
-                                        "--fan-offset": `${index - (array.length - 1) / 2}`
-                                      } as CSSProperties
-                                    }
-                                  >
-                                    <AssetImage
-                                      imageKey={inspectedDeckGroup.imageKey}
-                                      alt={inspectedDeckGroup.name}
-                                      fallbackSrc={resolveCardFallbackSrc()}
-                                      className="deck-fan-media"
-                                    />
-                                    <button
-                                      className="deck-fan-remove"
-                                      onClick={() => void runTask(() => removeCardFromDeck(inspectedDeckGroup.kind, inspectedDeckGroup.templateId))}
-                                    >
-                                      X
-                                    </button>
-                                  </article>
-                                ))}
-                              </div>
-                            </div>
-                            <div className="deck-fan-info">
-                              <span>DECK COPIES {inspectedDeckGroup.count}</span>
-                              <span>MANA {inspectedDeckMeta?.mana_cost ?? 0}</span>
-                              {inspectedDeckGroup.kind === "battle" ? (
-                                <span>
-                                  HP {inspectedDeckMeta?.health_points ?? 0} | ATK {inspectedDeckMeta?.attack ?? 0} | CD {inspectedDeckMeta?.cooldown ?? 0} | MAX {inspectedDeckMeta?.max_copies ?? 0}
-                                </span>
-                              ) : (
-                                <span>
-                                  {inspectedDeckMeta?.buff_type || "Buff"} {inspectedDeckMeta?.buff_value ?? 0} | DUR {inspectedDeckMeta?.duration ?? 0} | MAX {inspectedDeckMeta?.max_copies ?? 0}
-                                </span>
-                              )}
-                              <span>{inspectedDeckMeta?.description || "-"}</span>
-                            </div>
-                          </div>
-                        </div>
-                      )}
+                          </article>
+                        ))}
+                      </div>
                     </div>
-                  </section>
-                  <section className="panel inventory-altar inventory-altar-cards">
-                    <div className="inventory-altar-copy inventory-altar-copy--cards">
-                      <div className="section-head inventory-panel-head inventory-panel-head-row">
-                        <h2>{"\u0412\u0421\u0415 \u041A\u0410\u0420\u0422\u042B \u0418\u0413\u0420\u041E\u041A\u0410"}</h2>
-                        <span className="inventory-panel-kicker">Collection</span>
-                      </div>
-                      <div className="catalog-toolbar inventory-catalog-toolbar">
-                        <div className="catalog-kind-switch">
-                          <button
-                            className={catalogKind === "battle" ? "nav-pill active" : "nav-pill"}
-                            onClick={() => {
-                              setCatalogKind("battle");
-                              setCatalogPage(0);
-                            }}
-                          >
-                            Battle Cards
-                          </button>
-                          <button
-                            className={catalogKind === "buff" ? "nav-pill active" : "nav-pill"}
-                            onClick={() => {
-                              setCatalogKind("buff");
-                              setCatalogPage(0);
-                            }}
-                          >
-                            Buff Cards
-                          </button>
-                        </div>
-                        <label className="catalog-sort">
-                          <span>Sort</span>
-                          <select
-                            value={catalogSort}
-                            onChange={(event) => setCatalogSort(event.target.value as CatalogSort)}
-                          >
-                            <option value="mana">Mana</option>
-                            <option value="attack">Attack</option>
-                            <option value="hp">HP</option>
-                            <option value="tank">Tank / Non-tank</option>
-                          </select>
-                        </label>
-                      </div>
-                      <div className="inventory-collection-grid">
-                        {catalogPageItems.map((card) => {
-                          const imageKey =
-                            card.kind === "battle"
-                              ? card.image_key || resolveBattleCardImageKey(card.template_id)
-                              : card.image_key || resolveBuffCardImageKey(card.template_id);
-                          const templateKey = `${card.kind}:${card.template_id}`;
-                          const deckCount = deckCountMap.get(templateKey) ?? 0;
-                          const addLimit = Math.min(card.max_copies, card.copies);
-                          const exhausted = deckCount >= addLimit;
-                          return (
-                            <article
-                              key={templateKey}
-                              className={`inventory-card-tile ${exhausted ? "exhausted" : ""}`}
-                              onClick={() =>
-                                setCardPreview(
-                                  card.kind === "battle"
-                                    ? {
-                                        kind: "battle",
-                                        name: card.name,
-                                        description: card.description,
-                                        imageKey,
-                                        mana: card.mana_cost,
-                                        hp: card.health_points,
-                                        attack: card.attack,
-                                        cooldown: card.cooldown,
-                                      }
-                                    : {
-                                        kind: "buff",
-                                        name: card.name,
-                                        description: card.description,
-                                        imageKey,
-                                        mana: card.mana_cost,
-                                        buffType: card.buff_type,
-                                        buffValue: card.buff_value,
-                                        duration: card.duration,
-                                      },
-                                )
-                              }
-                            >
-                              <div className="inventory-card-media">
-                                <AssetImage
-                                  imageKey={imageKey}
-                                  alt={card.name}
-                                  fallbackSrc={resolveCardFallbackSrc()}
-                                  className="inventory-card-image"
-                                />
-                                <span className="inventory-card-mana">{card.mana_cost}</span>
-                                {card.kind === "battle" ? (
-                                  <>
-                                    <span className="inventory-card-stat attack">{card.attack}</span>
-                                    <span className="inventory-card-stat health">{card.health_points}</span>
-                                  </>
-                                ) : (
-                                  <span className="inventory-card-buff">{card.duration}</span>
-                                )}
-                                <button
-                                  className="inventory-card-add"
-                                  disabled={exhausted}
-                                  onClick={(event) => {
-                                    event.stopPropagation();
-                                    if (exhausted) {
-                                      return;
-                                    }
-                                    void runTask(() => addCardToDeck(card.kind, card.template_id));
-                                  }}
-                                >
-                                  +
-                                </button>
-                              </div>
-                              <strong>{card.name}</strong>
-                            </article>
-                          );
-                        })}
-                      </div>
-                      <div className="catalog-pager inventory-catalog-pager">
-                        <button
-                          className="ghost-button"
-                          onClick={() => setCatalogPage((prev) => Math.max(0, prev - 1))}
-                          disabled={catalogPage === 0}
-                        >
-                          {"<"}
-                        </button>
+                    <div className="deck-fan-info">
+                      <span>DECK COPIES {inspectedDeckGroup.count}</span>
+                      <span>MANA {inspectedDeckMeta?.mana_cost ?? 0}</span>
+                      {inspectedDeckGroup.kind === "battle" ? (
                         <span>
-                          {catalogPage + 1} / {catalogPages}
+                          HP {inspectedDeckMeta?.health_points ?? 0} | ATK {inspectedDeckMeta?.attack ?? 0} | CD {inspectedDeckMeta?.cooldown ?? 0} | MAX {inspectedDeckMeta?.max_copies ?? 0}
                         </span>
-                        <button
-                          className="ghost-button"
-                          onClick={() => setCatalogPage((prev) => Math.min(catalogPages - 1, prev + 1))}
-                          disabled={catalogPage >= catalogPages - 1}
-                        >
-                          {">"}
-                        </button>
-                      </div>
+                      ) : (
+                        <span>
+                          {inspectedDeckMeta?.buff_type || "Buff"} {inspectedDeckMeta?.buff_value ?? 0} | DUR {inspectedDeckMeta?.duration ?? 0} | MAX {inspectedDeckMeta?.max_copies ?? 0}
+                        </span>
+                      )}
+                      <span>{inspectedDeckMeta?.description || "-"}</span>
                     </div>
-                  </section>
-                  <section className="panel inventory-altar inventory-altar-shop">
-                    <div className="inventory-altar-copy inventory-altar-copy--shop">
-                      <div className="section-head inventory-panel-head">
-                        <h2>{"\u041C\u0410\u0413\u0410\u0417\u0418\u041D"}</h2>
-                      </div>
-                      <div className="inventory-placeholder-panel">
-                        <div>
-                          <strong>{"\u0421\u041A\u041E\u0420\u041E"}</strong>
-                          <p>{"\u041A\u043E\u0433\u0434\u0430-\u043D\u0438\u0431\u0443\u0434\u044C \u0437\u0434\u0435\u0441\u044C \u043F\u043E\u044F\u0432\u0438\u0442\u0441\u044F \u043C\u0430\u0433\u0430\u0437\u0438\u043D \u0438 \u043D\u043E\u0432\u044B\u0435 \u043F\u0430\u043A\u0438 \u043A\u0430\u0440\u0442."}</p>
-                        </div>
-                        <button
-                          className="home-main-button tertiary inventory-placeholder-button"
-                          onClick={() => pushToast("Когда-нибудь, здесь будет магазин", "info")}
-                        >
-                          {"\u041D\u0415 \u0421\u0415\u0419\u0427\u0410\u0421"}
-                        </button>
-                      </div>
-                    </div>
-                  </section>
+                  </div>
                 </div>
+              )}
+            </div>
+
+            <div className="panel inventory-panel catalog-panel">
+              <div className="catalog-toolbar">
+                <div className="catalog-kind-switch">
+                  <button
+                    className={catalogKind === "battle" ? "nav-pill active" : "nav-pill"}
+                    onClick={() => {
+                      setCatalogKind("battle");
+                      setCatalogPage(0);
+                    }}
+                  >
+                    Battle Cards
+                  </button>
+                  <button
+                    className={catalogKind === "buff" ? "nav-pill active" : "nav-pill"}
+                    onClick={() => {
+                      setCatalogKind("buff");
+                      setCatalogPage(0);
+                    }}
+                  >
+                    Buff Cards
+                  </button>
+                </div>
+                <label className="catalog-sort">
+                  <span>Sort</span>
+                  <select
+                    value={catalogSort}
+                    onChange={(event) => setCatalogSort(event.target.value as CatalogSort)}
+                  >
+                    <option value="mana">Mana</option>
+                    <option value="attack">Attack</option>
+                    <option value="hp">HP</option>
+                    <option value="tank">Tank / Non-tank</option>
+                  </select>
+                </label>
               </div>
-            </section>
+              <div className="catalog-grid">
+                {catalogPageItems.map((card) => {
+                  const imageKey =
+                    card.kind === "battle"
+                      ? card.image_key || resolveBattleCardImageKey(card.template_id)
+                      : card.image_key || resolveBuffCardImageKey(card.template_id);
+                  const templateKey = `${card.kind}:${card.template_id}`;
+                  const deckCount = deckCountMap.get(templateKey) ?? 0;
+                  const addLimit = Math.min(card.max_copies, card.copies);
+                  const exhausted = deckCount >= addLimit;
+                  return (
+                    <article
+                      key={templateKey}
+                      className={`asset-card tone-${getAssetTone(card.asset_base_key)} clickable ${exhausted ? "exhausted" : ""}`}
+                      onClick={() =>
+                        setCardPreview(
+                          card.kind === "battle"
+                            ? {
+                                kind: "battle",
+                                name: card.name,
+                                description: card.description,
+                                imageKey,
+                                mana: card.mana_cost,
+                                hp: card.health_points,
+                                attack: card.attack,
+                                cooldown: card.cooldown,
+                              }
+                            : {
+                                kind: "buff",
+                                name: card.name,
+                                description: card.description,
+                                imageKey,
+                                mana: card.mana_cost,
+                                buffType: card.buff_type,
+                                buffValue: card.buff_value,
+                                duration: card.duration,
+                              },
+                        )
+                      }
+                    >
+                      <div className="asset-frame">
+                        <AssetImage
+                          imageKey={imageKey}
+                          alt={card.name}
+                          fallbackSrc={resolveCardFallbackSrc()}
+                          className="asset-frame-media"
+                        />
+                        {card.kind === "battle" && (
+                          <div className="asset-top-stats" aria-label="Card stats">
+                            <span className="asset-top-stat-icon mana" aria-label={`Mana ${card.mana_cost}`}>
+                              <span className="asset-top-stat-value">{card.mana_cost}</span>
+                            </span>
+                            <span className="asset-top-stat-icon attack" aria-label={`Attack ${card.attack}`}>
+                              <span className="asset-top-stat-value">{card.attack}</span>
+                            </span>
+                            <span className="asset-top-stat-icon health" aria-label={`Health ${card.health_points}`}>
+                              <span className="asset-top-stat-value">{card.health_points}</span>
+                            </span>
+                          </div>
+                        )}
+                        <button
+                          className="asset-add"
+                          disabled={exhausted}
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            if (exhausted) {
+                              return;
+                            }
+                            void runTask(() => addCardToDeck(card.kind, card.template_id));
+                          }}
+                        >
+                          +
+                        </button>
+                      </div>
+                      <strong>{card.name}</strong>
+                    </article>
+                  );
+                })}
+              </div>
+              <div className="catalog-pager">
+                <button
+                  className="ghost-button"
+                  onClick={() => setCatalogPage((prev) => Math.max(0, prev - 1))}
+                  disabled={catalogPage === 0}
+                >
+                  {"<"}
+                </button>
+                <span>
+                  {catalogPage + 1} / {catalogPages}
+                </span>
+                <button
+                  className="ghost-button"
+                  onClick={() => setCatalogPage((prev) => Math.min(catalogPages - 1, prev + 1))}
+                  disabled={catalogPage >= catalogPages - 1}
+                >
+                  {">"}
+                </button>
+              </div>
+            </div>
           </section>
         )}
+
         {activeBattle && (
           <section className="battle-screen">
             <section
@@ -3161,14 +3098,4 @@ export default function App() {
     </div>
   );
 }
-
-
-
-
-
-
-
-
-
-
 
