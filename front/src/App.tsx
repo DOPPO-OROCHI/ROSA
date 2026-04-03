@@ -2790,19 +2790,6 @@ export default function App() {
                           fallbackSrc={resolveCardFallbackSrc()}
                           className="asset-frame-media"
                         />
-                        {card.kind === "battle" && (
-                          <div className="asset-top-stats" aria-label="Card stats">
-                            <span className="asset-top-stat-icon mana" aria-label={`Mana ${card.mana_cost}`}>
-                              <span className="asset-top-stat-value">{card.mana_cost}</span>
-                            </span>
-                            <span className="asset-top-stat-icon attack" aria-label={`Attack ${card.attack}`}>
-                              <span className="asset-top-stat-value">{card.attack}</span>
-                            </span>
-                            <span className="asset-top-stat-icon health" aria-label={`Health ${card.health_points}`}>
-                              <span className="asset-top-stat-value">{card.health_points}</span>
-                            </span>
-                          </div>
-                        )}
                         <button
                           className="asset-add"
                           disabled={exhausted}
