@@ -2561,13 +2561,11 @@ export default function App() {
 
         {!activeBattle && tab === "inventory" && (
           <section className="screen-grid">
-            <div className="inventory-back-row">
-              <button className="ghost-button" onClick={() => setTab("home")}>
-                {"<"} Back
-              </button>
-            </div>
             <div className="panel inventory-panel">
-              <div className="section-head">
+              <div className="section-head inventory-deck-head">
+                <button className="ghost-button inventory-inline-back" onClick={() => setTab("home")}>
+                  {"<"} Back
+                </button>
                 <h2>Deck Doctrine</h2>
               </div>
               <div className="deck-summary">

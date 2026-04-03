@@ -260,6 +260,23 @@ pre {
   gap: 0.75rem;
 }
 
+.inventory-deck-head {
+  justify-content: flex-start;
+  align-items: center;
+  gap: 0.85rem;
+}
+
+.inventory-inline-back {
+  align-self: auto;
+  flex: 0 0 auto;
+}
+
+.inventory-deck-head h2 {
+  flex: 1 1 auto;
+  text-align: center;
+  margin-right: 68px;
+}
+
 .view-frame {
   margin-top: 14px;
 }
