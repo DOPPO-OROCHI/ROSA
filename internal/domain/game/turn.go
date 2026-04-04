@@ -25,7 +25,7 @@ func StartTurn(m *MatchState, nowUnix int64) {
 	if p.HeroAbilityCooldown > 0 {
 		p.HeroAbilityCooldown--
 	}
-	_ = processPendingResurections(m, m.ActivePlayer)
+	// _ = processPendingResurections(m, m.ActivePlayer)
 	for i := range p.Table {
 		u := p.Table[i]
 		if u == nil {
@@ -34,24 +34,24 @@ func StartTurn(m *MatchState, nowUnix int64) {
 		if u.Cooldown > 0 {
 			u.Cooldown--
 		}
-		if u.SkillCooldownLeft > 0 {
-			u.SkillCooldownLeft--
+		if u.Skill.CooldownLeft > 0 {
+			u.Skill.CooldownLeft--
 		}
 	}
 	TickerEffects(m, m.ActivePlayer)
-	_ = DispathContinuousPassives(m)
-	_ = DispathPassives(m, m.ActivePlayer, cards.PassiveTriggerTurnStart, PassiveTriggerContext{
-		SourceOwnerIdx: m.ActivePlayer,
-	})
+	// _ = DispathContinuousPassives(m)
+	// _ = DispathPassives(m, m.ActivePlayer, cards.PassiveTriggerTurnStart, PassiveTriggerContext{
+	// 	SourceOwnerIdx: m.ActivePlayer,
+	// })
 	for i := 0; i < TableSize; i++ {
 		u := p.Table[i]
 		if u == nil {
 			continue
 		}
-		_ = triggerCardSkillByTrigger(m, m.ActivePlayer, u, cards.TriggerTurnStart, Action{
-			PlayerIndex:    m.ActivePlayer,
-			CardInstanceID: u.InstanceID,
-		})
+		// _ = triggerCardSkillByTrigger(m, m.ActivePlayer, u, cards.TriggerTurnStart, Action{
+		// 	PlayerIndex:    m.ActivePlayer,
+		// 	CardInstanceID: u.InstanceID,
+		// })
 	}
 	draw := 1
 	if len(p.Deck) < draw {
@@ -93,9 +93,9 @@ func EndTurn(m *MatchState) {
 	if m.Phase != PhaseMain {
 		return
 	}
-	_ = DispathPassives(m, m.ActivePlayer, cards.PassiveTriggerTurnEnd, PassiveTriggerContext{
-		SourceOwnerIdx: m.ActivePlayer,
-	})
+	// _ = DispathPassives(m, m.ActivePlayer, cards.PassiveTriggerTurnEnd, PassiveTriggerContext{
+	// 	SourceOwnerIdx: m.ActivePlayer,
+	// })
 	m.ActivePlayer = 1 - m.ActivePlayer
 	StartTurn(m, time.Now().Unix())
 }
@@ -140,55 +140,48 @@ func PlayBattleCard(m *MatchState,
 	if !ok {
 		return errors.New("unknown battle template: " + c.TemplateID)
 	}
-	if p.Mana < tpl.Manacost {
+	if p.Mana < tpl.ManaCost {
 		return ErrNotEnoughMana
 	}
-	p.Mana -= tpl.Manacost
+	p.Mana -= tpl.ManaCost
 	last := len(p.Hand) - 1
 	p.Hand[handIdx] = p.Hand[last]
 	p.Hand = p.Hand[:last]
 	hp, atk := ScaleBattleStats(tpl.HealthPoints, tpl.Attack, c.CardLevel)
 	u := &UnitState{
-		InstanceID:            c.InstanceID,
-		TemplateID:            c.TemplateID,
-		GamerCardID:           c.GamerCardID,
-		CardLevel:             c.CardLevel,
-		HP:                    hp,
-		MaxHP:                 hp,
-		Attack:                atk,
-		SplashRadius:          tpl.SplashRadius,
-		CanBeUpgraded:         tpl.CanBeUpgraded,
-		BaseCooldown:          tpl.Cooldown,
-		Cooldown:              0,
-		IsTank:                tpl.IsTank,
-		Effects:               nil,
-		CardType:              tpl.CardType,
-		SummonedInTurn:        p.Turns,
-		SkillImageKey:         tpl.SkillImageKey,
-		SkillName:             tpl.SkillName,
-		SkillCode:             tpl.SkillCode,
-		SkillTrigger:          tpl.SkillTrigger,
-		SkillTarget:           tpl.SkillTarget,
-		SkillValue:            tpl.SkillValue,
-		SkillDuration:         tpl.SkillDuration,
-		SkillCooldown:         tpl.SkillCooldown,
-		SkillCooldownLeft:     0,
-		SkillParamsJSON:       tpl.SkillParamsJSON,
-		ResurrectedUsed:       false,
-		PassiveImageKey:       tpl.PassiveImageKey,
-		PassiveName:           tpl.PassiveName,
-		PassiveCode:           tpl.PassiveCode,
-		PassiveTrigger:        tpl.PassiveTrigger,
-		PassiveTarget:         tpl.PassiveTarget,
-		PassiveEffect:         tpl.PassiveEffect,
-		PassiveCondition:      tpl.PassiveCondition,
-		PassiveValue:          tpl.PassiveValue,
-		PassiveDuration:       tpl.PassiveDuration,
-		PassiveScale:          tpl.PassiveScale,
-		PassiveCountOwner:     tpl.PassiveCountOwner,
-		PassiveConditionCount: tpl.PassiveConditionCount,
-		PassiveCountType:      tpl.PassiveCountType,
-		PassiveCountCode:      tpl.PassiveCountCode,
+		InstanceID:      c.InstanceID,
+		TemplateID:      c.TemplateID,
+		GamerCardID:     c.GamerCardID,
+		CardLevel:       c.CardLevel,
+		HP:              hp,
+		MaxHP:           hp,
+		Attack:          atk,
+		SplashRadius:    tpl.SplashRadius,
+		IsTank:          tpl.IsTank,
+		CardType:        tpl.CardType,
+		BaseCooldown:    tpl.BaseCooldown,
+		Cooldown:        0,
+		SummonedInTurn:  p.Turns,
+		ImageKey:        tpl.ImageKey,
+		AssetBaseKey:    tpl.AssetBaseKey,
+		HasSkill:        tpl.HasSkill,
+		SkillImageKey:   tpl.SkillImageKey,
+		Effects:         nil,
+		ResurrectedUsed: false,
+	}
+	if tpl.HasSkill {
+		u.Skill = cards.UnitSkillState{
+			Code:         tpl.Skill.Code,
+			Kind:         tpl.Skill.Kind,
+			Target:       tpl.Skill.Target,
+			Power:        tpl.Skill.Power,
+			BaseCooldown: tpl.Skill.BaseCooldown,
+			CooldownLeft: 0,
+			Duration:     tpl.Skill.Duration,
+			ExtraValue:   tpl.Skill.ExtraValue,
+			IgnoreTank:   tpl.Skill.IgnoreTank,
+			ApplyCount:   tpl.Skill.HitCount,
+		}
 	}
 	p.Table[targetSlot] = u
 	m.Events = append(m.Events, Event{
@@ -201,18 +194,18 @@ func PlayBattleCard(m *MatchState,
 		SFXKey:           BuildSFXKey(tpl.AssetBaseKey, "summon"),
 		TargetSlot:       targetSlot,
 	})
-	_ = triggerPassiveByTrigger(m, playerIndex, u, cards.PassiveTriggerOnPlay, PassiveTriggerContext{
-		TargetInstanceID: u.InstanceID,
-		SourceOwnerIdx:   playerIndex,
-		TargetOwnerIdx:   playerIndex,
-		TargetSlot:       targetSlot,
-	})
-	_ = DispathContinuousPassives(m)
-	_ = triggerCardSkillByTrigger(m, playerIndex, u, cards.TriggerOnPlay, Action{
-		PlayerIndex:    playerIndex,
-		CardInstanceID: u.InstanceID,
-		TargetSlot:     targetSlot,
-	})
+	// _ = triggerPassiveByTrigger(m, playerIndex, u, cards.PassiveTriggerOnPlay, PassiveTriggerContext{
+	// 	TargetInstanceID: u.InstanceID,
+	// 	SourceOwnerIdx:   playerIndex,
+	// 	TargetOwnerIdx:   playerIndex,
+	// 	TargetSlot:       targetSlot,
+	// })
+	// _ = DispathContinuousPassives(m)
+	// _ = triggerCardSkillByTrigger(m, playerIndex, u, cards.TriggerOnPlay, Action{
+	// 	PlayerIndex:    playerIndex,
+	// 	CardInstanceID: u.InstanceID,
+	// 	TargetSlot:     targetSlot,
+	// })
 	return nil
 }
 
@@ -254,10 +247,7 @@ func PlayBuffCard(m *MatchState,
 	if target == nil {
 		return ErrTargetNotFound
 	}
-	if !target.CanBeUpgraded {
-		return errors.New("card cannot be upgraded")
-	}
-	if tpl.OnlyFor != "" && tpl.OnlyFor != cards.All && target.CardType != tpl.OnlyFor {
+	if tpl.OnlyFor != "" && target.CardType != tpl.OnlyFor {
 		return ErrWrongTargetType
 	}
 	if p.Mana < tpl.ManaCost {
@@ -326,7 +316,7 @@ func CardAttack(m *MatchState,
 		return ErrAttackerSummoneddThisTurn
 	}
 	targets := make([]EventTarget, 0, 3)
-	if atk.CardType == cards.HealerCard {
+	if atk.CardType == cards.Healer {
 		if attackHero {
 			return ErrHealerCannotAttackHero
 		}
@@ -335,21 +325,21 @@ func CardAttack(m *MatchState,
 			return ErrTargetNotFound
 		}
 		heal := atk.Attack
-		_ = triggerPassiveByTrigger(m, playerIndex, atk, cards.PassiveTriggerOnAttack, PassiveTriggerContext{
-			AttackerInstanceID: atk.InstanceID,
-			AttackerOwnerIdx:   playerIndex,
-			TargetInstanceID:   tu.InstanceID,
-			SourceOwnerIdx:     playerIndex,
-			TargetOwnerIdx:     playerIndex,
-			TargetSlot:         ti,
-		})
-		_ = triggerCardSkillByTrigger(m, playerIndex, atk, cards.TriggerOnAttack, Action{
-			PlayerIndex:      playerIndex,
-			CardInstanceID:   atk.InstanceID,
-			TargetInstanceID: tu.InstanceID,
-			TargetSlot:       ti,
-			AttackHero:       false,
-		})
+		// _ = triggerPassiveByTrigger(m, playerIndex, atk, cards.PassiveTriggerOnAttack, PassiveTriggerContext{
+		// 	AttackerInstanceID: atk.InstanceID,
+		// 	AttackerOwnerIdx:   playerIndex,
+		// 	TargetInstanceID:   tu.InstanceID,
+		// 	SourceOwnerIdx:     playerIndex,
+		// 	TargetOwnerIdx:     playerIndex,
+		// 	TargetSlot:         ti,
+		// })
+		// _ = triggerCardSkillByTrigger(m, playerIndex, atk, cards.TriggerOnAttack, Action{
+		// 	PlayerIndex:      playerIndex,
+		// 	CardInstanceID:   atk.InstanceID,
+		// 	TargetInstanceID: tu.InstanceID,
+		// 	TargetSlot:       ti,
+		// 	AttackHero:       false,
+		// })
 		tu.HP += heal
 		if tu.HP > tu.MaxHP {
 			tu.HP = tu.MaxHP
@@ -434,14 +424,14 @@ func CardAttack(m *MatchState,
 				dmg = baseDamage / 2
 			}
 			u.HP -= dmg
-			_ = triggerPassiveByTrigger(m, 1-playerIndex, u, cards.PassiveTriggerHitMe, PassiveTriggerContext{
-				AttackerInstanceID: atk.InstanceID,
-				AttackerOwnerIdx:   playerIndex,
-				TargetInstanceID:   u.InstanceID,
-				SourceOwnerIdx:     playerIndex,
-				TargetOwnerIdx:     1 - playerIndex,
-				TargetSlot:         s,
-			})
+			// _ = triggerPassiveByTrigger(m, 1-playerIndex, u, cards.PassiveTriggerHitMe, PassiveTriggerContext{
+			// 	AttackerInstanceID: atk.InstanceID,
+			// 	AttackerOwnerIdx:   playerIndex,
+			// 	TargetInstanceID:   u.InstanceID,
+			// 	SourceOwnerIdx:     playerIndex,
+			// 	TargetOwnerIdx:     1 - playerIndex,
+			// 	TargetSlot:         s,
+			// })
 			died := u.HP <= 0
 			newHP := u.HP
 			if died {
@@ -474,24 +464,24 @@ func CardAttack(m *MatchState,
 		SFXKey:           BuildSFXKey(tpl.AssetBaseKey, "attack"),
 		Targets:          targets,
 	})
-	_, aliveAttacker := atkPlayer.FindSlot(attackerInstanceID)
-	if aliveAttacker != nil {
-		_ = triggerPassiveByTrigger(m, playerIndex, aliveAttacker, cards.PassiveTriggerOnAttack, PassiveTriggerContext{
-			AttackerInstanceID: aliveAttacker.InstanceID,
-			AttackerOwnerIdx:   playerIndex,
-			TargetInstanceID:   defenderInstanceID,
-			SourceOwnerIdx:     playerIndex,
-			TargetOwnerIdx:     1 - playerIndex,
-		})
-	}
-	if aliveAttacker != nil {
-		_ = triggerCardSkillByTrigger(m, playerIndex, aliveAttacker, cards.TriggerOnAttack, Action{
-			PlayerIndex:      playerIndex,
-			CardInstanceID:   aliveAttacker.InstanceID,
-			TargetInstanceID: defenderInstanceID,
-			AttackHero:       attackHero,
-		})
-	}
+	// _, aliveAttacker := atkPlayer.FindSlot(attackerInstanceID)
+	// if aliveAttacker != nil {
+	// 	// _ = triggerPassiveByTrigger(m, playerIndex, aliveAttacker, cards.PassiveTriggerOnAttack, PassiveTriggerContext{
+	// 	// 	AttackerInstanceID: aliveAttacker.InstanceID,
+	// 	// 	AttackerOwnerIdx:   playerIndex,
+	// 	// 	TargetInstanceID:   defenderInstanceID,
+	// 	// 	SourceOwnerIdx:     playerIndex,
+	// 	// 	TargetOwnerIdx:     1 - playerIndex,
+	// 	// })
+	// }
+	// if aliveAttacker != nil {
+	// 	_ = triggerCardSkillByTrigger(m, playerIndex, aliveAttacker, cards.TriggerOnAttack, Action{
+	// 		PlayerIndex:      playerIndex,
+	// 		CardInstanceID:   aliveAttacker.InstanceID,
+	// 		TargetInstanceID: defenderInstanceID,
+	// 		AttackHero:       attackHero,
+	// 	})
+	// }
 	if defPlayer.HeroHP <= 0 {
 		m.Finished = true
 		if playerIndex == 0 {
@@ -700,84 +690,84 @@ func PlayHeroSpell(m *MatchState, a Action, r Resolvers) error {
 }
 
 // менеджер вызова определенных скилов карт
-func PlayCardSkill(m *MatchState, a Action, r BattleTemplateResolver) error {
-	if m.Finished {
-		return ErrMatchFinished
-	}
-	if a.PlayerIndex != m.ActivePlayer {
-		return ErrNotYourTurn
-	}
-	if m.Phase != PhaseMain {
-		return ErrWrongPhase
-	}
-	owner := m.Players[a.PlayerIndex]
-	enemy := m.Players[1-a.PlayerIndex]
-	if owner == nil || enemy == nil {
-		return errors.New("nil player state")
-	}
-	_, caster := owner.FindSlot(a.CardInstanceID)
-	if caster == nil || caster.SkillCode == "" {
-		return ErrCardSkillNotFound
-	}
-	if caster.SkillTrigger != cards.TriggerActive {
-		return ErrCardSkillNotActive
-	}
-	if caster.SkillCooldownLeft > 0 {
-		return ErrCardSkillOnCooldown
-	}
-	h, err := getCardSkillHandler(caster.SkillCode)
-	if err != nil {
-		return err
-	}
-	if err := h(m, a, caster, owner, enemy); err != nil {
-		return err
-	}
-	caster.SkillCooldownLeft = caster.SkillCooldown
-	return nil
-}
+// func PlayCardSkill(m *MatchState, a Action, r BattleTemplateResolver) error {
+// 	if m.Finished {
+// 		return ErrMatchFinished
+// 	}
+// 	if a.PlayerIndex != m.ActivePlayer {
+// 		return ErrNotYourTurn
+// 	}
+// 	if m.Phase != PhaseMain {
+// 		return ErrWrongPhase
+// 	}
+// 	owner := m.Players[a.PlayerIndex]
+// 	enemy := m.Players[1-a.PlayerIndex]
+// 	if owner == nil || enemy == nil {
+// 		return errors.New("nil player state")
+// 	}
+// 	_, caster := owner.FindSlot(a.CardInstanceID)
+// 	if caster == nil || caster.SkillCode == "" {
+// 		return ErrCardSkillNotFound
+// 	}
+// 	if caster.SkillTrigger != cards.TriggerActive {
+// 		return ErrCardSkillNotActive
+// 	}
+// 	if caster.SkillCooldownLeft > 0 {
+// 		return ErrCardSkillOnCooldown
+// 	}
+// 	h, err := getCardSkillHandler(caster.SkillCode)
+// 	if err != nil {
+// 		return err
+// 	}
+// 	if err := h(m, a, caster, owner, enemy); err != nil {
+// 		return err
+// 	}
+// 	caster.SkillCooldownLeft = caster.SkillCooldown
+// 	return nil
+// }
 
-func DispathContinuousPassives(m *MatchState) error {
-	if m == nil {
-		return nil
-	}
-	clearContinuousPassiveEffects(m)
-	for playerIdx := 0; playerIdx < 2; playerIdx++ {
-		p := m.Players[playerIdx]
-		if p == nil {
-			continue
-		}
-		for i := 0; i < TableSize; i++ {
-			u := p.Table[i]
-			if u == nil {
-				continue
-			}
-			if err := triggerContinuousPassive(m, playerIdx, u); err != nil {
-				return err
-			}
-		}
-	}
-	return nil
-}
+// func DispathContinuousPassives(m *MatchState) error {
+// 	if m == nil {
+// 		return nil
+// 	}
+// 	clearContinuousPassiveEffects(m)
+// 	for playerIdx := 0; playerIdx < 2; playerIdx++ {
+// 		p := m.Players[playerIdx]
+// 		if p == nil {
+// 			continue
+// 		}
+// 		for i := 0; i < TableSize; i++ {
+// 			u := p.Table[i]
+// 			if u == nil {
+// 				continue
+// 			}
+// 			if err := triggerContinuousPassive(m, playerIdx, u); err != nil {
+// 				return err
+// 			}
+// 		}
+// 	}
+// 	return nil
+// }
 
-func DispathPassives(m *MatchState, ownerIdx int, trigger string, ctx PassiveTriggerContext) error {
-	if m == nil || ownerIdx < 0 || ownerIdx > 1 || trigger == "" {
-		return nil
-	}
-	p := m.Players[ownerIdx]
-	if p == nil {
-		return nil
-	}
-	for i := 0; i < TableSize; i++ {
-		u := p.Table[i]
-		if u == nil {
-			continue
-		}
-		if err := triggerPassiveByTrigger(m, ownerIdx, u, trigger, ctx); err != nil {
-			return err
-		}
-	}
-	return nil
-}
+// func DispathPassives(m *MatchState, ownerIdx int, trigger string, ctx PassiveTriggerContext) error {
+// 	if m == nil || ownerIdx < 0 || ownerIdx > 1 || trigger == "" {
+// 		return nil
+// 	}
+// 	p := m.Players[ownerIdx]
+// 	if p == nil {
+// 		return nil
+// 	}
+// 	for i := 0; i < TableSize; i++ {
+// 		u := p.Table[i]
+// 		if u == nil {
+// 			continue
+// 		}
+// 		if err := triggerPassiveByTrigger(m, ownerIdx, u, trigger, ctx); err != nil {
+// 			return err
+// 		}
+// 	}
+// 	return nil
+// }
 
 // ХЕЛПЕР СМЕРТИ //
 func killUnitAt(m *MatchState, ownerIdx int, slot int, killerInstanceID string, killerOwnerIdx int) error {
@@ -799,39 +789,39 @@ func killUnitAt(m *MatchState, ownerIdx int, slot int, killerInstanceID string, 
 		return nil
 	}
 	dead := *u
-	_ = triggerPassiveByTrigger(m, ownerIdx, &dead, cards.PassiveTriggerOnDeath, PassiveTriggerContext{
-		DeadInstanceID:   dead.InstanceID,
-		TargetInstanceID: dead.InstanceID,
-		SourceOwnerIdx:   ownerIdx,
-		TargetOwnerIdx:   ownerIdx,
-		TargetSlot:       slot,
-	})
-	if dead.SkillCode == cards.SkillResurrectNextTurn && dead.SkillTrigger == cards.TriggerOnDeath && !dead.ResurrectedUsed {
-		owner.PendingRes = append(owner.PendingRes, PendingResurrected{
-			InstanceID: dead.InstanceID,
-			DueTurn:    owner.Turns + 1,
-		})
-	}
+	// _ = triggerPassiveByTrigger(m, ownerIdx, &dead, cards.PassiveTriggerOnDeath, PassiveTriggerContext{
+	// 	DeadInstanceID:   dead.InstanceID,
+	// 	TargetInstanceID: dead.InstanceID,
+	// 	SourceOwnerIdx:   ownerIdx,
+	// 	TargetOwnerIdx:   ownerIdx,
+	// 	TargetSlot:       slot,
+	// })
+	// if dead.SkillCode == cards.SkillResurrectNextTurn && dead.SkillTrigger == cards.TriggerOnDeath && !dead.ResurrectedUsed {
+	// 	owner.PendingRes = append(owner.PendingRes, PendingResurrected{
+	// 		InstanceID: dead.InstanceID,
+	// 		DueTurn:    owner.Turns + 1,
+	// 	})
+	// }
 	owner.GraveYard = append(owner.GraveYard, GraveEntry{
 		Unit:       dead,
 		DiedAtTurn: owner.Turns,
 	})
-	enemyIdx := 1 - ownerIdx
-	_ = triggerOnDeathSkill(m, &dead, ownerIdx, killerInstanceID, killerOwnerIdx)
-	owner.RemoveAt(slot)
-	_ = DispathPassives(m, ownerIdx, cards.PassiveTriggerOnAllyDead, PassiveTriggerContext{
-		DeadInstanceID: dead.InstanceID,
-		SourceOwnerIdx: ownerIdx,
-		TargetOwnerIdx: ownerIdx,
-		TargetSlot:     slot,
-	})
-	_ = DispathPassives(m, enemyIdx, cards.PassiveTriggerOnEnemyDead, PassiveTriggerContext{
-		DeadInstanceID: dead.InstanceID,
-		SourceOwnerIdx: ownerIdx,
-		TargetOwnerIdx: ownerIdx,
-		TargetSlot:     slot,
-	})
-	_ = DispathContinuousPassives(m)
+	// enemyIdx := 1 - ownerIdx
+	// _ = triggerOnDeathSkill(m, &dead, ownerIdx, killerInstanceID, killerOwnerIdx)
+	// owner.RemoveAt(slot)
+	// _ = DispathPassives(m, ownerIdx, cards.PassiveTriggerOnAllyDead, PassiveTriggerContext{
+	// 	DeadInstanceID: dead.InstanceID,
+	// 	SourceOwnerIdx: ownerIdx,
+	// 	TargetOwnerIdx: ownerIdx,
+	// 	TargetSlot:     slot,
+	// })
+	// _ = DispathPassives(m, enemyIdx, cards.PassiveTriggerOnEnemyDead, PassiveTriggerContext{
+	// 	DeadInstanceID: dead.InstanceID,
+	// 	SourceOwnerIdx: ownerIdx,
+	// 	TargetOwnerIdx: ownerIdx,
+	// 	TargetSlot:     slot,
+	// })
+	// _ = DispathContinuousPassives(m)
 	m.Events = append(m.Events, Event{
 		Type:             string(EventDeath),
 		SourceKind:       string(SourceUnit),

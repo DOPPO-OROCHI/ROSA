@@ -55,6 +55,20 @@ func NewCardsListHandler(d CardListHandlerDeps) http.HandlerFunc {
 		//и будут происходить все скейлы. Поэтому нужно было вынести темлейт в отдельную переменную
 		for _, r := range battleRows {
 			t := r.Tpl
+			var skill *dto.BattleSkillDTO
+			if t.HasSkill {
+				skill = &dto.BattleSkillDTO{
+					Code:         t.SkillCode,
+					Kind:         t.SkillKind,
+					Targeting:    t.SkillTargeting,
+					Power:        t.SkillPower,
+					BaseCooldown: t.SkillBaseCooldown,
+					Duration:     t.SkillDuration,
+					ExtraValue:   t.SkillExtraValue,
+					IgnoreTank:   t.SkillIgnoreTank,
+					HitCount:     t.SkillApplyCount,
+				}
+			}
 			out.Battle = append(out.Battle, dto.OwnedBattleCardsDTO{
 				Kind:          dto.CardKindBattle,
 				TemplateID:    t.CodeString,
@@ -65,24 +79,18 @@ func NewCardsListHandler(d CardListHandlerDeps) http.HandlerFunc {
 				HealthPoints:  t.HealthPoints,
 				Attack:        t.Attack,
 				SplashRadius:  t.SplashRadius,
-				Cooldown:      t.CoolDown,
+				BaseCooldown:  t.BaseCooldown,
 				IsTank:        t.IsTank,
-				BuffSlot:      t.BuffSlot,
 				MaxCopies:     t.MaxCopies,
 				OwnedCardID:   r.OwnedID,
 				Copies:        r.Copies,
 				Level:         r.Level,
 				XP:            r.XP,
 				ImageKey:      t.ImageKey,
-				SkillImageKey: t.SkillImageKey,
 				AssetBaseKey:  t.AssetBaseKey,
-				SkillName:     t.SkillName,
-				SkillCode:     t.SkillCode,
-				SkillTrigger:  t.SkillTrigger,
-				SkillTarget:   t.SkillTarget,
-				SkillValue:    t.SkillValue,
-				SkillDuration: t.SkillDuration,
-				SkillCooldown: t.SkillCooldown,
+				SkillImageKey: t.SkillImageKey,
+				HasSkill:      t.HasSkill,
+				Skill:         skill,
 			})
 		}
 		for _, r := range buffRows {

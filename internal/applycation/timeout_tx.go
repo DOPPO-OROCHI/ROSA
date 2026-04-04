@@ -39,6 +39,30 @@ func ApplyTimeOutToMatchTX(db *gorm.DB, matchID uint) (st *game.MatchState, chan
 			return nil
 		}
 		state.Version++
+		justFinished := !row.Finished && state.Finished
+		if justFinished {
+			switch state.Result {
+			case game.MatchWinP1:
+				winnerID := row.PlayerID1
+				loserID := row.PlayerID2
+				if err := repository.RatingUp(winnerID, tx); err != nil {
+					return err
+				}
+				if err := repository.RatingDown(loserID, tx); err != nil {
+					return err
+				}
+			case game.MatchWinP2:
+				winnerID := row.PlayerID2
+				loserID := row.PlayerID1
+				if err := repository.RatingUp(winnerID, tx); err != nil {
+					return err
+				}
+				if err := repository.RatingDown(loserID, tx); err != nil {
+					return err
+				}
+			case game.MatchDraw:
+			}
+		}
 		newJSON, err := json.Marshal(&state)
 		if err != nil {
 			return ErrCorruptedMatchState

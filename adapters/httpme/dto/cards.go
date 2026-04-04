@@ -27,37 +27,39 @@ DTO с картами битвы которые привязаны к конкр
 начиная от типа карты, заканчивая уроввнем прокачки конкретной карты и ключей эффектов. В общем все, что нужно
 */
 type OwnedBattleCardsDTO struct {
-	Kind         CardKind `json:"kind"`
-	TemplateID   string   `json:"template_id"`
-	Name         string   `json:"name"`
-	Description  string   `json:"description"`
-	CardType     string   `json:"card_type"`
-	ManaCost     int      `json:"mana_cost"`
-	HealthPoints int      `json:"health_points"`
-	Attack       int      `json:"attack"`
-	SplashRadius int      `json:"splash_radius"`
-	Cooldown     int      `json:"cooldown"`
-	IsTank       bool     `json:"is_tank"`
-	BuffSlot     bool     `json:"buff_slot"`
-	MaxCopies    int      `json:"max_copies"`
+	Kind          CardKind        `json:"kind"`
+	TemplateID    string          `json:"template_id"`
+	Name          string          `json:"name"`
+	Description   string          `json:"description"`
+	CardType      string          `json:"card_type"`
+	ManaCost      int             `json:"mana_cost"`
+	HealthPoints  int             `json:"health_points"`
+	Attack        int             `json:"attack"`
+	SplashRadius  int             `json:"splash_radius"`
+	BaseCooldown  int             `json:"base_cooldown"`
+	IsTank        bool            `json:"is_tank"`
+	MaxCopies     int             `json:"max_copies"`
+	OwnedCardID   uint            `json:"owned_card_id"`
+	Copies        int             `json:"copies"`
+	Level         int             `json:"level"`
+	XP            int             `json:"xp"`
+	ImageKey      string          `json:"image_key"`
+	AssetBaseKey  string          `json:"asset_base_key"`
+	SkillImageKey string          `json:"skill_image_key"`
+	HasSkill      bool            `json:"has_skill"`
+	Skill         *BattleSkillDTO `json:"skill,omitempty"`
+}
 
-	OwnedCardID uint `json:"owned_card_id"`
-	Copies      int  `json:"copies"`
-	Level       int  `json:"level"`
-	XP          int  `json:"xp"`
-
-	ImageKey      string `json:"image_key"`
-	AssetBaseKey  string `json:"asset_base_key"`
-	BackKey       string `json:"back_key,omitempty"`
-	SkillImageKey string `json:"skill_image_key"`
-
-	SkillName     string `json:"skill_name,omitempty"`
-	SkillCode     string `json:"skill_code,omitempty"`
-	SkillTrigger  string `json:"skill_trigger,omitempty"`
-	SkillTarget   string `json:"skill_target,omitempty"`
-	SkillValue    int    `json:"skill_value,omitempty"`
-	SkillDuration int    `json:"skill_duration,omitempty"`
-	SkillCooldown int    `json:"skill_cooldown,omitempty"`
+type BattleSkillDTO struct {
+	Code         string `json:"code"`
+	Kind         string `json:"kind"`
+	Targeting    string `json:"targeting"`
+	Power        int    `json:"power"`
+	BaseCooldown int    `json:"base_cooldown"`
+	Duration     int    `json:"duration"`
+	ExtraValue   int    `json:"extra_value"`
+	IgnoreTank   bool   `json:"ignore_tank"`
+	HitCount     int    `json:"hit_count"`
 }
 
 /*

@@ -64,6 +64,30 @@ func ApplyActionToMatchTx(db *gorm.DB,
 		if err != nil {
 			return err
 		}
+		justFinished := !row.Finished && st.Finished
+		if justFinished {
+			switch st.Result {
+			case game.MatchWinP1:
+				winnerID := row.PlayerID1
+				loserID := row.PlayerID2
+				if err := repository.RatingUp(winnerID, tx); err != nil {
+					return err
+				}
+				if err := repository.RatingDown(loserID, tx); err != nil {
+					return err
+				}
+			case game.MatchWinP2:
+				winnerID := row.PlayerID2
+				loserID := row.PlayerID1
+				if err := repository.RatingUp(winnerID, tx); err != nil {
+					return err
+				}
+				if err := repository.RatingDown(loserID, tx); err != nil {
+					return err
+				}
+			case game.MatchDraw:
+			}
+		}
 		if err := repository.SaveMatchState(tx, row.ID, expectedDBVersion, newJSON, st.Version, st.Finished, st.TurnDeadline); err != nil {
 			return err
 		} //<-обновляем строку конкретного матча атомарно

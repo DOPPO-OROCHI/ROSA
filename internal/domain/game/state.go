@@ -1,5 +1,7 @@
 package game
 
+import "TheWar/internal/domain/cards"
+
 /*Файл посвященный доменной части зависимостей, от которых зависит состояние матча. Используется исключительно внутриигровой
 логикой (функциями). Ладно не все. Тут я тупанул и ебанул некоторые DTO, но изменить это я уже не смогу, во избежание взаимного
 импорта пакетов. Поэтому имеем что имеем. Грязный код да...*/
@@ -61,53 +63,38 @@ type CardsInMatch struct {
 
 /*Состояние отдельно взятой карты внутри матча*/
 type UnitState struct {
-	InstanceID            string       //<-рандомносгенерированный айди
-	TemplateID            string       //<-чертеж карты
-	GamerCardID           uint         //<-айдишник карты с владения
-	CardLevel             int          //<-уровень карты владения
-	HP                    int          //<-это копия статки карты, на момент выхода на стол
-	Attack                int          //<-это копия статки карты, на момент выхода на стол
-	SplashRadius          int          //<-радиус атаки
-	CanBeUpgraded         bool         //<-тонкий момент, этот параметр копируется из шаблона, а дальше используется для бафов
-	BaseCooldown          int
-	Cooldown              int          //<-кд карты
-	IsTank                bool         //<-является ли карта танком
-	SummonedInTurn        int          //<-этот параметр равен ходу, в который была призвана карта, чтобы она не могла
-	MaxHP                 int          //<-максимальное кличество ХП
-	Effects               []UnitEffect //<-эффекты на карте. Используется в последствии. Ни одна карта в начале не имеет эффектов
-	CardType              string       //<-тип карты. Используется для апгрейдов
-	SkillImageKey         string
-	SkillName             string
-	SkillCode             string
-	SkillTrigger          string
-	SkillTarget           string
-	SkillValue            int
-	SkillDuration         int
-	SkillCooldown         int
-	SkillCooldownLeft     int
-	SkillParamsJSON       string
-	ResurrectedUsed       bool
-	PassiveImageKey       string
-	PassiveName           string
-	PassiveCode           string
-	PassiveTrigger        string
-	PassiveTarget         string
-	PassiveEffect         string
-	PassiveCondition      string
-	PassiveValue          int
-	PassiveDuration       int
-	PassiveScale          string
-	PassiveCountOwner     string
-	PassiveConditionCount int
-	PassiveCountType      string
-	PassiveCountCode      string
+	InstanceID      string //<-рандомносгенерированный айди
+	TemplateID      string //<-чертеж карты
+	GamerCardID     uint   //<-айдишник карты с владения
+	CardLevel       int    //<-уровень карты владения
+	HP              int    //<-это копия статки карты, на момент выхода на стол
+	MaxHP           int
+	Attack          int
+	SplashRadius    int
+	IsTank          bool
+	CardType        string
+	BaseCooldown    int
+	Cooldown        int
+	SummonedInTurn  int
+	ImageKey        string
+	AssetBaseKey    string
+	HasSkill        bool
+	SkillImageKey   string
+	Skill           cards.UnitSkillState
+	Effects         []UnitEffect
+	ResurrectedUsed bool
 }
 
 // эффект, или баф, который можно наложить на карту
 type UnitEffect struct {
-	EffectType string //<-тип эффекта, бафа
-	TurnsLeft  int    //<-то, сколько ходов длится баф (важно, если 0-то баф перманентный)
-	Value      int    //<-величина бафа
+	EffectType       string //<-тип эффекта, бафа
+	TurnsLeft        int    //<-то, сколько ходов длится баф (важно, если 0-то баф перманентный)
+	Value            int    //<-величина бафа
+	SourceType       string //<-от кого пришел эффект
+	Polarity         string // <-типа бафф, дебаф
+	SourceInstanceID string //<-от кого пришел эффект ?
+	Dispellable      bool   //<-можно ли снять эффект ?
+
 }
 
 //Ну вот и пошли косяки по разграничению доменов и DTO. Как уже говорил, я знаю об этом косяке, не надо тут это...
