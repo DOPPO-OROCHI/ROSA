@@ -9,12 +9,6 @@ import (
 /*Данный файл целиком и полностью описывает функциональную сторону скиллов в моей игре. Здесь представлены
 хендлеры по их поведению, например -ебнуть одну цель, ебнуть несколько случайных, ебнуть всех и тд*/
 
-type SkillHandler func(m *MatchState, a Action, caster *UnitState) error
-
-var SkillHandlers = map[string]SkillHandler{
-	"fragmentation_grenades": CastSplashDamageSkill,
-}
-
 // ХЕНДЛЕР ПОД ПРЯМОЙ УРОН В СОЛО ТАРГЕТ
 func CastSingleDamageSkill(m *MatchState, a Action, caster *UnitState) error {
 	if m == nil || caster == nil {
@@ -348,7 +342,7 @@ func CastRandomSingleEnemyDamageSkill(m *MatchState, a Action, caster *UnitState
 }
 
 // КАСТУЕМ СКИЛЛ НЕСКОЛЬКО РАЗ ПО СЛУЧАЙНЫМ ЦЕЛЯМ
-func CastRandomMultiplEnemyDamageSkill(m *MatchState, a Action, caster *UnitState) error {
+func CastRandomMultiEnemyDamageSkill(m *MatchState, a Action, caster *UnitState) error {
 	if m == nil || caster == nil {
 		return errors.New("nil match or casters")
 	}
@@ -481,6 +475,207 @@ func CastLowestHPDamageSkill(m *MatchState, a Action, caster *UnitState) error {
 			continue
 		}
 		if target == nil || u.HP < target.HP {
+			target = u
+			targetSlot = slot
+		}
+	}
+	if target == nil || targetSlot == -1 {
+		return ErrCardSkillBadTarget
+	}
+	damage := caster.Skill.Power
+	inst := target.InstanceID
+	tplID := target.TemplateID
+	target.HP -= damage
+	died := target.HP <= 0
+	newHP := target.HP
+	if died {
+		if err := killUnitAt(m, 1-a.PlayerIndex, targetSlot, caster.InstanceID, a.PlayerIndex); err != nil {
+			return err
+		}
+		newHP = 0
+	}
+	m.Events = append(m.Events, Event{
+		Type:             string(EventCardSkill),
+		PlayerIndex:      a.PlayerIndex,
+		SourceKind:       string(SourceUnit),
+		SourceInstanceID: caster.InstanceID,
+		SourceTemplateID: caster.TemplateID,
+		VFXKey:           BuildVFXKey(caster.AssetBaseKey, "spell"),
+		SFXKey:           BuildSFXKey(caster.AssetBaseKey, "spell"),
+		Targets: []EventTarget{
+			{
+				InstanceID: inst,
+				TemplateID: tplID,
+				Amount:     damage,
+				Died:       died,
+				NewHP:      newHP,
+			},
+		},
+	})
+	caster.Skill.CooldownLeft = caster.Skill.BaseCooldown
+	return nil
+}
+
+// КАСТУЕМ УРОН ПО САМОЙ АТАКУЮЩЕЙ ЦЕЛИ НАХУЙ
+func CastHighestAttackDamageSkill(m *MatchState, a Action, caster *UnitState) error {
+	if m == nil || caster == nil {
+		return errors.New("nil match or casters")
+	}
+	if caster.Skill.Code == "" {
+		return ErrCardSkillNotFound
+	}
+	if caster.Skill.CooldownLeft > 0 {
+		return ErrCardSkillOnCooldown
+	}
+	enemy := m.Players[1-a.PlayerIndex]
+	if enemy == nil {
+		return errors.New("nil enemy state")
+	}
+	if a.AttackHero {
+		return ErrCardSkillBadTarget
+	}
+	targetSlot := -1
+	var target *UnitState
+	for slot := 0; slot < TableSize; slot++ {
+		u := enemy.Table[slot]
+		if u == nil {
+			continue
+		}
+		if target == nil || u.Attack > target.Attack {
+			target = u
+			targetSlot = slot
+		}
+	}
+	if target == nil || targetSlot == -1 {
+		return ErrCardSkillBadTarget
+	}
+	damage := caster.Skill.Power
+	inst := target.InstanceID
+	tplID := target.TemplateID
+	target.HP -= damage
+	died := target.HP <= 0
+	newHP := target.HP
+	if died {
+		if err := killUnitAt(m, 1-a.PlayerIndex, targetSlot, caster.InstanceID, a.PlayerIndex); err != nil {
+			return err
+		}
+		newHP = 0
+	}
+	m.Events = append(m.Events, Event{
+		Type:             string(EventCardSkill),
+		PlayerIndex:      a.PlayerIndex,
+		SourceKind:       string(SourceUnit),
+		SourceInstanceID: caster.InstanceID,
+		SourceTemplateID: caster.TemplateID,
+		VFXKey:           BuildVFXKey(caster.AssetBaseKey, "spell"),
+		SFXKey:           BuildSFXKey(caster.AssetBaseKey, "spell"),
+		Targets: []EventTarget{
+			{
+				InstanceID: inst,
+				TemplateID: tplID,
+				Amount:     damage,
+				Died:       died,
+				NewHP:      newHP,
+			},
+		},
+	})
+	caster.Skill.CooldownLeft = caster.Skill.BaseCooldown
+	return nil
+}
+
+// КАСТУЕМ УРОН ПО САМОЙ ЖИРНОЙ ЦЕЛИ НАХУЙ
+func CastHighestHPDamageSkill(m *MatchState, a Action, caster *UnitState) error {
+	if m == nil || caster == nil {
+		return errors.New("nil match or casters")
+	}
+	if caster.Skill.Code == "" {
+		return ErrCardSkillNotFound
+	}
+	if caster.Skill.CooldownLeft > 0 {
+		return ErrCardSkillOnCooldown
+	}
+	enemy := m.Players[1-a.PlayerIndex]
+	if enemy == nil {
+		return errors.New("nil enemy state")
+	}
+	if a.AttackHero {
+		return ErrCardSkillBadTarget
+	}
+	targetSlot := -1
+	var target *UnitState
+	for slot := 0; slot < TableSize; slot++ {
+		u := enemy.Table[slot]
+		if u == nil {
+			continue
+		}
+		if target == nil || u.HP > target.HP {
+			target = u
+			targetSlot = slot
+		}
+	}
+	if target == nil || targetSlot == -1 {
+		return ErrCardSkillBadTarget
+	}
+	damage := caster.Skill.Power
+	inst := target.InstanceID
+	tplID := target.TemplateID
+	target.HP -= damage
+	died := target.HP <= 0
+	newHP := target.HP
+	if died {
+		if err := killUnitAt(m, 1-a.PlayerIndex, targetSlot, caster.InstanceID, a.PlayerIndex); err != nil {
+			return err
+		}
+		newHP = 0
+	}
+	m.Events = append(m.Events, Event{
+		Type:             string(EventCardSkill),
+		PlayerIndex:      a.PlayerIndex,
+		SourceKind:       string(SourceUnit),
+		SourceInstanceID: caster.InstanceID,
+		SourceTemplateID: caster.TemplateID,
+		VFXKey:           BuildVFXKey(caster.AssetBaseKey, "spell"),
+		SFXKey:           BuildSFXKey(caster.AssetBaseKey, "spell"),
+		Targets: []EventTarget{
+			{
+				InstanceID: inst,
+				TemplateID: tplID,
+				Amount:     damage,
+				Died:       died,
+				NewHP:      newHP,
+			},
+		},
+	})
+	caster.Skill.CooldownLeft = caster.Skill.BaseCooldown
+	return nil
+}
+
+// КАСТУЕМ УРОН ПО САМОЙ ЛОХОВСКОЙ ПО УРОНУ ЦЕЛИ НАХУЙ
+func CastLowestAttackDamageSkill(m *MatchState, a Action, caster *UnitState) error {
+	if m == nil || caster == nil {
+		return errors.New("nil match or casters")
+	}
+	if caster.Skill.Code == "" {
+		return ErrCardSkillNotFound
+	}
+	if caster.Skill.CooldownLeft > 0 {
+		return ErrCardSkillOnCooldown
+	}
+	enemy := m.Players[1-a.PlayerIndex]
+	if enemy == nil {
+		return errors.New("nil enemy state")
+	}
+	if a.AttackHero {
+		return ErrCardSkillBadTarget
+	}
+	targetSlot := -1
+	var target *UnitState
+	for slot := 0; slot < TableSize; slot++ {
+		u := enemy.Table[slot]
+		if u == nil {
+			continue
+		}
+		if target == nil || u.Attack < target.Attack {
 			target = u
 			targetSlot = slot
 		}

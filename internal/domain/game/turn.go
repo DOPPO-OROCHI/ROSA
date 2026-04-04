@@ -808,7 +808,7 @@ func killUnitAt(m *MatchState, ownerIdx int, slot int, killerInstanceID string, 
 	})
 	// enemyIdx := 1 - ownerIdx
 	// _ = triggerOnDeathSkill(m, &dead, ownerIdx, killerInstanceID, killerOwnerIdx)
-	// owner.RemoveAt(slot)
+	owner.RemoveAt(slot)
 	// _ = DispathPassives(m, ownerIdx, cards.PassiveTriggerOnAllyDead, PassiveTriggerContext{
 	// 	DeadInstanceID: dead.InstanceID,
 	// 	SourceOwnerIdx: ownerIdx,
