@@ -469,9 +469,53 @@ func CastHybridHealDamageSkill(m *MatchState, a Action, caster *UnitState) error
 					Died:       enemy.HeroHP <= 0,
 					NewHP:      enemy.HeroHP,
 				})
-				if enemy.HeroHP <= 0
+				if enemy.HeroHP <= 0 {
+					m.Finished = true
+					if a.PlayerIndex == 0 {
+						m.Result = MatchWinP1
+					} else {
+						m.Result = MatchWinP2
+					}
+				}
+			} else {
+				targetSlot := targetSlots[roll]
+				target := enemy.Table[targetSlot]
+				if target != nil {
+					inst := target.InstanceID
+					tplID := target.TemplateID
+					target.HP -= damageAmount
+					died := target.HP <= 0
+					newHP := target.HP
+					if died {
+						if err := killUnitAt(m, 1-a.PlayerIndex, targetSlot, caster.InstanceID, a.PlayerIndex); err != nil {
+							return err
+						}
+						newHP = 0
+					}
+					eventTargets = append(eventTargets, EventTarget{
+						InstanceID: inst,
+						TemplateID: tplID,
+						Amount:     damageAmount,
+						Died:       died,
+						NewHP:      newHP,
+					})
+				}
 			}
 		}
 	}
+	if len(eventTargets) == 0 {
+		return ErrCardSkillBadTarget
+	}
+	m.Events = append(m.Events, Event{
+		Type:             string(EventCardSkill),
+		PlayerIndex:      a.PlayerIndex,
+		SourceKind:       string(SourceUnit),
+		SourceInstanceID: caster.InstanceID,
+		SourceTemplateID: caster.TemplateID,
+		VFXKey:           BuildVFXKey(caster.AssetBaseKey, "spell"),
+		SFXKey:           BuildSFXKey(caster.AssetBaseKey, "spell"),
+		Targets:          eventTargets,
+	})
+	caster.Skill.CooldownLeft = caster.Skill.BaseCooldown
 	return nil
 }
