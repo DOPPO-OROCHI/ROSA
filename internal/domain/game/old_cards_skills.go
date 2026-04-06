@@ -451,7 +451,7 @@ package game
 // 	return nil
 // }
 
-// // РЕВИЛ РУКИ ИГРОКА
+// РЕВИЛ РУКИ ИГРОКА
 // func castRevealEnemyHand(
 // 	m *MatchState, a Action,
 // 	caster *UnitState,
