@@ -3,6 +3,8 @@ package game
 import (
 	"TheWar/internal/domain/cards"
 	"errors"
+	"fmt"
+	"math/rand/v2"
 )
 
 //Здесь будут расположены всяк разные интересные скиллы
@@ -301,5 +303,175 @@ func CastSetFixedHPToEnemySkill(m *MatchState, a Action, caster *UnitState) erro
 		Targets:          eventTargets,
 	})
 	caster.Skill.CooldownLeft = caster.Skill.BaseCooldown
+	return nil
+}
+
+// СПЕЦИАЛЬНЫЙ ЭФФЕКТ. ТУТ МЫ МЕНЯЕМ МЕСТАМИ ХП И АТАКУ СОЮЗНОЙ ЦЕЛИ
+func CastEqualizeAllyHPSkill(m *MatchState, a Action, caster *UnitState) error {
+	if m == nil || caster == nil {
+		return errors.New("nil match or casters")
+	}
+	if caster.Skill.Code == "" {
+		return ErrCardSkillNotFound
+	}
+	if caster.Skill.CooldownLeft > 0 {
+		return ErrCardSkillOnCooldown
+	}
+	owner := m.Players[a.PlayerIndex]
+	if owner == nil {
+		return errors.New("nil owner state")
+	}
+	var targets []*UnitState
+	switch caster.Skill.Target {
+	case cards.SkillTargetSelf:
+		if a.AttackHero || a.TargetInstanceID != "" {
+			return ErrCardSkillBadTarget
+		}
+		targets = append(targets, caster)
+	case cards.SkillTargetAllySingle:
+		if a.AttackHero || a.TargetInstanceID == "" {
+			return ErrCardSkillBadTarget
+		}
+		_, t := owner.FindSlot(a.TargetInstanceID)
+		if t == nil {
+			return ErrTargetNotFound
+		}
+		targets = append(targets, t)
+	case cards.SkillTargetAllyAdjacent:
+		if a.AttackHero || a.TargetInstanceID != "" {
+			return ErrCardSkillBadTarget
+		}
+		casterSlot := -1
+		for slot := 0; slot < TableSize; slot++ {
+			u := owner.Table[slot]
+			if u != nil && u.InstanceID == caster.InstanceID {
+				casterSlot = slot
+				break
+			}
+		}
+		if casterSlot == -1 {
+			return ErrCardSkillBadTarget
+		}
+		left := casterSlot - 1
+		right := casterSlot + 1
+		if left >= 0 && owner.Table[left] != nil {
+			targets = append(targets, owner.Table[left])
+		}
+		if right < TableSize && owner.Table[right] != nil {
+			targets = append(targets, owner.Table[right])
+		}
+	case cards.SkillTargetAllyAll:
+		if a.AttackHero || a.TargetInstanceID != "" {
+			return ErrCardSkillBadTarget
+		}
+		for i := 0; i < TableSize; i++ {
+			if owner.Table[i] == nil {
+				continue
+			}
+			targets = append(targets, owner.Table[i])
+		}
+	default:
+		return ErrCardSkillUnsupported
+	}
+	if len(targets) == 0 {
+		return ErrCardSkillBadTarget
+	}
+	eventTargets := make([]EventTarget, 0, len(targets))
+	for i := 0; i < len(targets); i++ {
+		t := targets[i]
+		if t == nil {
+			continue
+		}
+		if t.Attack <= 0 {
+			return ErrCardSkillUnsupported
+		}
+		beforeHP := t.HP
+		newHP := t.Attack
+		t.HP = newHP
+		t.MaxHP = newHP
+		t.Attack = beforeHP
+		eventTargets = append(eventTargets, EventTarget{
+			InstanceID: t.InstanceID,
+			TemplateID: t.TemplateID,
+			Amount:     t.HP - beforeHP,
+			Died:       false,
+			NewHP:      t.HP,
+		})
+	}
+	m.Events = append(m.Events, Event{
+		Type:             string(EventCardSkill),
+		PlayerIndex:      a.PlayerIndex,
+		SourceKind:       string(SourceUnit),
+		SourceInstanceID: caster.InstanceID,
+		SourceTemplateID: caster.TemplateID,
+		VFXKey:           BuildVFXKey(caster.AssetBaseKey, "spell"),
+		SFXKey:           BuildSFXKey(caster.AssetBaseKey, "spell"),
+		Targets:          eventTargets,
+	})
+	caster.Skill.CooldownLeft = caster.Skill.BaseCooldown
+	return nil
+}
+
+// ФУНКЦИЯ ПОД ХИЛ И УРОН
+func CastHybridHealDamageSkill(m *MatchState, a Action, caster *UnitState) error {
+	if m == nil || caster == nil {
+		return errors.New("nil match or casters")
+	}
+	if caster.Skill.Code == "" {
+		return ErrCardSkillNotFound
+	}
+	if caster.Skill.CooldownLeft > 0 {
+		return ErrCardSkillOnCooldown
+	}
+	owner := m.Players[a.PlayerIndex]
+	enemy := m.Players[1-a.PlayerIndex]
+	if owner == nil || enemy == nil {
+		return errors.New("nil owner or enemy state")
+	}
+	eventTargets := make([]EventTarget, 0, 2)
+	healAmount := caster.Skill.Power
+	damageAmount := caster.Skill.ExtraValue
+	if healAmount > 0 && caster.HP < caster.MaxHP {
+		beforeHP := caster.HP
+		caster.HP += healAmount
+		if caster.HP > caster.MaxHP {
+			caster.HP = caster.MaxHP
+		}
+		actualHP := caster.HP - beforeHP
+		eventTargets = append(eventTargets, EventTarget{
+			InstanceID: caster.InstanceID,
+			TemplateID: caster.TemplateID,
+			Amount:     actualHP,
+			Died:       false,
+			NewHP:      caster.HP,
+		})
+	}
+	if damageAmount > 0 {
+		targetSlots := make([]int, 0, TableSize)
+		for slot := 0; slot < TableSize; slot++ {
+			if enemy.Table[slot] != nil {
+				targetSlots = append(targetSlots, slot)
+			}
+		}
+		canHitHero := caster.Skill.IgnoreTank || !enemyHasTank(enemy)
+		targetPollSize := len(targetSlots)
+		if canHitHero {
+			targetPollSize++
+		}
+		if targetPollSize > 0 {
+			roll := rand.IntN(targetPollSize)
+			if canHitHero && roll == len(targetSlots) {
+				enemy.HeroHP -= damageAmount
+				heroID := fmt.Sprintf("hero:p%d", 1-a.PlayerIndex)
+				eventTargets = append(eventTargets, EventTarget{
+					InstanceID: heroID,
+					Amount:     damageAmount,
+					Died:       enemy.HeroHP <= 0,
+					NewHP:      enemy.HeroHP,
+				})
+				if enemy.HeroHP <= 0
+			}
+		}
+	}
 	return nil
 }
