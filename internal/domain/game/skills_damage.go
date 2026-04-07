@@ -15,8 +15,9 @@ func CastSingleDamageSkill(m *MatchState, a Action, caster *UnitState) error {
 	if m == nil || caster == nil {
 		return errors.New("nil match or caster")
 	}
+	owner := m.Players[a.PlayerIndex]
 	enemy := m.Players[1-a.PlayerIndex]
-	if enemy == nil {
+	if owner == nil || enemy == nil {
 		return errors.New("nil player state")
 	}
 	if caster.Skill.Code == "" {
@@ -65,6 +66,7 @@ func CastSingleDamageSkill(m *MatchState, a Action, caster *UnitState) error {
 			}
 		}
 	} else {
+		eventTargets := make([]EventTarget, 0, 2)
 		targetSlot, target := enemy.FindSlot(a.TargetInstanceID)
 		if target == nil || targetSlot == -1 {
 			return ErrTargetNotFound
@@ -73,14 +75,34 @@ func CastSingleDamageSkill(m *MatchState, a Action, caster *UnitState) error {
 			return ErrCardSkillTargetTankBlocked
 		}
 		damage := caster.Skill.Power
-		target.HP -= damage
-		died := target.HP <= 0
-		newHP := target.HP
-		if died {
-			if err := killUnitAt(m, 1-a.PlayerIndex, targetSlot, caster.InstanceID, a.PlayerIndex); err != nil {
-				return err
+		res, err := applyDamageToUnit(m, 1-a.PlayerIndex, targetSlot, target, damage, caster.InstanceID, a.PlayerIndex, true)
+		if err != nil {
+			return err
+		}
+		eventTargets = append(eventTargets, EventTarget{
+			InstanceID: target.InstanceID,
+			TemplateID: target.TemplateID,
+			Amount:     res.DamageToHP,
+			Died:       res.Died,
+			NewHP:      res.NewHP,
+		})
+		if res.ReflectedDamage > 0 {
+			casterSlot, aliveCaster := owner.FindSlot(caster.InstanceID)
+			if aliveCaster != nil && casterSlot >= 0 {
+				reflectRes, err := applyDamageToUnit(m, a.PlayerIndex,
+					casterSlot, aliveCaster, res.ReflectedDamage,
+					target.InstanceID, 1-a.PlayerIndex, false)
+				if err != nil {
+					return err
+				}
+				eventTargets = append(eventTargets, EventTarget{
+					InstanceID: aliveCaster.InstanceID,
+					TemplateID: aliveCaster.TemplateID,
+					Amount:     reflectRes.DamageToHP,
+					Died:       reflectRes.Died,
+					NewHP:      reflectRes.NewHP,
+				})
 			}
-			newHP = 0
 		}
 		m.Events = append(m.Events, Event{
 			Type:             string(EventCardSkill),
@@ -88,15 +110,7 @@ func CastSingleDamageSkill(m *MatchState, a Action, caster *UnitState) error {
 			SourceKind:       string(SourceUnit),
 			SourceInstanceID: caster.InstanceID,
 			SourceTemplateID: caster.TemplateID,
-			Targets: []EventTarget{
-				{
-					InstanceID: target.InstanceID,
-					TemplateID: target.TemplateID,
-					Amount:     damage,
-					Died:       died,
-					NewHP:      newHP,
-				},
-			},
+			Targets:          eventTargets,
 		})
 	}
 	caster.Skill.CooldownLeft = caster.Skill.BaseCooldown
@@ -117,9 +131,10 @@ func CastSplashDamageSkill(m *MatchState, a Action, caster *UnitState) error {
 	if a.TargetInstanceID == "" {
 		return ErrCardSkillBadTarget
 	}
+	owner := m.Players[a.PlayerIndex]
 	enemy := m.Players[1-a.PlayerIndex]
-	if enemy == nil {
-		return errors.New("nil enemy state")
+	if owner == nil || enemy == nil {
+		return errors.New("nil enemy or owner state")
 	}
 	if caster.Skill.Code == "" {
 		return ErrCardSkillNotFound
@@ -160,22 +175,34 @@ func CastSplashDamageSkill(m *MatchState, a Action, caster *UnitState) error {
 		}
 		inst := u.InstanceID
 		tplID := u.TemplateID
-		u.HP -= damage
-		died := u.HP <= 0
-		newHP := u.HP
-		if died {
-			if err := killUnitAt(m, 1-a.PlayerIndex, slot, caster.InstanceID, a.PlayerIndex); err != nil {
-				return err
-			}
-			newHP = 0
+		res, err := applyDamageToUnit(m, 1-a.PlayerIndex, slot, u, damage, caster.InstanceID, a.PlayerIndex, true)
+		if err != nil {
+			return err
 		}
 		targets = append(targets, EventTarget{
 			InstanceID: inst,
 			TemplateID: tplID,
-			Amount:     damage,
-			Died:       died,
-			NewHP:      newHP,
+			Amount:     res.DamageToHP,
+			Died:       res.Died,
+			NewHP:      res.NewHP,
 		})
+		if res.ReflectedDamage > 0 {
+			casterSlot, aliveCaster := owner.FindSlot(caster.InstanceID)
+			if aliveCaster != nil && casterSlot >= 0 {
+				reflectRes, err := applyDamageToUnit(m, a.PlayerIndex, casterSlot, aliveCaster,
+					res.ReflectedDamage, u.InstanceID, 1-a.PlayerIndex, false)
+				if err != nil {
+					return err
+				}
+				targets = append(targets, EventTarget{
+					InstanceID: aliveCaster.InstanceID,
+					TemplateID: aliveCaster.TemplateID,
+					Amount:     reflectRes.DamageToHP,
+					Died:       reflectRes.Died,
+					NewHP:      reflectRes.NewHP,
+				})
+			}
+		}
 	}
 	m.Events = append(m.Events, Event{
 		Type:             string(EventCardSkill),
@@ -226,21 +253,16 @@ func CastAllEnemiesDamageSkill(m *MatchState, a Action, caster *UnitState) error
 		hasTarget = true
 		inst := u.InstanceID
 		tplID := u.TemplateID
-		u.HP -= damage
-		died := u.HP <= 0
-		newHP := u.HP
-		if died {
-			if err := killUnitAt(m, 1-a.PlayerIndex, slot, caster.InstanceID, a.PlayerIndex); err != nil {
-				return err
-			}
-			newHP = 0
+		res, err := applyDamageToUnit(m, 1-a.PlayerIndex, slot, u, damage, caster.InstanceID, a.PlayerIndex, false)
+		if err != nil {
+			return err
 		}
 		targets = append(targets, EventTarget{
 			InstanceID: inst,
 			TemplateID: tplID,
-			Amount:     damage,
-			Died:       died,
-			NewHP:      newHP,
+			Amount:     res.DamageToHP,
+			Died:       res.Died,
+			NewHP:      res.NewHP,
 		})
 	}
 	if !hasTarget {
@@ -277,9 +299,10 @@ func CastRandomSingleEnemyDamageSkill(m *MatchState, a Action, caster *UnitState
 	if HasEffect(caster, cards.DebuffEffectSilence) {
 		return errors.New("caster is silenced")
 	}
+	owner := m.Players[a.PlayerIndex]
 	enemy := m.Players[1-a.PlayerIndex]
-	if enemy == nil {
-		return errors.New("nil enemy state")
+	if owner == nil || enemy == nil {
+		return errors.New("nil enemy or owner state")
 	}
 	targetSlots := make([]int, 0, TableSize)
 	for slot := 0; slot < TableSize; slot++ {
@@ -331,16 +354,37 @@ func CastRandomSingleEnemyDamageSkill(m *MatchState, a Action, caster *UnitState
 		if target == nil {
 			return nil
 		}
+		eventTargets := make([]EventTarget, 0, 2)
 		inst := target.InstanceID
 		tplID := target.TemplateID
-		target.HP -= damage
-		died := target.HP <= 0
-		newHP := target.HP
-		if died {
-			if err := killUnitAt(m, 1-a.PlayerIndex, targetSlot, caster.InstanceID, a.PlayerIndex); err != nil {
-				return err
+		res, err := applyDamageToUnit(m, 1-a.PlayerIndex, targetSlot, target,
+			damage, caster.InstanceID, a.PlayerIndex, true)
+		if err != nil {
+			return err
+		}
+		eventTargets = append(eventTargets, EventTarget{
+			InstanceID: inst,
+			TemplateID: tplID,
+			Amount:     res.DamageToHP,
+			Died:       res.Died,
+			NewHP:      res.NewHP,
+		})
+		if res.ReflectedDamage > 0 {
+			casterSlot, aliveCaster := owner.FindSlot(caster.InstanceID)
+			if aliveCaster != nil && casterSlot >= 0 {
+				reflectRes, err := applyDamageToUnit(m, a.PlayerIndex, casterSlot, aliveCaster,
+					res.ReflectedDamage, target.InstanceID, 1-a.PlayerIndex, false)
+				if err != nil {
+					return err
+				}
+				eventTargets = append(eventTargets, EventTarget{
+					InstanceID: aliveCaster.InstanceID,
+					TemplateID: aliveCaster.TemplateID,
+					Amount:     reflectRes.DamageToHP,
+					Died:       reflectRes.Died,
+					NewHP:      reflectRes.NewHP,
+				})
 			}
-			newHP = 0
 		}
 		m.Events = append(m.Events, Event{
 			Type:             string(EventCardSkill),
@@ -350,15 +394,7 @@ func CastRandomSingleEnemyDamageSkill(m *MatchState, a Action, caster *UnitState
 			SourceTemplateID: caster.TemplateID,
 			VFXKey:           BuildVFXKey(caster.AssetBaseKey, "spell"),
 			SFXKey:           BuildSFXKey(caster.AssetBaseKey, "spell"),
-			Targets: []EventTarget{
-				{
-					InstanceID: inst,
-					TemplateID: tplID,
-					Amount:     damage,
-					Died:       died,
-					NewHP:      newHP,
-				},
-			},
+			Targets:          eventTargets,
 		})
 	}
 	caster.Skill.CooldownLeft = caster.Skill.BaseCooldown
@@ -376,9 +412,10 @@ func CastRandomMultiEnemyDamageSkill(m *MatchState, a Action, caster *UnitState)
 	if caster.Skill.CooldownLeft > 0 {
 		return ErrCardSkillOnCooldown
 	}
+	owner := m.Players[a.PlayerIndex]
 	enemy := m.Players[1-a.PlayerIndex]
-	if enemy == nil {
-		return errors.New("nil enemy state")
+	if owner == nil || enemy == nil {
+		return errors.New("nil owner or enemy state")
 	}
 	if HasEffect(caster, cards.DebuffEffectStun) {
 		return errors.New("caster is stunned")
@@ -444,23 +481,40 @@ func CastRandomMultiEnemyDamageSkill(m *MatchState, a Action, caster *UnitState)
 		}
 		inst := target.InstanceID
 		tplID := target.TemplateID
-		target.HP -= damage
-		died := target.HP <= 0
-		newHP := target.HP
-		if died {
-			if err := killUnitAt(m, 1-a.PlayerIndex, rt.slot, caster.InstanceID, a.PlayerIndex); err != nil {
-				return err
-			}
-			newHP = 0
-			pool = append(pool[:pick], pool[pick+1:]...)
+		res, err := applyDamageToUnit(m, 1-a.PlayerIndex, rt.slot, target, damage, caster.InstanceID, a.PlayerIndex, true)
+		if err != nil {
+			return err
 		}
 		targets = append(targets, EventTarget{
 			InstanceID: inst,
 			TemplateID: tplID,
-			Amount:     damage,
-			Died:       died,
-			NewHP:      newHP,
+			Amount:     res.DamageToHP,
+			Died:       res.Died,
+			NewHP:      res.NewHP,
 		})
+		if res.Died {
+			pool = append(pool[:pick], pool[pick+1:]...)
+		}
+		if res.ReflectedDamage > 0 {
+			casterSlot, aliveCaster := owner.FindSlot(caster.InstanceID)
+			if aliveCaster != nil && casterSlot >= 0 {
+				reflectRes, err := applyDamageToUnit(m, a.PlayerIndex, casterSlot, aliveCaster,
+					res.ReflectedDamage, target.InstanceID, 1-a.PlayerIndex, false)
+				if err != nil {
+					return err
+				}
+				targets = append(targets, EventTarget{
+					InstanceID: aliveCaster.InstanceID,
+					TemplateID: aliveCaster.TemplateID,
+					Amount:     reflectRes.DamageToHP,
+					Died:       reflectRes.Died,
+					NewHP:      reflectRes.NewHP,
+				})
+				if reflectRes.Died {
+					break
+				}
+			}
+		}
 	}
 	if len(targets) == 0 {
 		return ErrCardSkillBadTarget
@@ -496,9 +550,10 @@ func CastLowestHPDamageSkill(m *MatchState, a Action, caster *UnitState) error {
 	if HasEffect(caster, cards.DebuffEffectSilence) {
 		return errors.New("caster is silenced")
 	}
+	owner := m.Players[a.PlayerIndex]
 	enemy := m.Players[1-a.PlayerIndex]
-	if enemy == nil {
-		return errors.New("nil enemy state")
+	if owner == nil || enemy == nil {
+		return errors.New("nil owner or enemy state")
 	}
 	if a.AttackHero {
 		return ErrCardSkillBadTarget
@@ -518,17 +573,37 @@ func CastLowestHPDamageSkill(m *MatchState, a Action, caster *UnitState) error {
 	if target == nil || targetSlot == -1 {
 		return ErrCardSkillBadTarget
 	}
+	eventTargets := make([]EventTarget, 0, 2)
 	damage := caster.Skill.Power
 	inst := target.InstanceID
 	tplID := target.TemplateID
-	target.HP -= damage
-	died := target.HP <= 0
-	newHP := target.HP
-	if died {
-		if err := killUnitAt(m, 1-a.PlayerIndex, targetSlot, caster.InstanceID, a.PlayerIndex); err != nil {
-			return err
+	res, err := applyDamageToUnit(m, 1-a.PlayerIndex, targetSlot, target, damage, caster.InstanceID, a.PlayerIndex, true)
+	if err != nil {
+		return err
+	}
+	eventTargets = append(eventTargets, EventTarget{
+		InstanceID: inst,
+		TemplateID: tplID,
+		Amount:     res.DamageToHP,
+		Died:       res.Died,
+		NewHP:      res.NewHP,
+	})
+	if res.ReflectedDamage > 0 {
+		casterSlot, aliveCaster := owner.FindSlot(caster.InstanceID)
+		if aliveCaster != nil && casterSlot >= 0 {
+			reflectRes, err := applyDamageToUnit(m, a.PlayerIndex, casterSlot, aliveCaster,
+				res.ReflectedDamage, target.InstanceID, 1-a.PlayerIndex, false)
+			if err != nil {
+				return err
+			}
+			eventTargets = append(eventTargets, EventTarget{
+				InstanceID: aliveCaster.InstanceID,
+				TemplateID: aliveCaster.TemplateID,
+				Amount:     reflectRes.DamageToHP,
+				Died:       reflectRes.Died,
+				NewHP:      reflectRes.NewHP,
+			})
 		}
-		newHP = 0
 	}
 	m.Events = append(m.Events, Event{
 		Type:             string(EventCardSkill),
@@ -538,15 +613,7 @@ func CastLowestHPDamageSkill(m *MatchState, a Action, caster *UnitState) error {
 		SourceTemplateID: caster.TemplateID,
 		VFXKey:           BuildVFXKey(caster.AssetBaseKey, "spell"),
 		SFXKey:           BuildSFXKey(caster.AssetBaseKey, "spell"),
-		Targets: []EventTarget{
-			{
-				InstanceID: inst,
-				TemplateID: tplID,
-				Amount:     damage,
-				Died:       died,
-				NewHP:      newHP,
-			},
-		},
+		Targets:          eventTargets,
 	})
 	caster.Skill.CooldownLeft = caster.Skill.BaseCooldown
 	return nil
@@ -569,9 +636,10 @@ func CastHighestAttackDamageSkill(m *MatchState, a Action, caster *UnitState) er
 	if HasEffect(caster, cards.DebuffEffectSilence) {
 		return errors.New("caster is silenced")
 	}
+	owner := m.Players[a.PlayerIndex]
 	enemy := m.Players[1-a.PlayerIndex]
-	if enemy == nil {
-		return errors.New("nil enemy state")
+	if owner == nil || enemy == nil {
+		return errors.New("nil owner or enemy state")
 	}
 	if a.AttackHero {
 		return ErrCardSkillBadTarget
@@ -591,17 +659,54 @@ func CastHighestAttackDamageSkill(m *MatchState, a Action, caster *UnitState) er
 	if target == nil || targetSlot == -1 {
 		return ErrCardSkillBadTarget
 	}
+	eventTargets := make([]EventTarget, 0, 2)
 	damage := caster.Skill.Power
 	inst := target.InstanceID
 	tplID := target.TemplateID
-	target.HP -= damage
-	died := target.HP <= 0
-	newHP := target.HP
-	if died {
-		if err := killUnitAt(m, 1-a.PlayerIndex, targetSlot, caster.InstanceID, a.PlayerIndex); err != nil {
-			return err
+	res, err := applyDamageToUnit(
+		m,
+		1-a.PlayerIndex,
+		targetSlot,
+		target,
+		damage,
+		caster.InstanceID,
+		a.PlayerIndex,
+		true,
+	)
+	if err != nil {
+		return err
+	}
+	eventTargets = append(eventTargets, EventTarget{
+		InstanceID: inst,
+		TemplateID: tplID,
+		Amount:     res.DamageToHP,
+		Died:       res.Died,
+		NewHP:      res.NewHP,
+	})
+	if res.ReflectedDamage > 0 {
+		casterSlot, aliveCaster := owner.FindSlot(caster.InstanceID)
+		if aliveCaster != nil && casterSlot >= 0 {
+			reflectRes, err := applyDamageToUnit(
+				m,
+				a.PlayerIndex,
+				casterSlot,
+				aliveCaster,
+				res.ReflectedDamage,
+				target.InstanceID,
+				1-a.PlayerIndex,
+				false,
+			)
+			if err != nil {
+				return err
+			}
+			eventTargets = append(eventTargets, EventTarget{
+				InstanceID: aliveCaster.InstanceID,
+				TemplateID: aliveCaster.TemplateID,
+				Amount:     reflectRes.DamageToHP,
+				Died:       reflectRes.Died,
+				NewHP:      reflectRes.NewHP,
+			})
 		}
-		newHP = 0
 	}
 	m.Events = append(m.Events, Event{
 		Type:             string(EventCardSkill),
@@ -611,15 +716,7 @@ func CastHighestAttackDamageSkill(m *MatchState, a Action, caster *UnitState) er
 		SourceTemplateID: caster.TemplateID,
 		VFXKey:           BuildVFXKey(caster.AssetBaseKey, "spell"),
 		SFXKey:           BuildSFXKey(caster.AssetBaseKey, "spell"),
-		Targets: []EventTarget{
-			{
-				InstanceID: inst,
-				TemplateID: tplID,
-				Amount:     damage,
-				Died:       died,
-				NewHP:      newHP,
-			},
-		},
+		Targets:          eventTargets,
 	})
 	caster.Skill.CooldownLeft = caster.Skill.BaseCooldown
 	return nil
@@ -642,9 +739,10 @@ func CastHighestHPDamageSkill(m *MatchState, a Action, caster *UnitState) error 
 	if HasEffect(caster, cards.DebuffEffectSilence) {
 		return errors.New("caster is silenced")
 	}
+	owner := m.Players[a.PlayerIndex]
 	enemy := m.Players[1-a.PlayerIndex]
-	if enemy == nil {
-		return errors.New("nil enemy state")
+	if owner == nil || enemy == nil {
+		return errors.New("nil owner or enemy state")
 	}
 	if a.AttackHero {
 		return ErrCardSkillBadTarget
@@ -664,17 +762,54 @@ func CastHighestHPDamageSkill(m *MatchState, a Action, caster *UnitState) error 
 	if target == nil || targetSlot == -1 {
 		return ErrCardSkillBadTarget
 	}
+	eventTargets := make([]EventTarget, 0, 2)
 	damage := caster.Skill.Power
 	inst := target.InstanceID
 	tplID := target.TemplateID
-	target.HP -= damage
-	died := target.HP <= 0
-	newHP := target.HP
-	if died {
-		if err := killUnitAt(m, 1-a.PlayerIndex, targetSlot, caster.InstanceID, a.PlayerIndex); err != nil {
-			return err
+	res, err := applyDamageToUnit(
+		m,
+		1-a.PlayerIndex,
+		targetSlot,
+		target,
+		damage,
+		caster.InstanceID,
+		a.PlayerIndex,
+		true,
+	)
+	if err != nil {
+		return err
+	}
+	eventTargets = append(eventTargets, EventTarget{
+		InstanceID: inst,
+		TemplateID: tplID,
+		Amount:     res.DamageToHP,
+		Died:       res.Died,
+		NewHP:      res.NewHP,
+	})
+	if res.ReflectedDamage > 0 {
+		casterSlot, aliveCaster := owner.FindSlot(caster.InstanceID)
+		if aliveCaster != nil && casterSlot >= 0 {
+			reflectRes, err := applyDamageToUnit(
+				m,
+				a.PlayerIndex,
+				casterSlot,
+				aliveCaster,
+				res.ReflectedDamage,
+				target.InstanceID,
+				1-a.PlayerIndex,
+				false,
+			)
+			if err != nil {
+				return err
+			}
+			eventTargets = append(eventTargets, EventTarget{
+				InstanceID: aliveCaster.InstanceID,
+				TemplateID: aliveCaster.TemplateID,
+				Amount:     reflectRes.DamageToHP,
+				Died:       reflectRes.Died,
+				NewHP:      reflectRes.NewHP,
+			})
 		}
-		newHP = 0
 	}
 	m.Events = append(m.Events, Event{
 		Type:             string(EventCardSkill),
@@ -684,15 +819,7 @@ func CastHighestHPDamageSkill(m *MatchState, a Action, caster *UnitState) error 
 		SourceTemplateID: caster.TemplateID,
 		VFXKey:           BuildVFXKey(caster.AssetBaseKey, "spell"),
 		SFXKey:           BuildSFXKey(caster.AssetBaseKey, "spell"),
-		Targets: []EventTarget{
-			{
-				InstanceID: inst,
-				TemplateID: tplID,
-				Amount:     damage,
-				Died:       died,
-				NewHP:      newHP,
-			},
-		},
+		Targets:          eventTargets,
 	})
 	caster.Skill.CooldownLeft = caster.Skill.BaseCooldown
 	return nil
@@ -715,9 +842,10 @@ func CastLowestAttackDamageSkill(m *MatchState, a Action, caster *UnitState) err
 	if HasEffect(caster, cards.DebuffEffectSilence) {
 		return errors.New("caster is silenced")
 	}
+	owner := m.Players[a.PlayerIndex]
 	enemy := m.Players[1-a.PlayerIndex]
-	if enemy == nil {
-		return errors.New("nil enemy state")
+	if owner == nil || enemy == nil {
+		return errors.New("nil owner or enemy state")
 	}
 	if a.AttackHero {
 		return ErrCardSkillBadTarget
@@ -737,17 +865,54 @@ func CastLowestAttackDamageSkill(m *MatchState, a Action, caster *UnitState) err
 	if target == nil || targetSlot == -1 {
 		return ErrCardSkillBadTarget
 	}
+	eventTargets := make([]EventTarget, 0, 2)
 	damage := caster.Skill.Power
 	inst := target.InstanceID
 	tplID := target.TemplateID
-	target.HP -= damage
-	died := target.HP <= 0
-	newHP := target.HP
-	if died {
-		if err := killUnitAt(m, 1-a.PlayerIndex, targetSlot, caster.InstanceID, a.PlayerIndex); err != nil {
-			return err
+	res, err := applyDamageToUnit(
+		m,
+		1-a.PlayerIndex,
+		targetSlot,
+		target,
+		damage,
+		caster.InstanceID,
+		a.PlayerIndex,
+		true,
+	)
+	if err != nil {
+		return err
+	}
+	eventTargets = append(eventTargets, EventTarget{
+		InstanceID: inst,
+		TemplateID: tplID,
+		Amount:     res.DamageToHP,
+		Died:       res.Died,
+		NewHP:      res.NewHP,
+	})
+	if res.ReflectedDamage > 0 {
+		casterSlot, aliveCaster := owner.FindSlot(caster.InstanceID)
+		if aliveCaster != nil && casterSlot >= 0 {
+			reflectRes, err := applyDamageToUnit(
+				m,
+				a.PlayerIndex,
+				casterSlot,
+				aliveCaster,
+				res.ReflectedDamage,
+				target.InstanceID,
+				1-a.PlayerIndex,
+				false,
+			)
+			if err != nil {
+				return err
+			}
+			eventTargets = append(eventTargets, EventTarget{
+				InstanceID: aliveCaster.InstanceID,
+				TemplateID: aliveCaster.TemplateID,
+				Amount:     reflectRes.DamageToHP,
+				Died:       reflectRes.Died,
+				NewHP:      reflectRes.NewHP,
+			})
 		}
-		newHP = 0
 	}
 	m.Events = append(m.Events, Event{
 		Type:             string(EventCardSkill),
@@ -757,15 +922,7 @@ func CastLowestAttackDamageSkill(m *MatchState, a Action, caster *UnitState) err
 		SourceTemplateID: caster.TemplateID,
 		VFXKey:           BuildVFXKey(caster.AssetBaseKey, "spell"),
 		SFXKey:           BuildSFXKey(caster.AssetBaseKey, "spell"),
-		Targets: []EventTarget{
-			{
-				InstanceID: inst,
-				TemplateID: tplID,
-				Amount:     damage,
-				Died:       died,
-				NewHP:      newHP,
-			},
-		},
+		Targets:          eventTargets,
 	})
 	caster.Skill.CooldownLeft = caster.Skill.BaseCooldown
 	return nil

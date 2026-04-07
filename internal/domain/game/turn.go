@@ -338,25 +338,15 @@ func CardAttack(m *MatchState,
 			return ErrTargetNotFound
 		}
 		heal := atk.Attack
-		// _ = triggerPassiveByTrigger(m, playerIndex, atk, cards.PassiveTriggerOnAttack, PassiveTriggerContext{
-		// 	AttackerInstanceID: atk.InstanceID,
-		// 	AttackerOwnerIdx:   playerIndex,
-		// 	TargetInstanceID:   tu.InstanceID,
-		// 	SourceOwnerIdx:     playerIndex,
-		// 	TargetOwnerIdx:     playerIndex,
-		// 	TargetSlot:         ti,
-		// })
-		// _ = triggerCardSkillByTrigger(m, playerIndex, atk, cards.TriggerOnAttack, Action{
-		// 	PlayerIndex:      playerIndex,
-		// 	CardInstanceID:   atk.InstanceID,
-		// 	TargetInstanceID: tu.InstanceID,
-		// 	TargetSlot:       ti,
-		// 	AttackHero:       false,
-		// })
+		if HasEffect(tu, cards.DebuffEffectNoHeal) {
+			return errors.New("target cannot be healed")
+		}
+		beforeHP := tu.HP
 		tu.HP += heal
 		if tu.HP > tu.MaxHP {
 			tu.HP = tu.MaxHP
 		}
+		actualHeal := tu.HP - beforeHP
 		tpl, ok := r.GetBattleTemplate(atk.TemplateID)
 		if !ok {
 			return errors.New("unknown battle template: " + atk.TemplateID)
@@ -365,7 +355,7 @@ func CardAttack(m *MatchState,
 		targets = append(targets, EventTarget{
 			InstanceID: tu.InstanceID,
 			TemplateID: tu.TemplateID,
-			Amount:     heal,
+			Amount:     actualHeal,
 			Died:       false,
 			NewHP:      tu.HP,
 		})
@@ -375,8 +365,8 @@ func CardAttack(m *MatchState,
 			SourceKind:       string(SourceUnit),
 			SourceInstanceID: atk.InstanceID,
 			SourceTemplateID: atk.TemplateID,
-			VFXKey:           BuildVFXKey(tpl.AssetBaseKey, "attack"), //бессмыслица, добавил чисто для красоты
-			SFXKey:           BuildSFXKey(tpl.AssetBaseKey, "attack"), //ок не бессмыслица, хил с точки зрения движка это атака по своим)))
+			VFXKey:           BuildVFXKey(tpl.AssetBaseKey, "attack"),
+			SFXKey:           BuildSFXKey(tpl.AssetBaseKey, "attack"),
 			Targets:          targets,
 		})
 		return nil
@@ -436,30 +426,34 @@ func CardAttack(m *MatchState,
 			if s != di {
 				dmg = baseDamage / 2
 			}
-			u.HP -= dmg
-			// _ = triggerPassiveByTrigger(m, 1-playerIndex, u, cards.PassiveTriggerHitMe, PassiveTriggerContext{
-			// 	AttackerInstanceID: atk.InstanceID,
-			// 	AttackerOwnerIdx:   playerIndex,
-			// 	TargetInstanceID:   u.InstanceID,
-			// 	SourceOwnerIdx:     playerIndex,
-			// 	TargetOwnerIdx:     1 - playerIndex,
-			// 	TargetSlot:         s,
-			// })
-			died := u.HP <= 0
-			newHP := u.HP
-			if died {
-				if err := killUnitAt(m, 1-playerIndex, s, atk.InstanceID, playerIndex); err != nil {
-					return err
-				}
-				newHP = 0
+			res, err := applyDamageToUnit(m, 1-playerIndex, s, u, dmg, atk.InstanceID, playerIndex, true)
+			if err != nil {
+				return err
 			}
 			targets = append(targets, EventTarget{
 				InstanceID: inst,
 				TemplateID: tplID,
-				Amount:     dmg,
-				Died:       died,
-				NewHP:      newHP,
+				Amount:     res.DamageToHP,
+				Died:       res.Died,
+				NewHP:      res.NewHP,
 			})
+			if res.ReflectedDamage > 0 {
+				atkSlot, aliveAtk := atkPlayer.FindSlot(attackerInstanceID)
+				if aliveAtk != nil && atkSlot >= 0 {
+					reflectRes, err := applyDamageToUnit(m, playerIndex, atkSlot, aliveAtk, res.ReflectedDamage,
+						u.InstanceID, 1-playerIndex, false)
+					if err != nil {
+						return err
+					}
+					targets = append(targets, EventTarget{
+						InstanceID: aliveAtk.InstanceID,
+						TemplateID: aliveAtk.TemplateID,
+						Amount:     reflectRes.DamageToHP,
+						Died:       reflectRes.Died,
+						NewHP:      reflectRes.NewHP,
+					})
+				}
+			}
 		}
 	}
 	tpl, ok := r.GetBattleTemplate(atk.TemplateID)
@@ -477,24 +471,6 @@ func CardAttack(m *MatchState,
 		SFXKey:           BuildSFXKey(tpl.AssetBaseKey, "attack"),
 		Targets:          targets,
 	})
-	// _, aliveAttacker := atkPlayer.FindSlot(attackerInstanceID)
-	// if aliveAttacker != nil {
-	// 	// _ = triggerPassiveByTrigger(m, playerIndex, aliveAttacker, cards.PassiveTriggerOnAttack, PassiveTriggerContext{
-	// 	// 	AttackerInstanceID: aliveAttacker.InstanceID,
-	// 	// 	AttackerOwnerIdx:   playerIndex,
-	// 	// 	TargetInstanceID:   defenderInstanceID,
-	// 	// 	SourceOwnerIdx:     playerIndex,
-	// 	// 	TargetOwnerIdx:     1 - playerIndex,
-	// 	// })
-	// }
-	// if aliveAttacker != nil {
-	// 	_ = triggerCardSkillByTrigger(m, playerIndex, aliveAttacker, cards.TriggerOnAttack, Action{
-	// 		PlayerIndex:      playerIndex,
-	// 		CardInstanceID:   aliveAttacker.InstanceID,
-	// 		TargetInstanceID: defenderInstanceID,
-	// 		AttackHero:       attackHero,
-	// 	})
-	// }
 	if defPlayer.HeroHP <= 0 {
 		m.Finished = true
 		if playerIndex == 0 {
@@ -583,22 +559,27 @@ func HeroAttack(m *MatchState,
 			}
 			inst := u.InstanceID
 			tplID := u.TemplateID
-			u.HP -= dmg
-			died := u.HP <= 0
-			newHP := u.HP
-			if died {
-				if err := killUnitAt(m, 1-playerIndex, s, "", playerIndex); err != nil {
-					return err
-				}
-				newHP = 0
+			res, err := applyDamageToUnit(m, 1-playerIndex, s, u, dmg, "", playerIndex, true)
+			if err != nil {
+				return err
 			}
 			targets = append(targets, EventTarget{
 				InstanceID: inst,
 				TemplateID: tplID,
-				Amount:     dmg,
-				Died:       died,
-				NewHP:      newHP,
+				Amount:     res.DamageToHP,
+				Died:       res.Died,
+				NewHP:      res.NewHP,
 			})
+			if res.ReflectedDamage > 0 {
+				heroID := fmt.Sprintf("hero:p%d", playerIndex)
+				atkPlayer.HeroHP -= res.ReflectedDamage
+				targets = append(targets, EventTarget{
+					InstanceID: heroID,
+					Amount:     res.ReflectedDamage,
+					Died:       atkPlayer.HeroHP <= 0,
+					NewHP:      atkPlayer.HeroHP,
+				})
+			}
 		}
 	}
 	atkPlayer.HeroAttackCooldown = atkPlayer.HeroAttackBaseCooldown
@@ -612,6 +593,15 @@ func HeroAttack(m *MatchState,
 		SFXKey:         BuildSFXKey(heroBase, "attack"),
 		Targets:        targets,
 	})
+	if atkPlayer.HeroHP <= 0 {
+		m.Finished = true
+		if playerIndex == 0 {
+			m.Result = MatchWinP2
+		} else {
+			m.Result = MatchWinP1
+		}
+		return nil
+	}
 	if defPlayer.HeroHP <= 0 {
 		m.Finished = true
 		if playerIndex == 0 {
@@ -619,6 +609,7 @@ func HeroAttack(m *MatchState,
 		} else {
 			m.Result = MatchWinP2
 		}
+		return nil
 	}
 	return nil
 }

@@ -5,8 +5,6 @@ import (
 	"errors"
 )
 
-//ПЕРЕЛОПАТИТЬ
-
 /*Файл посвящен функциям хелперам, которые так или иначе влияют на геймплей. Но я сейчас так подумал, наверное это
 уничижительное определение, поскольку данные функции ебать как помогают... Ну вот к примеру*/
 
@@ -161,7 +159,6 @@ func RemoveEffect(u *UnitState, e UnitEffect) error {
 	case cards.BuffEffectHealPerTurn,
 		cards.BuffEffectShield,
 		cards.BuffEffectReflectShield,
-		cards.BuffEffectRedirectDamage,
 		cards.BuffEffectDamageReduction,
 		cards.BuffEffectOverdrive,
 		cards.BuffEffectMulticast,
@@ -250,7 +247,6 @@ func ApplyEffect(u *UnitState, buff UnitEffect) error {
 	case cards.BuffEffectHealPerTurn,
 		cards.BuffEffectShield,
 		cards.BuffEffectReflectShield,
-		cards.BuffEffectRedirectDamage,
 		cards.BuffEffectDamageReduction,
 		cards.BuffEffectOverdrive,
 		cards.BuffEffectMulticast,
@@ -285,6 +281,88 @@ func clampUnitCooldown(u *UnitState) {
 	if u.Cooldown < 1 {
 		u.Cooldown = 1
 	}
+}
+
+/*
+Короче. Далее будет структура, смысл которой заключается в том, чтобы собрать все данные о входящем
+уроне по юниту. А точнее то, сколько пришло после всех модификаторов и по факту должно отняться у карты.
+*/
+type UnitDamageResult struct {
+	TotalDamage     int  //<-всего дамага
+	DamageToHP      int  //<-сколько пройдет в ХП
+	ReflectedDamage int  //<-отраженный урон
+	Died            bool //<-умерла ли карта
+	NewHP           int  //<-новые хп
+}
+
+func applyDamageToUnit(m *MatchState, ownerIdx int, slot int,
+	target *UnitState, rawDamage int, killerInstanceID string,
+	killerOwnerIdx int, canReflect bool) (UnitDamageResult, error) {
+	result := UnitDamageResult{}
+	if m == nil {
+		return result, errors.New("nil match state")
+	}
+	if target == nil {
+		return result, errors.New("nil target unit")
+	}
+	if rawDamage <= 0 {
+		result.NewHP = target.HP
+		return result, nil
+	}
+	damage := rawDamage
+	reflectPower := 0
+	for _, e := range target.Effects {
+		switch e.EffectType {
+		case cards.BuffEffectDamageReduction:
+			damage -= e.Value
+		case cards.DebuffEffectVulnerable:
+			damage += e.Value
+		case cards.BuffEffectReflectShield:
+			reflectPower += e.ExtraValue
+		}
+	}
+	if damage < 0 {
+		damage = 0
+	}
+	result.TotalDamage = damage
+	remaining := damage
+	for i := 0; i < len(target.Effects) && remaining > 0; {
+		e := &target.Effects[i]
+		if e.EffectType != cards.BuffEffectShield && e.EffectType != cards.BuffEffectReflectShield {
+			i++
+			continue
+		}
+		absorbed := remaining
+		if absorbed > e.Value {
+			absorbed = e.Value
+		}
+		remaining -= absorbed
+		e.Value -= absorbed
+		if e.Value <= 0 {
+			target.Effects = append(target.Effects[:i], target.Effects[i+1:]...)
+			continue
+		}
+		i++
+	}
+	result.DamageToHP = remaining
+	if result.DamageToHP > 0 {
+		target.HP -= result.DamageToHP
+	}
+	if canReflect && result.TotalDamage > 0 && reflectPower > 0 {
+		result.ReflectedDamage = reflectPower
+		if result.ReflectedDamage > result.TotalDamage {
+			result.ReflectedDamage = result.TotalDamage
+		}
+	}
+	result.Died = target.HP <= 0
+	result.NewHP = target.HP
+	if result.Died {
+		if err := killUnitAt(m, ownerIdx, slot, killerInstanceID, killerOwnerIdx); err != nil {
+			return result, err
+		}
+		result.NewHP = 0
+	}
+	return result, nil
 }
 
 /*Таким образом работают хелп функции вокруг основных функций (которые мы написали в turn.go). Тут происходит

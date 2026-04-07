@@ -64,7 +64,6 @@ const (
 	BuffEffectMakeTank        = "make_tank"        //делаем из карты танка (если карта уже танк, нельзя навесить)
 	BuffEffectShield          = "shield"           //накидываем щит на карту
 	BuffEffectReflectShield   = "reflect_shield"   //накидываем щит отражающий урон на карту
-	BuffEffectRedirectDamage  = "redirect_damage"  //перенаправляем урон на целевую карту в сторону кастера (нельзя навесить на себя)
 	BuffEffectVampiricStrike  = "vampiric_strike"  //даруем вамиризм целевой карте
 	BuffEffectChainAttack     = "chain_attack"     //атака целевой карты перескакивает на случайных противников
 	BuffEffectDamageReduction = "damage_reduction" //снижаем урон входящий по целевой карте на Х
