@@ -55,7 +55,9 @@ func EnsureStartTurn(m *MatchState) error {
 	//если фаза в матче старт (системная подготовка к ходу)
 	if m.Phase == PhaseStart {
 		//запускаем функцию, которая помимо прочего ограничивает время на ход. Подробнее о ней в следующих файлах
-		StartTurn(m, time.Now().Unix())
+		if err := StartTurn(m, time.Now().Unix()); err != nil {
+			return err
+		}
 	}
 	return nil
 }

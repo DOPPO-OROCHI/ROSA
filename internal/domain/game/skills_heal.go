@@ -1,10 +1,13 @@
 package game
 
-import "errors"
+import (
+	"TheWar/internal/domain/cards"
+	"errors"
+)
 
 /*Данный файл целиком и полностью посвящен хендлерам хил скилов. Ура!*/
 
-//КАСТУЕМ ХИЛ НА СЕБЯ
+// КАСТУЕМ ХИЛ НА СЕБЯ
 func CastHealSelfSkill(m *MatchState, a Action, caster *UnitState) error {
 	if m == nil || caster == nil {
 		return errors.New("nil match or casters")
@@ -15,6 +18,12 @@ func CastHealSelfSkill(m *MatchState, a Action, caster *UnitState) error {
 	if caster.Skill.CooldownLeft > 0 {
 		return ErrCardSkillOnCooldown
 	}
+	if HasEffect(caster, cards.DebuffEffectStun) {
+		return errors.New("caster is stunned")
+	}
+	if HasEffect(caster, cards.DebuffEffectSilence) {
+		return errors.New("caster is silenced")
+	}
 	if a.AttackHero || a.TargetInstanceID != "" {
 		return ErrCardSkillBadTarget
 	}
@@ -22,6 +31,9 @@ func CastHealSelfSkill(m *MatchState, a Action, caster *UnitState) error {
 	beforeHP := caster.HP
 	if caster.HP >= caster.MaxHP {
 		return errors.New("cant cast this skill while HP full")
+	}
+	if HasEffect(caster, cards.DebuffEffectNoHeal) {
+		return errors.New("target cannot be healed")
 	}
 	caster.HP += heal
 	if caster.HP > caster.MaxHP {
@@ -50,7 +62,7 @@ func CastHealSelfSkill(m *MatchState, a Action, caster *UnitState) error {
 	return nil
 }
 
-//КАСТУЕМ ХИЛ НА КОГО НИБУДЬ СОЛО
+// КАСТУЕМ ХИЛ НА КОГО НИБУДЬ СОЛО
 func CastHealSingleSkill(m *MatchState, a Action, caster *UnitState) error {
 	if m == nil || caster == nil {
 		return errors.New("nil match or casters")
@@ -60,6 +72,12 @@ func CastHealSingleSkill(m *MatchState, a Action, caster *UnitState) error {
 	}
 	if caster.Skill.CooldownLeft > 0 {
 		return ErrCardSkillOnCooldown
+	}
+	if HasEffect(caster, cards.DebuffEffectStun) {
+		return errors.New("caster is stunned")
+	}
+	if HasEffect(caster, cards.DebuffEffectSilence) {
+		return errors.New("caster is silenced")
 	}
 	if a.AttackHero || a.TargetInstanceID == "" {
 		return ErrCardSkillBadTarget
@@ -80,6 +98,9 @@ func CastHealSingleSkill(m *MatchState, a Action, caster *UnitState) error {
 	beforeHP := target.HP
 	if target.HP >= target.MaxHP {
 		return errors.New("cant cast this skill while HP full")
+	}
+	if HasEffect(target, cards.DebuffEffectNoHeal) {
+		return errors.New("target cannot be healed")
 	}
 	target.HP += heal
 	if target.HP > target.MaxHP {
@@ -108,7 +129,7 @@ func CastHealSingleSkill(m *MatchState, a Action, caster *UnitState) error {
 	return nil
 }
 
-//КАСТУЕМ ХИЛ ВОКРУГ СЕБЯ (вокруг карты типа, на 1 слот) ИЛИ НА СЕБЯ ЕСЛИ НИКОГО НЕТ
+// КАСТУЕМ ХИЛ ВОКРУГ СЕБЯ (вокруг карты типа, на 1 слот) ИЛИ НА СЕБЯ ЕСЛИ НИКОГО НЕТ
 func CastHealAdjacentSkill(m *MatchState, a Action, caster *UnitState) error {
 	if m == nil || caster == nil {
 		return errors.New("nil match or casters")
@@ -118,6 +139,12 @@ func CastHealAdjacentSkill(m *MatchState, a Action, caster *UnitState) error {
 	}
 	if caster.Skill.CooldownLeft > 0 {
 		return ErrCardSkillOnCooldown
+	}
+	if HasEffect(caster, cards.DebuffEffectStun) {
+		return errors.New("caster is stunned")
+	}
+	if HasEffect(caster, cards.DebuffEffectSilence) {
+		return errors.New("caster is silenced")
 	}
 	if a.AttackHero || a.TargetInstanceID != "" {
 		return ErrCardSkillBadTarget
@@ -141,6 +168,12 @@ func CastHealAdjacentSkill(m *MatchState, a Action, caster *UnitState) error {
 	heal := caster.Skill.Power
 	healTarget := func(target *UnitState) {
 		if target == nil {
+			return
+		}
+		if HasEffect(target, cards.DebuffEffectNoHeal) {
+			return
+		}
+		if target.HP >= target.MaxHP {
 			return
 		}
 		beforeHP := target.HP
@@ -170,6 +203,9 @@ func CastHealAdjacentSkill(m *MatchState, a Action, caster *UnitState) error {
 			return errors.New("cant cast this skill while HP full and noones near the healer")
 		}
 		beforeHP := caster.HP
+		if HasEffect(caster, cards.DebuffEffectNoHeal) {
+			return errors.New("target cannot be healed")
+		}
 		caster.HP += caster.Skill.Power
 		if caster.HP > caster.MaxHP {
 			caster.HP = caster.MaxHP
@@ -197,7 +233,7 @@ func CastHealAdjacentSkill(m *MatchState, a Action, caster *UnitState) error {
 	return nil
 }
 
-//ХИЛИМ ВООБЩЕ ВСЕХ И СЕБЯ В ТОМ ЧИСЛЕ
+// ХИЛИМ ВООБЩЕ ВСЕХ И СЕБЯ В ТОМ ЧИСЛЕ
 func CastHealAllAlliesSkill(m *MatchState, a Action, caster *UnitState) error {
 	if m == nil || caster == nil {
 		return errors.New("nil match or casters")
@@ -207,6 +243,12 @@ func CastHealAllAlliesSkill(m *MatchState, a Action, caster *UnitState) error {
 	}
 	if caster.Skill.CooldownLeft > 0 {
 		return ErrCardSkillOnCooldown
+	}
+	if HasEffect(caster, cards.DebuffEffectStun) {
+		return errors.New("caster is stunned")
+	}
+	if HasEffect(caster, cards.DebuffEffectSilence) {
+		return errors.New("caster is silenced")
 	}
 	if a.AttackHero || a.TargetInstanceID != "" {
 		return ErrCardSkillBadTarget
@@ -225,6 +267,9 @@ func CastHealAllAlliesSkill(m *MatchState, a Action, caster *UnitState) error {
 		}
 		hasTargets = true
 		beforeHP := u.HP
+		if HasEffect(u, cards.DebuffEffectNoHeal) {
+			continue
+		}
 		u.HP += heal
 		if u.HP > u.MaxHP {
 			u.HP = u.MaxHP
@@ -266,6 +311,12 @@ func CastHealLowestHPSkill(m *MatchState, a Action, caster *UnitState) error {
 	if caster.Skill.CooldownLeft > 0 {
 		return ErrCardSkillOnCooldown
 	}
+	if HasEffect(caster, cards.DebuffEffectStun) {
+		return errors.New("caster is stunned")
+	}
+	if HasEffect(caster, cards.DebuffEffectSilence) {
+		return errors.New("caster is silenced")
+	}
 	owner := m.Players[a.PlayerIndex]
 	if owner == nil {
 		return errors.New("nil owner state")
@@ -292,6 +343,9 @@ func CastHealLowestHPSkill(m *MatchState, a Action, caster *UnitState) error {
 	tplID := target.TemplateID
 	if target.HP >= target.MaxHP {
 		return errors.New("cant cast this skill while HP full")
+	}
+	if HasEffect(target, cards.DebuffEffectNoHeal) {
+		return errors.New("target cannot be healed")
 	}
 	target.HP += heal
 	if target.HP > target.MaxHP {
@@ -332,6 +386,12 @@ func CastHealHighestAttackSkill(m *MatchState, a Action, caster *UnitState) erro
 	if caster.Skill.CooldownLeft > 0 {
 		return ErrCardSkillOnCooldown
 	}
+	if HasEffect(caster, cards.DebuffEffectStun) {
+		return errors.New("caster is stunned")
+	}
+	if HasEffect(caster, cards.DebuffEffectSilence) {
+		return errors.New("caster is silenced")
+	}
 	owner := m.Players[a.PlayerIndex]
 	if owner == nil {
 		return errors.New("nil owner state")
@@ -345,6 +405,12 @@ func CastHealHighestAttackSkill(m *MatchState, a Action, caster *UnitState) erro
 		if u == nil {
 			continue
 		}
+		if u.HP >= u.MaxHP {
+			continue
+		}
+		if HasEffect(u, cards.DebuffEffectNoHeal) {
+			continue
+		}
 		if target == nil || u.Attack > target.Attack {
 			target = u
 		}
@@ -356,9 +422,6 @@ func CastHealHighestAttackSkill(m *MatchState, a Action, caster *UnitState) erro
 	heal := caster.Skill.Power
 	inst := target.InstanceID
 	tplID := target.TemplateID
-	if target.HP >= target.MaxHP {
-		return errors.New("cant cast this skill while HP full")
-	}
 	target.HP += heal
 	if target.HP > target.MaxHP {
 		target.HP = target.MaxHP

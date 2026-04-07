@@ -8,10 +8,10 @@ import (
 	"time"
 )
 
-func StartTurn(m *MatchState, nowUnix int64) {
+func StartTurn(m *MatchState, nowUnix int64) error {
 	p := m.Players[m.ActivePlayer]
 	if p == nil || m.Finished {
-		return
+		return errors.New("bad player index or match finished")
 	}
 	p.Turns++
 	if p.Turns >= 10 {
@@ -38,7 +38,9 @@ func StartTurn(m *MatchState, nowUnix int64) {
 			u.Skill.CooldownLeft--
 		}
 	}
-	TickerEffects(m, m.ActivePlayer)
+	if err := TickerEffects(m, m.ActivePlayer); err != nil {
+		return err
+	}
 	// _ = DispathContinuousPassives(m)
 	// _ = DispathPassives(m, m.ActivePlayer, cards.PassiveTriggerTurnStart, PassiveTriggerContext{
 	// 	SourceOwnerIdx: m.ActivePlayer,
@@ -76,7 +78,7 @@ func StartTurn(m *MatchState, nowUnix int64) {
 		} else {
 			m.Result = MatchWinP1
 		}
-		return
+		return nil
 	}
 	if m.TurnTimeSec <= 0 {
 		m.TurnTimeSec = 45
@@ -84,6 +86,7 @@ func StartTurn(m *MatchState, nowUnix int64) {
 	m.TurnStartedAt = nowUnix
 	m.TurnDeadline = nowUnix + int64(m.TurnTimeSec)
 	m.Phase = PhaseMain
+	return nil
 }
 
 func EndTurn(m *MatchState) {
@@ -97,7 +100,9 @@ func EndTurn(m *MatchState) {
 	// 	SourceOwnerIdx: m.ActivePlayer,
 	// })
 	m.ActivePlayer = 1 - m.ActivePlayer
-	StartTurn(m, time.Now().Unix())
+	if err := StartTurn(m, time.Now().Unix()); err != nil {
+		return
+	}
 }
 
 func PlayBattleCard(m *MatchState,
@@ -260,7 +265,9 @@ func PlayBuffCard(m *MatchState,
 		Value:      tpl.BuffValue,
 	}
 	beforeHP := target.HP
-	AddEffect(target, e)
+	if err := AddEffect(target, e); err != nil {
+		return err
+	}
 	afterHP := target.HP
 	deltaHP := afterHP - beforeHP
 	last := len(p.Hand) - 1
@@ -314,6 +321,12 @@ func CardAttack(m *MatchState,
 	}
 	if atk.SummonedInTurn == atkPlayer.Turns {
 		return ErrAttackerSummoneddThisTurn
+	}
+	if HasEffect(atk, cards.DebuffEffectStun) {
+		return errors.New("attacker is stunned")
+	}
+	if HasEffect(atk, cards.DebuffEffectDisarm) {
+		return errors.New("attacker is disarmed")
 	}
 	targets := make([]EventTarget, 0, 3)
 	if atk.CardType == cards.Healer {
@@ -830,4 +843,17 @@ func killUnitAt(m *MatchState, ownerIdx int, slot int, killerInstanceID string, 
 		TargetSlot:       slot,
 	})
 	return nil
+}
+
+// Хелмер чисто для проверки эффектов стана, сайленса и так далее
+func HasEffect(u *UnitState, effectType string) bool {
+	if u == nil || effectType == "" {
+		return false
+	}
+	for _, e := range u.Effects {
+		if e.EffectType == effectType {
+			return true
+		}
+	}
+	return false
 }

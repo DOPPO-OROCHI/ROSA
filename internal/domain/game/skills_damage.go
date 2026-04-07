@@ -1,6 +1,7 @@
 package game
 
 import (
+	"TheWar/internal/domain/cards"
 	"errors"
 	"fmt"
 	"math/rand/v2"
@@ -14,9 +15,8 @@ func CastSingleDamageSkill(m *MatchState, a Action, caster *UnitState) error {
 	if m == nil || caster == nil {
 		return errors.New("nil match or caster")
 	}
-	owner := m.Players[a.PlayerIndex]
 	enemy := m.Players[1-a.PlayerIndex]
-	if owner == nil || enemy == nil {
+	if enemy == nil {
 		return errors.New("nil player state")
 	}
 	if caster.Skill.Code == "" {
@@ -27,6 +27,12 @@ func CastSingleDamageSkill(m *MatchState, a Action, caster *UnitState) error {
 	}
 	if !a.AttackHero && a.TargetInstanceID == "" {
 		return ErrCardSkillBadTarget
+	}
+	if HasEffect(caster, cards.DebuffEffectStun) {
+		return errors.New("caster is stunned")
+	}
+	if HasEffect(caster, cards.DebuffEffectSilence) {
+		return errors.New("caster is silenced")
 	}
 	if a.AttackHero {
 		if !caster.Skill.IgnoreTank && enemyHasTank(enemy) {
@@ -118,6 +124,12 @@ func CastSplashDamageSkill(m *MatchState, a Action, caster *UnitState) error {
 	if caster.Skill.Code == "" {
 		return ErrCardSkillNotFound
 	}
+	if HasEffect(caster, cards.DebuffEffectStun) {
+		return errors.New("caster is stunned")
+	}
+	if HasEffect(caster, cards.DebuffEffectSilence) {
+		return errors.New("caster is silenced")
+	}
 	targetSlot, target := enemy.FindSlot(a.TargetInstanceID)
 	if target == nil || targetSlot < 0 {
 		return ErrCardSkillBadTarget
@@ -197,6 +209,12 @@ func CastAllEnemiesDamageSkill(m *MatchState, a Action, caster *UnitState) error
 	if enemy == nil {
 		return errors.New("nil enemy state")
 	}
+	if HasEffect(caster, cards.DebuffEffectStun) {
+		return errors.New("caster is stunned")
+	}
+	if HasEffect(caster, cards.DebuffEffectSilence) {
+		return errors.New("caster is silenced")
+	}
 	targets := make([]EventTarget, 0, TableSize)
 	damage := caster.Skill.Power
 	hasTarget := false
@@ -252,6 +270,12 @@ func CastRandomSingleEnemyDamageSkill(m *MatchState, a Action, caster *UnitState
 	}
 	if caster.Skill.CooldownLeft > 0 {
 		return ErrCardSkillOnCooldown
+	}
+	if HasEffect(caster, cards.DebuffEffectStun) {
+		return errors.New("caster is stunned")
+	}
+	if HasEffect(caster, cards.DebuffEffectSilence) {
+		return errors.New("caster is silenced")
 	}
 	enemy := m.Players[1-a.PlayerIndex]
 	if enemy == nil {
@@ -355,6 +379,12 @@ func CastRandomMultiEnemyDamageSkill(m *MatchState, a Action, caster *UnitState)
 	enemy := m.Players[1-a.PlayerIndex]
 	if enemy == nil {
 		return errors.New("nil enemy state")
+	}
+	if HasEffect(caster, cards.DebuffEffectStun) {
+		return errors.New("caster is stunned")
+	}
+	if HasEffect(caster, cards.DebuffEffectSilence) {
+		return errors.New("caster is silenced")
 	}
 	type randomTarget struct {
 		isHero bool
@@ -460,6 +490,12 @@ func CastLowestHPDamageSkill(m *MatchState, a Action, caster *UnitState) error {
 	if caster.Skill.CooldownLeft > 0 {
 		return ErrCardSkillOnCooldown
 	}
+	if HasEffect(caster, cards.DebuffEffectStun) {
+		return errors.New("caster is stunned")
+	}
+	if HasEffect(caster, cards.DebuffEffectSilence) {
+		return errors.New("caster is silenced")
+	}
 	enemy := m.Players[1-a.PlayerIndex]
 	if enemy == nil {
 		return errors.New("nil enemy state")
@@ -526,6 +562,12 @@ func CastHighestAttackDamageSkill(m *MatchState, a Action, caster *UnitState) er
 	}
 	if caster.Skill.CooldownLeft > 0 {
 		return ErrCardSkillOnCooldown
+	}
+	if HasEffect(caster, cards.DebuffEffectStun) {
+		return errors.New("caster is stunned")
+	}
+	if HasEffect(caster, cards.DebuffEffectSilence) {
+		return errors.New("caster is silenced")
 	}
 	enemy := m.Players[1-a.PlayerIndex]
 	if enemy == nil {
@@ -594,6 +636,12 @@ func CastHighestHPDamageSkill(m *MatchState, a Action, caster *UnitState) error 
 	if caster.Skill.CooldownLeft > 0 {
 		return ErrCardSkillOnCooldown
 	}
+	if HasEffect(caster, cards.DebuffEffectStun) {
+		return errors.New("caster is stunned")
+	}
+	if HasEffect(caster, cards.DebuffEffectSilence) {
+		return errors.New("caster is silenced")
+	}
 	enemy := m.Players[1-a.PlayerIndex]
 	if enemy == nil {
 		return errors.New("nil enemy state")
@@ -660,6 +708,12 @@ func CastLowestAttackDamageSkill(m *MatchState, a Action, caster *UnitState) err
 	}
 	if caster.Skill.CooldownLeft > 0 {
 		return ErrCardSkillOnCooldown
+	}
+	if HasEffect(caster, cards.DebuffEffectStun) {
+		return errors.New("caster is stunned")
+	}
+	if HasEffect(caster, cards.DebuffEffectSilence) {
+		return errors.New("caster is silenced")
 	}
 	enemy := m.Players[1-a.PlayerIndex]
 	if enemy == nil {

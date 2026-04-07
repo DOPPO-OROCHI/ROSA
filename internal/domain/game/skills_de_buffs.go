@@ -18,6 +18,12 @@ func CastBuffSkill(m *MatchState, a Action, caster *UnitState) error {
 	if caster.Skill.CooldownLeft > 0 {
 		return ErrCardSkillOnCooldown
 	}
+	if HasEffect(caster, cards.DebuffEffectStun) {
+		return errors.New("caster is stunned")
+	}
+	if HasEffect(caster, cards.DebuffEffectSilence) {
+		return errors.New("caster is silenced")
+	}
 	owner := m.Players[a.PlayerIndex]
 	if owner == nil {
 		return errors.New("nil owner state")
@@ -101,7 +107,9 @@ func CastBuffSkill(m *MatchState, a Action, caster *UnitState) error {
 			SourceInstanceID: caster.InstanceID,
 			Dispellable:      true,
 		}
-		AddEffect(target, e)
+		if err := AddEffect(target, e); err != nil {
+			return err
+		}
 		eventTargets = append(eventTargets, EventTarget{
 			InstanceID: target.InstanceID,
 			TemplateID: target.TemplateID,
@@ -137,6 +145,12 @@ func CastDebuffSkill(m *MatchState, a Action, caster *UnitState) error {
 	}
 	if caster.Skill.CooldownLeft > 0 {
 		return ErrCardSkillOnCooldown
+	}
+	if HasEffect(caster, cards.DebuffEffectStun) {
+		return errors.New("caster is stunned")
+	}
+	if HasEffect(caster, cards.DebuffEffectSilence) {
+		return errors.New("caster is silenced")
 	}
 	enemy := m.Players[1-a.PlayerIndex]
 	if enemy == nil {
@@ -187,7 +201,9 @@ func CastDebuffSkill(m *MatchState, a Action, caster *UnitState) error {
 			SourceInstanceID: caster.InstanceID,
 			Dispellable:      true,
 		}
-		AddEffect(target, e)
+		if err := AddEffect(target, e); err != nil {
+			return err
+		}
 		eventTargets = append(eventTargets, EventTarget{
 			InstanceID: target.InstanceID,
 			TemplateID: target.TemplateID,
@@ -223,6 +239,12 @@ func CastDispelDebuffsFromAllySkill(m *MatchState, a Action, caster *UnitState) 
 	}
 	if caster.Skill.CooldownLeft > 0 {
 		return ErrCardSkillOnCooldown
+	}
+	if HasEffect(caster, cards.DebuffEffectStun) {
+		return errors.New("caster is stunned")
+	}
+	if HasEffect(caster, cards.DebuffEffectSilence) {
+		return errors.New("caster is silenced")
 	}
 	owner := m.Players[a.PlayerIndex]
 	if owner == nil {
@@ -366,6 +388,12 @@ func CastDispelBuffsFromEnemySkill(m *MatchState, a Action, caster *UnitState) e
 	}
 	if caster.Skill.CooldownLeft > 0 {
 		return ErrCardSkillOnCooldown
+	}
+	if HasEffect(caster, cards.DebuffEffectStun) {
+		return errors.New("caster is stunned")
+	}
+	if HasEffect(caster, cards.DebuffEffectSilence) {
+		return errors.New("caster is silenced")
 	}
 	enemy := m.Players[1-a.PlayerIndex]
 	if enemy == nil {

@@ -79,7 +79,9 @@ func (ab BlackCellAbilitySpec) Apply(st *MatchState, a Action) error {
 		Value:      spec.Value,
 	}
 	u.HP = 1
-	AddEffect(u, e)
+	if err := AddEffect(u, e); err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -146,7 +148,9 @@ func (ab KarnAbilitySpec) Apply(st *MatchState, a Action) error {
 		TurnsLeft:  spec.Duration,
 		Value:      0,
 	}
-	AddEffect(u, e)
+	if err := AddEffect(u, e); err != nil {
+		return err
+	}
 	return nil
 }
 
