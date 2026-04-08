@@ -28,6 +28,7 @@ const (
 	SkillKindKill   = "kill"
 	SkillKindVision = "vision"
 	SkillKindDebuff = "debuff"
+	SkillKindSummon = "summon"
 )
 
 const (

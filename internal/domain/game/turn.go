@@ -25,7 +25,6 @@ func StartTurn(m *MatchState, nowUnix int64) error {
 	if p.HeroAbilityCooldown > 0 {
 		p.HeroAbilityCooldown--
 	}
-	// _ = processPendingResurections(m, m.ActivePlayer)
 	for i := range p.Table {
 		u := p.Table[i]
 		if u == nil {
@@ -41,19 +40,11 @@ func StartTurn(m *MatchState, nowUnix int64) error {
 	if err := TickerEffects(m, m.ActivePlayer); err != nil {
 		return err
 	}
-	// _ = DispathContinuousPassives(m)
-	// _ = DispathPassives(m, m.ActivePlayer, cards.PassiveTriggerTurnStart, PassiveTriggerContext{
-	// 	SourceOwnerIdx: m.ActivePlayer,
-	// })
 	for i := 0; i < TableSize; i++ {
 		u := p.Table[i]
 		if u == nil {
 			continue
 		}
-		// _ = triggerCardSkillByTrigger(m, m.ActivePlayer, u, cards.TriggerTurnStart, Action{
-		// 	PlayerIndex:    m.ActivePlayer,
-		// 	CardInstanceID: u.InstanceID,
-		// })
 	}
 	draw := 1
 	if len(p.Deck) < draw {
@@ -96,9 +87,6 @@ func EndTurn(m *MatchState) {
 	if m.Phase != PhaseMain {
 		return
 	}
-	// _ = DispathPassives(m, m.ActivePlayer, cards.PassiveTriggerTurnEnd, PassiveTriggerContext{
-	// 	SourceOwnerIdx: m.ActivePlayer,
-	// })
 	m.ActivePlayer = 1 - m.ActivePlayer
 	if err := StartTurn(m, time.Now().Unix()); err != nil {
 		return
@@ -199,18 +187,6 @@ func PlayBattleCard(m *MatchState,
 		SFXKey:           BuildSFXKey(tpl.AssetBaseKey, "summon"),
 		TargetSlot:       targetSlot,
 	})
-	// _ = triggerPassiveByTrigger(m, playerIndex, u, cards.PassiveTriggerOnPlay, PassiveTriggerContext{
-	// 	TargetInstanceID: u.InstanceID,
-	// 	SourceOwnerIdx:   playerIndex,
-	// 	TargetOwnerIdx:   playerIndex,
-	// 	TargetSlot:       targetSlot,
-	// })
-	// _ = DispathContinuousPassives(m)
-	// _ = triggerCardSkillByTrigger(m, playerIndex, u, cards.TriggerOnPlay, Action{
-	// 	PlayerIndex:    playerIndex,
-	// 	CardInstanceID: u.InstanceID,
-	// 	TargetSlot:     targetSlot,
-	// })
 	return nil
 }
 
@@ -329,144 +305,167 @@ func CardAttack(m *MatchState,
 		return errors.New("attacker is disarmed")
 	}
 	targets := make([]EventTarget, 0, 3)
-	if atk.CardType == cards.Healer {
-		if attackHero {
-			return ErrHealerCannotAttackHero
-		}
-		ti, tu := atkPlayer.FindSlot(defenderInstanceID)
-		if ti == -1 || tu == nil {
-			return ErrTargetNotFound
-		}
-		heal := atk.Attack
-		if HasEffect(tu, cards.DebuffEffectNoHeal) {
-			return errors.New("target cannot be healed")
-		}
-		beforeHP := tu.HP
-		tu.HP += heal
-		if tu.HP > tu.MaxHP {
-			tu.HP = tu.MaxHP
-		}
-		actualHeal := tu.HP - beforeHP
-		tpl, ok := r.GetBattleTemplate(atk.TemplateID)
-		if !ok {
-			return errors.New("unknown battle template: " + atk.TemplateID)
-		}
-		atk.Cooldown = atk.BaseCooldown
-		targets = append(targets, EventTarget{
-			InstanceID: tu.InstanceID,
-			TemplateID: tu.TemplateID,
-			Amount:     actualHeal,
-			Died:       false,
-			NewHP:      tu.HP,
-		})
-		m.Events = append(m.Events, Event{
-			Type:             string(EventHeal),
-			PlayerIndex:      playerIndex,
-			SourceKind:       string(SourceUnit),
-			SourceInstanceID: atk.InstanceID,
-			SourceTemplateID: atk.TemplateID,
-			VFXKey:           BuildVFXKey(tpl.AssetBaseKey, "attack"),
-			SFXKey:           BuildSFXKey(tpl.AssetBaseKey, "attack"),
-			Targets:          targets,
-		})
-		return nil
+	isHealAttack := false
+	attackRepeats := 1
+	if hasOverdrive(atk) {
+		attackRepeats = 2
 	}
-	if atk.Cooldown > 0 {
-		return ErrAttackerOnCooldown
-	}
-	defenderHasTank := false
-	for i := 0; i < TableSize; i++ {
-		u := defPlayer.Table[i]
-		if u != nil && u.IsTank {
-			defenderHasTank = true
+	for rep := 0; rep < attackRepeats; rep++ {
+		if atk == nil || atk.HP <= 0 {
 			break
 		}
-	}
-	if attackHero {
-		if defenderHasTank {
-			return ErrCannotHitHeroWhileTanks
+		if atk.Cooldown > 0 {
+			return ErrAttackerOnCooldown
 		}
-		dmg := atk.Attack
-		defPlayer.HeroHP -= dmg
-		heroID := fmt.Sprintf("hero:p%d", 1-playerIndex)
-		targets = append(targets, EventTarget{
-			InstanceID: heroID,
-			Amount:     dmg,
-			Died:       defPlayer.HeroHP <= 0,
-			NewHP:      defPlayer.HeroHP,
-		})
-	} else {
-		di, du := defPlayer.FindSlot(defenderInstanceID)
-		if di == -1 || du == nil {
-			return ErrDefenderNotFound
-		}
-		if defenderHasTank && !du.IsTank {
-			return ErrMustAttackTank
-		}
-		targetSlots := make([]int, 0, 3)
-		targetSlots = append(targetSlots, di)
-		if atk.SplashRadius > 0 {
-			left, right := di-1, di+1
-			if left >= 0 && defPlayer.Table[left] != nil {
-				targetSlots = append(targetSlots, left)
+		if atk.CardType == cards.Healer {
+			if attackHero {
+				return ErrHealerCannotAttackHero
 			}
-			if right < TableSize && defPlayer.Table[right] != nil {
-				targetSlots = append(targetSlots, right)
+			ti, tu := atkPlayer.FindSlot(defenderInstanceID)
+			if ti == -1 || tu == nil {
+				return ErrTargetNotFound
 			}
-		}
-		baseDamage := atk.Attack
-		for _, s := range targetSlots {
-			u := defPlayer.Table[s]
-			if u == nil {
-				continue
+			heal := atk.Attack
+			if HasEffect(tu, cards.DebuffEffectNoHeal) {
+				return errors.New("target cannot be healed")
 			}
-			dmg := baseDamage
-			inst := u.InstanceID
-			tplID := u.TemplateID
-			if s != di {
-				dmg = baseDamage / 2
+			beforeHP := tu.HP
+			tu.HP += heal
+			if tu.HP > tu.MaxHP {
+				tu.HP = tu.MaxHP
 			}
-			res, err := applyDamageToUnit(m, 1-playerIndex, s, u, dmg, atk.InstanceID, playerIndex, true)
-			if err != nil {
-				return err
-			}
+			actualHeal := tu.HP - beforeHP
 			targets = append(targets, EventTarget{
-				InstanceID: inst,
-				TemplateID: tplID,
-				Amount:     res.DamageToHP,
-				Died:       res.Died,
-				NewHP:      res.NewHP,
+				InstanceID: tu.InstanceID,
+				TemplateID: tu.TemplateID,
+				Amount:     actualHeal,
+				Died:       false,
+				NewHP:      tu.HP,
 			})
-			if res.ReflectedDamage > 0 {
-				atkSlot, aliveAtk := atkPlayer.FindSlot(attackerInstanceID)
-				if aliveAtk != nil && atkSlot >= 0 {
-					reflectRes, err := applyDamageToUnit(m, playerIndex, atkSlot, aliveAtk, res.ReflectedDamage,
-						u.InstanceID, 1-playerIndex, false)
-					if err != nil {
-						return err
-					}
-					targets = append(targets, EventTarget{
-						InstanceID: aliveAtk.InstanceID,
-						TemplateID: aliveAtk.TemplateID,
-						Amount:     reflectRes.DamageToHP,
-						Died:       reflectRes.Died,
-						NewHP:      reflectRes.NewHP,
-					})
+			isHealAttack = true
+			continue
+		}
+		defenderHasTank := false
+		for i := 0; i < TableSize; i++ {
+			u := defPlayer.Table[i]
+			if u != nil && u.IsTank {
+				defenderHasTank = true
+				break
+			}
+		}
+		if attackHero {
+			if defenderHasTank {
+				return ErrCannotHitHeroWhileTanks
+			}
+			beforeHP := defPlayer.HeroHP
+			dmg := atk.Attack
+			defPlayer.HeroHP -= dmg
+			if defPlayer.HeroHP < 0 {
+				defPlayer.HeroHP = 0
+			}
+			dealtToHeroHP := beforeHP - defPlayer.HeroHP
+			healed := applyVampiricOnHit(atk, dealtToHeroHP)
+			if healed > 0 {
+				targets = append(targets, EventTarget{
+					InstanceID: atk.InstanceID,
+					TemplateID: atk.TemplateID,
+					Amount:     healed,
+					Died:       false,
+					NewHP:      atk.HP,
+				})
+			}
+			heroID := fmt.Sprintf("hero:p%d", 1-playerIndex)
+			targets = append(targets, EventTarget{
+				InstanceID: heroID,
+				Amount:     dealtToHeroHP,
+				Died:       defPlayer.HeroHP <= 0,
+				NewHP:      defPlayer.HeroHP,
+			})
+		} else {
+			di, du := defPlayer.FindSlot(defenderInstanceID)
+			if di == -1 || du == nil {
+				return ErrDefenderNotFound
+			}
+			if defenderHasTank && !du.IsTank {
+				return ErrMustAttackTank
+			}
+			targetSlots := make([]int, 0, 3)
+			targetSlots = append(targetSlots, di)
+			if atk.SplashRadius > 0 {
+				left, right := di-1, di+1
+				if left >= 0 && defPlayer.Table[left] != nil {
+					targetSlots = append(targetSlots, left)
+				}
+				if right < TableSize && defPlayer.Table[right] != nil {
+					targetSlots = append(targetSlots, right)
 				}
 			}
-			if u != nil && u.HP > 0 {
-				counterRes, err := applyCounterattack(m, 1-playerIndex, u, playerIndex, atkIdx, atk)
+			baseDamage := atk.Attack
+			for _, s := range targetSlots {
+				u := defPlayer.Table[s]
+				if u == nil {
+					continue
+				}
+				dmg := baseDamage
+				inst := u.InstanceID
+				tplID := u.TemplateID
+				if s != di {
+					dmg = baseDamage / 2
+				}
+				res, err := applyDamageToUnit(m, 1-playerIndex, s, u, dmg, atk.InstanceID, playerIndex, true)
 				if err != nil {
 					return err
 				}
-				if counterRes.TotalDamage > 0 {
-					targets = append(targets, EventTarget{
-						InstanceID: atk.InstanceID,
-						TemplateID: atk.TemplateID,
-						Amount:     counterRes.DamageToHP,
-						Died:       counterRes.Died,
-						NewHP:      counterRes.NewHP,
-					})
+				targets = append(targets, EventTarget{
+					InstanceID: inst,
+					TemplateID: tplID,
+					Amount:     res.DamageToHP,
+					Died:       res.Died,
+					NewHP:      res.NewHP,
+				})
+				if atk.HP > 0 {
+					healed := applyVampiricOnHit(atk, res.DamageToHP)
+					if healed > 0 {
+						targets = append(targets, EventTarget{
+							InstanceID: atk.InstanceID,
+							TemplateID: atk.TemplateID,
+							Amount:     healed,
+							Died:       false,
+							NewHP:      atk.HP,
+						})
+					}
+				}
+				if res.ReflectedDamage > 0 {
+					atkSlot, aliveAtk := atkPlayer.FindSlot(attackerInstanceID)
+					if aliveAtk != nil && atkSlot >= 0 {
+						reflectRes, err := applyDamageToUnit(m, playerIndex, atkSlot, aliveAtk, res.ReflectedDamage,
+							u.InstanceID, 1-playerIndex, false)
+						if err != nil {
+							return err
+						}
+						targets = append(targets, EventTarget{
+							InstanceID: aliveAtk.InstanceID,
+							TemplateID: aliveAtk.TemplateID,
+							Amount:     reflectRes.DamageToHP,
+							Died:       reflectRes.Died,
+							NewHP:      reflectRes.NewHP,
+						})
+					}
+				}
+				if u.HP > 0 && atk.HP > 0 {
+					counterRes, err := applyCounterattack(m, 1-playerIndex, u, playerIndex, atkIdx, atk)
+					if err != nil {
+						return err
+					}
+					if counterRes.TotalDamage > 0 {
+						targets = append(targets, EventTarget{
+							InstanceID: atk.InstanceID,
+							TemplateID: atk.TemplateID,
+							Amount:     counterRes.DamageToHP,
+							Died:       counterRes.Died,
+							NewHP:      counterRes.NewHP,
+						})
+					}
 				}
 			}
 		}
@@ -475,9 +474,25 @@ func CardAttack(m *MatchState,
 	if !ok {
 		return errors.New("unknown Battle Template: " + atk.TemplateID)
 	}
+	if atk.HP > 0 && !isHealAttack {
+		chainTargets, err := applyChainAttack(m, playerIndex, atk)
+		if err != nil {
+			return err
+		}
+		if len(chainTargets) > 0 {
+			targets = append(targets, chainTargets...)
+		}
+	}
+	if atk.HP > 0 && !isHealAttack {
+		applyBonusAfterAttack(atk)
+	}
+	eventType := string(EventAttack)
+	if isHealAttack {
+		eventType = string(EventHeal)
+	}
 	atk.Cooldown = atk.BaseCooldown
 	m.Events = append(m.Events, Event{
-		Type:             string(EventAttack),
+		Type:             eventType,
 		PlayerIndex:      playerIndex,
 		SourceKind:       string(SourceUnit),
 		SourceInstanceID: atk.InstanceID,
@@ -708,42 +723,58 @@ func PlayHeroSpell(m *MatchState, a Action, r Resolvers) error {
 	return nil
 }
 
-// менеджер вызова определенных скилов карт
-// func PlayCardSkill(m *MatchState, a Action, r BattleTemplateResolver) error {
-// 	if m.Finished {
-// 		return ErrMatchFinished
-// 	}
-// 	if a.PlayerIndex != m.ActivePlayer {
-// 		return ErrNotYourTurn
-// 	}
-// 	if m.Phase != PhaseMain {
-// 		return ErrWrongPhase
-// 	}
-// 	owner := m.Players[a.PlayerIndex]
-// 	enemy := m.Players[1-a.PlayerIndex]
-// 	if owner == nil || enemy == nil {
-// 		return errors.New("nil player state")
-// 	}
-// 	_, caster := owner.FindSlot(a.CardInstanceID)
-// 	if caster == nil || caster.SkillCode == "" {
-// 		return ErrCardSkillNotFound
-// 	}
-// 	if caster.SkillTrigger != cards.TriggerActive {
-// 		return ErrCardSkillNotActive
-// 	}
-// 	if caster.SkillCooldownLeft > 0 {
-// 		return ErrCardSkillOnCooldown
-// 	}
-// 	h, err := getCardSkillHandler(caster.SkillCode)
-// 	if err != nil {
-// 		return err
-// 	}
-// 	if err := h(m, a, caster, owner, enemy); err != nil {
-// 		return err
-// 	}
-// 	caster.SkillCooldownLeft = caster.SkillCooldown
-// 	return nil
-// }
+func PlayCardSkill(m *MatchState, a Action) error {
+	if m == nil {
+		return errors.New("nil match state")
+	}
+	if m.Finished {
+		return ErrMatchFinished
+	}
+	if a.PlayerIndex != m.ActivePlayer {
+		return ErrNotYourTurn
+	}
+	if m.Phase != PhaseMain {
+		return ErrWrongPhase
+	}
+	owner := m.Players[a.PlayerIndex]
+	if owner == nil {
+		return errors.New("nil owner state")
+	}
+	_, caster := owner.FindSlot(a.CardInstanceID)
+	if caster == nil || caster.Skill.Code == "" {
+		return ErrCardSkillNotFound
+	}
+	if caster.Skill.CooldownLeft > 0 {
+		return ErrCardSkillOnCooldown
+	}
+	if HasEffect(caster, cards.DebuffEffectStun) {
+		return errors.New("caster is stunned")
+	}
+	if HasEffect(caster, cards.DebuffEffectSilence) {
+		return errors.New("caster is silenced")
+	}
+	h, ok := SkillHandlers[caster.Skill.Code]
+	if !ok {
+		return ErrCardSkillUnsupported
+	}
+	repeates := 1
+	if hasMulticast(caster) {
+		repeates = 2
+	}
+	for i := 0; i < repeates; i++ {
+		if caster.HP <= 0 {
+			break
+		}
+		if i > 0 {
+			caster.Skill.CooldownLeft = 0
+		}
+		if err := h(m, a, caster); err != nil {
+			return err
+		}
+	}
+	caster.Skill.CooldownLeft = caster.Skill.BaseCooldown
+	return nil
+}
 
 // ХЕЛПЕР СМЕРТИ //
 func killUnitAt(m *MatchState, ownerIdx int, slot int, killerInstanceID string, killerOwnerIdx int) error {

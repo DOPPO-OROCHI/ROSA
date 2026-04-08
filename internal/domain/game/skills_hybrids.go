@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"math/rand/v2"
+	"time"
 )
 
 //Здесь будут расположены всяк разные интересные скиллы
@@ -515,6 +516,89 @@ func CastHybridHealDamageSkill(m *MatchState, a Action, caster *UnitState) error
 		VFXKey:           BuildVFXKey(caster.AssetBaseKey, "spell"),
 		SFXKey:           BuildSFXKey(caster.AssetBaseKey, "spell"),
 		Targets:          eventTargets,
+	})
+	caster.Skill.CooldownLeft = caster.Skill.BaseCooldown
+	return nil
+}
+
+/*
+Суммоним свою копию на стол
+Здесь количество копий определяется тем, сколько в описании карты SkillApplyCount
+*/
+func CastSummonSelfCopySkill(m *MatchState, a Action, caster *UnitState) error {
+	if m == nil || caster == nil {
+		return errors.New("nil match or caster state")
+	}
+	if caster.Skill.Code == "" {
+		return ErrCardSkillNotFound
+	}
+	if caster.Skill.CooldownLeft > 0 {
+		return ErrCardSkillOnCooldown
+	}
+	if a.AttackHero || a.TargetInstanceID != "" {
+		return ErrCardSkillBadTarget
+	}
+	owner := m.Players[a.PlayerIndex]
+	if owner == nil {
+		return errors.New("nil owner state")
+	}
+	need := caster.Skill.ApplyCount
+	if need <= 0 {
+		need = 1
+	}
+	targets := make([]EventTarget, 0, need)
+	summoned := 0
+	for i := 0; i < need; i++ {
+		slot := -1
+		for s := 0; s < TableSize; s++ {
+			if owner.Table[s] == nil {
+				slot = s
+				break
+			}
+		}
+		if slot < 0 {
+			break
+		}
+		newID := fmt.Sprintf("%s_copy_%d_%d", caster.InstanceID, time.Now().UnixNano(), i)
+		copyUnit := &UnitState{
+			InstanceID:      newID,
+			TemplateID:      caster.TemplateID,
+			GamerCardID:     0,
+			CardLevel:       caster.CardLevel,
+			HP:              caster.HP,
+			MaxHP:           caster.MaxHP,
+			Attack:          caster.Attack,
+			SplashRadius:    caster.SplashRadius,
+			IsTank:          caster.IsTank,
+			CardType:        caster.CardType,
+			BaseCooldown:    caster.BaseCooldown,
+			Cooldown:        1,
+			SummonedInTurn:  owner.Turns,
+			ImageKey:        caster.ImageKey,
+			AssetBaseKey:    caster.AssetBaseKey,
+			HasSkill:        false,
+			Effects:         nil,
+			ResurrectedUsed: false,
+		}
+		owner.Table[slot] = copyUnit
+		summoned++
+		targets = append(targets, EventTarget{
+			InstanceID: copyUnit.InstanceID,
+			TemplateID: copyUnit.TemplateID,
+		})
+	}
+	if summoned == 0 {
+		return ErrSlotOccupied
+	}
+	m.Events = append(m.Events, Event{
+		Type:             string(EventCardSkill),
+		PlayerIndex:      a.PlayerIndex,
+		SourceKind:       string(SourceUnit),
+		SourceInstanceID: caster.InstanceID,
+		SourceTemplateID: caster.TemplateID,
+		VFXKey:           BuildVFXKey(caster.AssetBaseKey, "spell"),
+		SFXKey:           BuildSFXKey(caster.AssetBaseKey, "spell"),
+		Targets:          targets,
 	})
 	caster.Skill.CooldownLeft = caster.Skill.BaseCooldown
 	return nil

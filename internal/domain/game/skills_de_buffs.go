@@ -3,6 +3,7 @@ package game
 import (
 	"TheWar/internal/domain/cards"
 	"errors"
+	"math/rand/v2"
 )
 
 // Здесь все о бафах-дебафах
@@ -83,7 +84,7 @@ func CastBuffSkill(m *MatchState, a Action, caster *UnitState) error {
 		if len(targets) == 0 {
 			return ErrCardSkillBadTarget
 		}
-		//ПОТОМ ДОПИСАТЬ КАСТ БАФА НА РАНДОМНОГО СОЮЗНИКА. КАСТ БАФА НА ГЕРОЯ
+		//ПОТОМ ДОПИСАТЬ КАСТ БАФА НА РАНДОМНОГО СОЮЗНИКА
 	default:
 		return ErrCardSkillUnsupported
 	}
@@ -158,6 +159,9 @@ func CastDebuffSkill(m *MatchState, a Action, caster *UnitState) error {
 	if enemy == nil {
 		return errors.New("nil enemy state")
 	}
+	if caster.Skill.DebuffEffect == "" {
+		return ErrCardSkillUnsupported
+	}
 	var targets []*UnitState
 	switch caster.Skill.Target {
 	case cards.SkillTargetEnemySingle:
@@ -185,7 +189,147 @@ func CastDebuffSkill(m *MatchState, a Action, caster *UnitState) error {
 		if len(targets) == 0 {
 			return ErrCardSkillBadTarget
 		}
-		//ПЕРЕД ТЕСТАМИ СЮДА ДОБАВИТЬ enemy_random, enemy_random_multi, enemy_lowest_hp, enemy_highest_hp, enemy_highest_attack, enemy_lowest_attack, enemy_splash
+	case cards.SkillTargetEnemySplash:
+		if a.AttackHero || a.TargetInstanceID == "" {
+			return ErrCardSkillBadTarget
+		}
+		targetSlot, target := enemy.FindSlot(a.TargetInstanceID)
+		if target == nil || targetSlot < 0 {
+			return ErrCardSkillBadTarget
+		}
+		if !caster.Skill.IgnoreTank && enemyHasTank(enemy) && !target.IsTank {
+			return ErrCardSkillTargetTankBlocked
+		}
+		targets = append(targets, target)
+		left := targetSlot - 1
+		right := targetSlot + 1
+		if left >= 0 && enemy.Table[left] != nil {
+			targets = append(targets, enemy.Table[left])
+		}
+		if right < TableSize && enemy.Table[right] != nil {
+			targets = append(targets, enemy.Table[right])
+		}
+		if len(targets) == 0 {
+			return ErrCardSkillBadTarget
+		}
+	case cards.SkillTargetEnemyLowestHP:
+		if a.AttackHero || a.TargetInstanceID != "" {
+			return ErrCardSkillBadTarget
+		}
+		var target *UnitState
+		for i := 0; i < TableSize; i++ {
+			u := enemy.Table[i]
+			if u == nil {
+				continue
+			}
+			if target == nil || u.HP < target.HP {
+				target = u
+			}
+		}
+		if target == nil {
+			return ErrCardSkillBadTarget
+		}
+		targets = append(targets, target)
+	case cards.SkillTargetEnemyHighestHP:
+		if a.AttackHero || a.TargetInstanceID != "" {
+			return ErrCardSkillBadTarget
+		}
+		var target *UnitState
+		for i := 0; i < TableSize; i++ {
+			u := enemy.Table[i]
+			if u == nil {
+				continue
+			}
+			if target == nil || u.HP > target.HP {
+				target = u
+			}
+		}
+		if target == nil {
+			return ErrCardSkillBadTarget
+		}
+		targets = append(targets, target)
+	case cards.SkillTargetEnemyHighestAttack:
+		if a.AttackHero || a.TargetInstanceID != "" {
+			return ErrCardSkillBadTarget
+		}
+		var target *UnitState
+		for i := 0; i < TableSize; i++ {
+			u := enemy.Table[i]
+			if u == nil {
+				continue
+			}
+			if target == nil || u.Attack > target.Attack {
+				target = u
+			}
+		}
+		if target == nil {
+			return ErrCardSkillBadTarget
+		}
+		targets = append(targets, target)
+	case cards.SkillTargetEnemyLowestAttack:
+		if a.AttackHero || a.TargetInstanceID != "" {
+			return ErrCardSkillBadTarget
+		}
+		var target *UnitState
+		for i := 0; i < TableSize; i++ {
+			u := enemy.Table[i]
+			if u == nil {
+				continue
+			}
+			if target == nil || u.Attack < target.Attack {
+				target = u
+			}
+		}
+		if target == nil {
+			return ErrCardSkillBadTarget
+		}
+		targets = append(targets, target)
+	case cards.SkillTargetEnemyRandom:
+		if a.AttackHero || a.TargetInstanceID != "" {
+			return ErrCardSkillBadTarget
+		}
+		pool := make([]*UnitState, 0, TableSize)
+		for i := 0; i < TableSize; i++ {
+			u := enemy.Table[i]
+			if u == nil {
+				continue
+			}
+			if !caster.Skill.IgnoreTank && enemyHasTank(enemy) && !u.IsTank {
+				continue
+			}
+			pool = append(pool, u)
+		}
+		if len(pool) == 0 {
+			return ErrCardSkillBadTarget
+		}
+		pick := rand.IntN(len(pool))
+		targets = append(targets, pool[pick])
+	case cards.SkillTargetEnemyRandomMulti:
+		if a.AttackHero || a.TargetInstanceID != "" {
+			return ErrCardSkillBadTarget
+		}
+		pool := make([]*UnitState, 0, TableSize)
+		for i := 0; i < TableSize; i++ {
+			u := enemy.Table[i]
+			if u == nil {
+				continue
+			}
+			if !caster.Skill.IgnoreTank && enemyHasTank(enemy) && !u.IsTank {
+				continue
+			}
+			pool = append(pool, u)
+		}
+		if len(pool) == 0 {
+			return ErrCardSkillBadTarget
+		}
+		hits := caster.Skill.ApplyCount
+		if hits <= 0 {
+			hits = 1
+		}
+		for i := 0; i < hits; i++ {
+			pick := rand.IntN(len(pool))
+			targets = append(targets, pool[pick])
+		}
 	default:
 		return ErrCardSkillUnsupported
 	}
