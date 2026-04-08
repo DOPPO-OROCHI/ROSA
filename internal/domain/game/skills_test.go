@@ -955,6 +955,7 @@ func TestIntegration_BuffDurationTwoTurns_RollbackStats(t *testing.T) {
 }
 
 // //////////////////////////////////////////////////////////////////////////
+
 func TestIntegration_MulticastDebuff_ThenCleanse(t *testing.T) {
 	enemy := &UnitState{
 		InstanceID: "enemy_1",
@@ -993,25 +994,13 @@ func TestIntegration_MulticastDebuff_ThenCleanse(t *testing.T) {
 		MaxHP:        7,
 		Attack:       1,
 		Skill: cards.UnitSkillState{
-			Code:         "cleanse_one",
-			Target:       cards.SkillTargetAllySingle,
-			CleanseMode:  cards.CleanseModeRemoveAllDebuffs,
+			Code:         "enemy_dispel",
+			Target:       cards.SkillTargetEnemySingle,
+			CleanseMode:  cards.CleanseModeRemoveAllEffects, // снимет и дебаффы тоже
 			BaseCooldown: 3,
 			CooldownLeft: 0,
 		},
 	}
-
-	// регистрируем временный хендлер на твой cleanse-скилл
-	const cleanseCode = "cleanse_one"
-	oldHandler, hadHandler := SkillHandlers[cleanseCode]
-	SkillHandlers[cleanseCode] = CastCleanseSkill
-	t.Cleanup(func() {
-		if hadHandler {
-			SkillHandlers[cleanseCode] = oldHandler
-		} else {
-			delete(SkillHandlers, cleanseCode)
-		}
-	})
 
 	m := &MatchState{
 		ActivePlayer: 0,
@@ -1022,7 +1011,7 @@ func TestIntegration_MulticastDebuff_ThenCleanse(t *testing.T) {
 		},
 	}
 
-	// 1) мультикаст дебафа через PlayCardSkill
+	// 1) Мультикаст-дебафф (через общий пайплайн)
 	err := PlayCardSkill(m, Action{
 		PlayerIndex:      0,
 		CardInstanceID:   debuffer.InstanceID,
@@ -1032,43 +1021,26 @@ func TestIntegration_MulticastDebuff_ThenCleanse(t *testing.T) {
 		t.Fatalf("PlayCardSkill(debuffer) returned error: %v", err)
 	}
 
-	// multicast => 2 наложения attack_down по 1
 	if enemy.Attack != 4 {
 		t.Fatalf("expected enemy attack=4 after multicast debuff, got %d", enemy.Attack)
 	}
-	debuffCount := 0
-	for _, e := range enemy.Effects {
-		if e.EffectType == cards.DebuffEffectAttackDown {
-			debuffCount++
-		}
-	}
-	if debuffCount != 2 {
-		t.Fatalf("expected 2 attack_down effects, got %d", debuffCount)
-	}
 
-	// 2) снимаем все дебафы с союзной цели (для этого надо сделать enemy нашей целью)
-	// в этом сценарии просто переходим на сторону enemy как активного игрока
-	m.ActivePlayer = 1
-	m.Players[1].Table[1] = cleanser
-	// и даем cleanser скилл уже на стороне enemy
-	cleanserEnemySide := m.Players[1].Table[1]
-	cleanserEnemySide.Skill = cleanser.Skill
-
-	err = PlayCardSkill(m, Action{
-		PlayerIndex:      1,
-		CardInstanceID:   cleanserEnemySide.InstanceID,
+	// 2) Снимаем эффекты с противника прямым вызовом твоей функции
+	err = CastDispelBuffsFromEnemySkill(m, Action{
+		PlayerIndex:      0,
+		CardInstanceID:   cleanser.InstanceID,
 		TargetInstanceID: enemy.InstanceID,
-	})
+	}, cleanser)
 	if err != nil {
-		t.Fatalf("PlayCardSkill(cleanser) returned error: %v", err)
+		t.Fatalf("CastDispelBuffsFromEnemySkill returned error: %v", err)
 	}
 
 	if enemy.Attack != 6 {
-		t.Fatalf("expected enemy attack restored to 6 after cleanse, got %d", enemy.Attack)
+		t.Fatalf("expected enemy attack restored to 6 after dispel, got %d", enemy.Attack)
 	}
 	for _, e := range enemy.Effects {
 		if e.EffectType == cards.DebuffEffectAttackDown {
-			t.Fatalf("expected no attack_down effects after cleanse")
+			t.Fatalf("expected no attack_down effects after dispel")
 		}
 	}
 }

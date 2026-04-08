@@ -467,44 +467,56 @@ func CastDispelDebuffsFromAllySkill(m *MatchState, a Action, caster *UnitState) 
 		if target == nil {
 			continue
 		}
-		toRemove := make([]UnitEffect, 0)
+		toRemoveIdx := make([]int, 0)
 		switch caster.Skill.CleanseMode {
 		//снимаем один дебаф с цели
 		case cards.CleanseModeRemoveDebuff:
-			for _, e := range target.Effects {
+			for i, e := range target.Effects {
 				if e.Dispellable && e.Polarity == "debuff" {
-					toRemove = append(toRemove, e)
+					toRemoveIdx = append(toRemoveIdx, i)
 					break
 				}
 			}
 			//снимаем вообще все дебафы с цели
 		case cards.CleanseModeRemoveAllDebuffs:
-			for _, e := range target.Effects {
+			for i, e := range target.Effects {
 				if e.Dispellable && e.Polarity == "debuff" {
-					toRemove = append(toRemove, e)
+					toRemoveIdx = append(toRemoveIdx, i)
 				}
 			}
 			//снимаем вообще все эффекты с цели
 		case cards.CleanseModeRemoveAllEffects:
-			for _, e := range target.Effects {
+			for i, e := range target.Effects {
 				if e.Dispellable {
-					toRemove = append(toRemove, e)
+					toRemoveIdx = append(toRemoveIdx, i)
 				}
 			}
 		default:
 			return ErrCardSkillUnsupported
 		}
-		if len(toRemove) == 0 {
+		if len(toRemoveIdx) == 0 {
 			continue
 		}
-		for _, e := range toRemove {
-			RemoveEffect(target, e)
+		drop := make(map[int]struct{}, len(toRemoveIdx))
+		for _, idx := range toRemoveIdx {
+			drop[idx] = struct{}{}
+			if err := RemoveEffect(target, target.Effects[idx]); err != nil {
+				return err
+			}
 		}
-		totalRemoved += len(toRemove)
+		kept := make([]UnitEffect, 0, len(target.Effects)-len(toRemoveIdx))
+		for i, e := range target.Effects {
+			if _, ok := drop[i]; ok {
+				continue
+			}
+			kept = append(kept, e)
+		}
+		target.Effects = kept
+		totalRemoved += len(toRemoveIdx)
 		eventTargets = append(eventTargets, EventTarget{
 			InstanceID: target.InstanceID,
 			TemplateID: target.TemplateID,
-			Amount:     len(toRemove),
+			Amount:     len(toRemoveIdx),
 			Died:       false,
 			NewHP:      target.HP,
 		})
@@ -606,44 +618,56 @@ func CastDispelBuffsFromEnemySkill(m *MatchState, a Action, caster *UnitState) e
 		if target == nil {
 			continue
 		}
-		toRemove := make([]UnitEffect, 0)
+		toRemoveIdx := make([]int, 0)
 		switch caster.Skill.CleanseMode {
-		//снимаем один дебаф с цели
+		//снимаем один баф с цели
 		case cards.CleanseModeRemoveBuff:
-			for _, e := range target.Effects {
+			for i, e := range target.Effects {
 				if e.Dispellable && e.Polarity == "buff" {
-					toRemove = append(toRemove, e)
+					toRemoveIdx = append(toRemoveIdx, i)
 					break
 				}
 			}
-			//снимаем вообще все дебафы с цели
+			//снимаем вообще все бафы с цели
 		case cards.CleanseModeRemoveAllBuffs:
-			for _, e := range target.Effects {
+			for i, e := range target.Effects {
 				if e.Dispellable && e.Polarity == "buff" {
-					toRemove = append(toRemove, e)
+					toRemoveIdx = append(toRemoveIdx, i)
 				}
 			}
 			//снимаем вообще все эффекты с цели
 		case cards.CleanseModeRemoveAllEffects:
-			for _, e := range target.Effects {
+			for i, e := range target.Effects {
 				if e.Dispellable {
-					toRemove = append(toRemove, e)
+					toRemoveIdx = append(toRemoveIdx, i)
 				}
 			}
 		default:
 			return ErrCardSkillUnsupported
 		}
-		if len(toRemove) == 0 {
+		if len(toRemoveIdx) == 0 {
 			continue
 		}
-		for _, e := range toRemove {
-			RemoveEffect(target, e)
+		drop := make(map[int]struct{}, len(toRemoveIdx))
+		for _, idx := range toRemoveIdx {
+			drop[idx] = struct{}{}
+			if err := RemoveEffect(target, target.Effects[idx]); err != nil {
+				return err
+			}
 		}
-		totalRemoved += len(toRemove)
+		kept := make([]UnitEffect, 0, len(target.Effects)-len(toRemoveIdx))
+		for i, e := range target.Effects {
+			if _, ok := drop[i]; ok {
+				continue
+			}
+			kept = append(kept, e)
+		}
+		target.Effects = kept
+		totalRemoved += len(toRemoveIdx)
 		eventTargets = append(eventTargets, EventTarget{
 			InstanceID: target.InstanceID,
 			TemplateID: target.TemplateID,
-			Amount:     len(toRemove),
+			Amount:     len(toRemoveIdx),
 			Died:       false,
 			NewHP:      target.HP,
 		})
