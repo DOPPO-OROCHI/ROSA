@@ -454,6 +454,21 @@ func CardAttack(m *MatchState,
 					})
 				}
 			}
+			if u != nil && u.HP > 0 {
+				counterRes, err := applyCounterattack(m, 1-playerIndex, u, playerIndex, atkIdx, atk)
+				if err != nil {
+					return err
+				}
+				if counterRes.TotalDamage > 0 {
+					targets = append(targets, EventTarget{
+						InstanceID: atk.InstanceID,
+						TemplateID: atk.TemplateID,
+						Amount:     counterRes.DamageToHP,
+						Died:       counterRes.Died,
+						NewHP:      counterRes.NewHP,
+					})
+				}
+			}
 		}
 	}
 	tpl, ok := r.GetBattleTemplate(atk.TemplateID)
@@ -730,49 +745,6 @@ func PlayHeroSpell(m *MatchState, a Action, r Resolvers) error {
 // 	return nil
 // }
 
-// func DispathContinuousPassives(m *MatchState) error {
-// 	if m == nil {
-// 		return nil
-// 	}
-// 	clearContinuousPassiveEffects(m)
-// 	for playerIdx := 0; playerIdx < 2; playerIdx++ {
-// 		p := m.Players[playerIdx]
-// 		if p == nil {
-// 			continue
-// 		}
-// 		for i := 0; i < TableSize; i++ {
-// 			u := p.Table[i]
-// 			if u == nil {
-// 				continue
-// 			}
-// 			if err := triggerContinuousPassive(m, playerIdx, u); err != nil {
-// 				return err
-// 			}
-// 		}
-// 	}
-// 	return nil
-// }
-
-// func DispathPassives(m *MatchState, ownerIdx int, trigger string, ctx PassiveTriggerContext) error {
-// 	if m == nil || ownerIdx < 0 || ownerIdx > 1 || trigger == "" {
-// 		return nil
-// 	}
-// 	p := m.Players[ownerIdx]
-// 	if p == nil {
-// 		return nil
-// 	}
-// 	for i := 0; i < TableSize; i++ {
-// 		u := p.Table[i]
-// 		if u == nil {
-// 			continue
-// 		}
-// 		if err := triggerPassiveByTrigger(m, ownerIdx, u, trigger, ctx); err != nil {
-// 			return err
-// 		}
-// 	}
-// 	return nil
-// }
-
 // ХЕЛПЕР СМЕРТИ //
 func killUnitAt(m *MatchState, ownerIdx int, slot int, killerInstanceID string, killerOwnerIdx int) error {
 	if m == nil {
@@ -793,39 +765,17 @@ func killUnitAt(m *MatchState, ownerIdx int, slot int, killerInstanceID string, 
 		return nil
 	}
 	dead := *u
-	// _ = triggerPassiveByTrigger(m, ownerIdx, &dead, cards.PassiveTriggerOnDeath, PassiveTriggerContext{
-	// 	DeadInstanceID:   dead.InstanceID,
-	// 	TargetInstanceID: dead.InstanceID,
-	// 	SourceOwnerIdx:   ownerIdx,
-	// 	TargetOwnerIdx:   ownerIdx,
-	// 	TargetSlot:       slot,
-	// })
-	// if dead.SkillCode == cards.SkillResurrectNextTurn && dead.SkillTrigger == cards.TriggerOnDeath && !dead.ResurrectedUsed {
-	// 	owner.PendingRes = append(owner.PendingRes, PendingResurrected{
-	// 		InstanceID: dead.InstanceID,
-	// 		DueTurn:    owner.Turns + 1,
-	// 	})
-	// }
+	if err := triggerEnemyOnDeathExplosion(m, ownerIdx, &dead, slot); err != nil {
+		return err
+	}
+	if err := triggerAllyOnDeathMassHeal(m, ownerIdx, &dead, slot); err != nil {
+		return err
+	}
 	owner.GraveYard = append(owner.GraveYard, GraveEntry{
 		Unit:       dead,
 		DiedAtTurn: owner.Turns,
 	})
-	// enemyIdx := 1 - ownerIdx
-	// _ = triggerOnDeathSkill(m, &dead, ownerIdx, killerInstanceID, killerOwnerIdx)
 	owner.RemoveAt(slot)
-	// _ = DispathPassives(m, ownerIdx, cards.PassiveTriggerOnAllyDead, PassiveTriggerContext{
-	// 	DeadInstanceID: dead.InstanceID,
-	// 	SourceOwnerIdx: ownerIdx,
-	// 	TargetOwnerIdx: ownerIdx,
-	// 	TargetSlot:     slot,
-	// })
-	// _ = DispathPassives(m, enemyIdx, cards.PassiveTriggerOnEnemyDead, PassiveTriggerContext{
-	// 	DeadInstanceID: dead.InstanceID,
-	// 	SourceOwnerIdx: ownerIdx,
-	// 	TargetOwnerIdx: ownerIdx,
-	// 	TargetSlot:     slot,
-	// })
-	// _ = DispathContinuousPassives(m)
 	m.Events = append(m.Events, Event{
 		Type:             string(EventDeath),
 		SourceKind:       string(SourceUnit),

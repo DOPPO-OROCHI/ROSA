@@ -107,6 +107,7 @@ func CastBuffSkill(m *MatchState, a Action, caster *UnitState) error {
 			Polarity:         "buff",
 			SourceInstanceID: caster.InstanceID,
 			Dispellable:      true,
+			Targeting:        caster.Skill.Target,
 		}
 		if err := AddEffect(target, e); err != nil {
 			return err
@@ -202,6 +203,7 @@ func CastDebuffSkill(m *MatchState, a Action, caster *UnitState) error {
 			Polarity:         "debuff",
 			SourceInstanceID: caster.InstanceID,
 			Dispellable:      true,
+			Targeting:        caster.Skill.Target,
 		}
 		if err := AddEffect(target, e); err != nil {
 			return err

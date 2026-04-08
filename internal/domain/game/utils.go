@@ -348,6 +348,9 @@ func applyDamageToUnit(m *MatchState, ownerIdx int, slot int,
 	if result.DamageToHP > 0 {
 		target.HP -= result.DamageToHP
 	}
+	if result.DamageToHP > 0 && target.HP > 0 {
+		_ = applyLifeOnHit(target)
+	}
 	if canReflect && result.TotalDamage > 0 && reflectPower > 0 {
 		result.ReflectedDamage = reflectPower
 		if result.ReflectedDamage > result.TotalDamage {
