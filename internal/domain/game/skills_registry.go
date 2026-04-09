@@ -40,4 +40,7 @@ var SkillHandlers = map[string]SkillHandler{
 	"natural_born_predator":    CastRandomMultiEnemyDamageSkill,
 	"poisonous_splash":         CastDebuffSkill,
 	"plasma_beam":              CastSplashDamageSkill,
+	"wild_hunt":                CastBuffSkill,
+	"we_are_swarm":             CastSummonSelfCopySkill,
+	"demoralizing_presence":    CastDebuffSkill,
 }
