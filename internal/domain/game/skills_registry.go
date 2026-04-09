@@ -38,4 +38,6 @@ var SkillHandlers = map[string]SkillHandler{
 	"spikes":                   CastBuffSkill,
 	"unfair_fight":             CastLowestHPDamageSkill,
 	"natural_born_predator":    CastRandomMultiEnemyDamageSkill,
+	"poisonous_splash":         CastDebuffSkill,
+	"plasma_beam":              CastSplashDamageSkill,
 }
