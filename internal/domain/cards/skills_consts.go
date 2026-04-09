@@ -21,14 +21,15 @@ type UnitSkillState struct {
 }
 
 const (
-	SkillKindDamage = "damage"
-	SkillKindHeal   = "heal"
-	SkillKindBuff   = "buff"
-	SkillKindHybrid = "hybrid"
-	SkillKindKill   = "kill"
-	SkillKindVision = "vision"
-	SkillKindDebuff = "debuff"
-	SkillKindSummon = "summon"
+	SkillKindDamage  = "damage"
+	SkillKindHeal    = "heal"
+	SkillKindBuff    = "buff"
+	SkillKindHybrid  = "hybrid"
+	SkillKindKill    = "kill"
+	SkillKindVision  = "vision"
+	SkillKindDebuff  = "debuff"
+	SkillKindSummon  = "summon"
+	SkillKindExplode = "explode"
 )
 
 const (

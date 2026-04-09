@@ -928,6 +928,139 @@ func CastLowestAttackDamageSkill(m *MatchState, a Action, caster *UnitState) err
 	return nil
 }
 
+// ВЗРЫВАЕМСЯ О ВРАГА, НАНОСЯ ЕМУ УРОН
+func CastExplodeOnHittingEnemy(m *MatchState, a Action, caster *UnitState) error {
+	if m == nil || caster == nil {
+		return errors.New("nil match or casters")
+	}
+	if caster.Skill.Code == "" {
+		return ErrCardSkillNotFound
+	}
+	if caster.Skill.CooldownLeft > 0 {
+		return ErrCardSkillOnCooldown
+	}
+	if HasEffect(caster, cards.DebuffEffectStun) {
+		return errors.New("caster is stunned")
+	}
+	if HasEffect(caster, cards.DebuffEffectSilence) {
+		return errors.New("caster is silenced")
+	}
+	owner := m.Players[a.PlayerIndex]
+	enemy := m.Players[1-a.PlayerIndex]
+	if owner == nil || enemy == nil {
+		return errors.New("nil owner or enemy state")
+	}
+	type TargetRef struct {
+		slot int
+		u    *UnitState
+	}
+	targetRefs := make([]TargetRef, 0, TableSize)
+	centerSlot := -1
+	switch caster.Skill.Target {
+	case cards.SkillTargetEnemySingle:
+		if a.AttackHero || a.TargetInstanceID == "" {
+			return ErrCardSkillBadTarget
+		}
+		slot, target := enemy.FindSlot(a.TargetInstanceID)
+		if target == nil || slot < 0 {
+			return ErrTargetNotFound
+		}
+		if !caster.Skill.IgnoreTank && enemyHasTank(enemy) && !target.IsTank {
+			return ErrCardSkillTargetTankBlocked
+		}
+		targetRefs = append(targetRefs, TargetRef{slot: slot, u: target})
+	case cards.SkillTargetEnemySplash:
+		if a.AttackHero || a.TargetInstanceID == "" {
+			return ErrCardSkillBadTarget
+		}
+		slot, target := enemy.FindSlot(a.TargetInstanceID)
+		if target == nil || slot < 0 {
+			return ErrTargetNotFound
+		}
+		if !caster.Skill.IgnoreTank && enemyHasTank(enemy) && !target.IsTank {
+			return ErrCardSkillTargetTankBlocked
+		}
+		centerSlot = slot
+		targetRefs = append(targetRefs, TargetRef{slot: slot, u: target})
+		left := slot - 1
+		right := slot + 1
+		if left >= 0 && enemy.Table[left] != nil {
+			targetRefs = append(targetRefs, TargetRef{slot: left, u: enemy.Table[left]})
+		}
+		if right < TableSize && enemy.Table[right] != nil {
+			targetRefs = append(targetRefs, TargetRef{slot: right, u: enemy.Table[right]})
+		}
+	case cards.SkillTargetEnemyAll:
+		if a.AttackHero || a.TargetInstanceID != "" {
+			return ErrCardSkillBadTarget
+		}
+		for i := 0; i < TableSize; i++ {
+			u := enemy.Table[i]
+			if u != nil {
+				targetRefs = append(targetRefs, TargetRef{slot: i, u: u})
+			}
+		}
+	default:
+		return ErrCardSkillBadTarget
+	}
+	if len(targetRefs) == 0 {
+		return ErrCardSkillBadTarget
+	}
+	eventTargets := make([]EventTarget, 0, len(targetRefs))
+	damage := caster.Skill.Power
+	for _, tr := range targetRefs {
+		dmg := damage
+		if caster.Skill.Target == cards.SkillTargetEnemySplash && tr.slot != centerSlot {
+			dmg = damage / 2
+		}
+		if tr.u == nil || tr.slot < 0 {
+			continue
+		}
+		inst := tr.u.InstanceID
+		tplID := tr.u.TemplateID
+		res, err := applyDamageToUnit(
+			m,
+			1-a.PlayerIndex,
+			tr.slot,
+			tr.u,
+			dmg,
+			caster.InstanceID,
+			a.PlayerIndex,
+			false,
+		)
+		if err != nil {
+			return err
+		}
+		eventTargets = append(eventTargets, EventTarget{
+			InstanceID: inst,
+			TemplateID: tplID,
+			Amount:     res.DamageToHP,
+			Died:       res.Died,
+			NewHP:      res.NewHP,
+		})
+	}
+	if len(eventTargets) == 0 {
+		return ErrCardSkillBadTarget
+	}
+	casterSlot, aliveCaster := owner.FindSlot(caster.InstanceID)
+	if aliveCaster != nil && casterSlot >= 0 {
+		if err := killUnitAt(m, a.PlayerIndex, casterSlot, caster.InstanceID, a.PlayerIndex); err != nil {
+			return err
+		}
+	}
+	m.Events = append(m.Events, Event{
+		Type:             string(EventCardSkill),
+		PlayerIndex:      a.PlayerIndex,
+		SourceKind:       string(SourceUnit),
+		SourceInstanceID: caster.InstanceID,
+		SourceTemplateID: caster.TemplateID,
+		VFXKey:           BuildVFXKey(caster.AssetBaseKey, "spell"),
+		SFXKey:           BuildSFXKey(caster.AssetBaseKey, "spell"),
+		Targets:          eventTargets,
+	})
+	return nil
+}
+
 // ищем танка в руке противника
 func enemyHasTank(p *PlayerState) bool {
 	if p == nil {
