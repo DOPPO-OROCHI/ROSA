@@ -43,4 +43,7 @@ var SkillHandlers = map[string]SkillHandler{
 	"wild_hunt":                CastBuffSkill,
 	"we_are_swarm":             CastSummonSelfCopySkill,
 	"demoralizing_presence":    CastDebuffSkill,
+	"shocking_horror":          CastSetFixedHPToEnemySkill,
+	"constant_growth":          CastBuffSkill,
+	"deafening_roar":           CastDebuffSkill,
 }
