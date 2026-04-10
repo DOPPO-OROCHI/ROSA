@@ -6,18 +6,34 @@ type MeResponse = {
   first_name: string;
   rating: number;
   xp: number;
+  selected_hero_code?: string;
   selected_hero_name?: string;
 };
 
 const QUICK_USERS = ["dev", "roman", "test", "rosa"];
-const HEROES = [
-  "Astra Vanguard",
-  "Hex Runner",
-  "Ivory Saint",
-  "Rust King",
-  "Noctis Bloom",
-  "Signal Warden",
-] as const;
+
+type Hero = {
+  hero_id: number;
+  hero_code: string;
+  name: string;
+  description: string;
+  image_key: string;
+  level: number;
+  health_points: number;
+  attack_power: number;
+  attack_cooldown: number;
+};
+
+type HeroesResponse = {
+  heroes: Hero[];
+};
+
+function resolveImageSrc(key?: string): string {
+  if (!key) {
+    return "/assets/placeholders/hero_image.svg";
+  }
+  return `/assets/${key.replace(/^\/+/, "").replace(/\/+/g, "/")}.png`;
+}
 
 async function request<T>(url: string, init?: RequestInit): Promise<T> {
   const response = await fetch(url, {
@@ -40,19 +56,31 @@ async function request<T>(url: string, init?: RequestInit): Promise<T> {
 export function App() {
   const [username, setUsername] = useState("dev");
   const [me, setMe] = useState<MeResponse | null>(null);
+  const [heroes, setHeroes] = useState<Hero[]>([]);
   const [busy, setBusy] = useState(true);
   const [error, setError] = useState("");
-  const [selectedHero, setSelectedHero] = useState<(typeof HEROES)[number]>(HEROES[0]);
+  const [selectedHeroCode, setSelectedHeroCode] = useState("");
   const [heroPickerOpen, setHeroPickerOpen] = useState(false);
 
+  const selectedHero = heroes.find((hero) => hero.hero_code === selectedHeroCode) ?? heroes[0] ?? null;
+
+  async function loadSession() {
+    const [nextMe, nextHeroes] = await Promise.all([
+      request<MeResponse>("/me"),
+      request<HeroesResponse>("/heroes"),
+    ]);
+    setMe(nextMe);
+    setHeroes(nextHeroes.heroes);
+    setSelectedHeroCode(nextMe.selected_hero_code || nextHeroes.heroes[0]?.hero_code || "");
+    setError("");
+  }
+
   useEffect(() => {
-    request<MeResponse>("/me")
-      .then((next) => {
-        setMe(next);
-        setError("");
-      })
+    loadSession()
       .catch(() => {
         setMe(null);
+        setHeroes([]);
+        setSelectedHeroCode("");
       })
       .finally(() => setBusy(false));
   }, []);
@@ -65,13 +93,27 @@ export function App() {
         method: "POST",
         body: JSON.stringify({ username: nextUsername }),
       });
-      const nextMe = await request<MeResponse>("/me");
-      setMe(nextMe);
+      await loadSession();
       setUsername(nextUsername);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Login failed");
     } finally {
       setBusy(false);
+    }
+  }
+
+  async function chooseHero(hero: Hero) {
+    setSelectedHeroCode(hero.hero_code);
+    try {
+      await request("/heroes/select", {
+        method: "POST",
+        body: JSON.stringify({ hero_code: hero.hero_code }),
+      });
+      const nextMe = await request<MeResponse>("/me");
+      setMe(nextMe);
+      setHeroPickerOpen(false);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to select hero");
     }
   }
 
@@ -95,9 +137,13 @@ export function App() {
 
         <section className="hero-focus">
           <button type="button" className="hero-avatar" onClick={() => setHeroPickerOpen(true)}>
-            <span>Hero</span>
+            {selectedHero ? (
+              <img src={resolveImageSrc(selectedHero.image_key)} alt={selectedHero.name} />
+            ) : (
+              <span>Hero</span>
+            )}
           </button>
-          <div className="hero-nameplate">{selectedHero}</div>
+          <div className="hero-nameplate">{selectedHero?.name ?? "No hero selected"}</div>
           <div className="player-tag">
             {me ? `${me.username} / rating ${me.rating}` : "guest / no session"}
           </div>
@@ -165,18 +211,17 @@ export function App() {
               </button>
             </div>
             <div className="hero-grid">
-              {HEROES.map((hero) => (
+              {heroes.map((hero) => (
                 <button
-                  key={hero}
+                  key={hero.hero_code}
                   type="button"
-                  className={`hero-card ${hero === selectedHero ? "hero-card--active" : ""}`}
-                  onClick={() => {
-                    setSelectedHero(hero);
-                    setHeroPickerOpen(false);
-                  }}
+                  className={`hero-card ${hero.hero_code === selectedHeroCode ? "hero-card--active" : ""}`}
+                  onClick={() => chooseHero(hero)}
                 >
-                  <span className="hero-card__avatar">Avatar</span>
-                  <strong>{hero}</strong>
+                  <span className="hero-card__avatar">
+                    <img src={resolveImageSrc(hero.image_key)} alt={hero.name} />
+                  </span>
+                  <strong>{hero.name}</strong>
                 </button>
               ))}
             </div>
