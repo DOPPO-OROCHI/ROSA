@@ -1,63 +1,31 @@
 import { useEffect, useState } from "react";
-
-type MeResponse = {
-  user_id: number;
-  username: string;
-  first_name: string;
-  rating: number;
-  xp: number;
-  selected_hero_code?: string;
-  selected_hero_name?: string;
-};
+import { InventoryScreen } from "./components/InventoryScreen";
+import { MainMenu } from "./components/MainMenu";
+import { request } from "./lib/api";
+import type {
+  BattleCard,
+  BuffCard,
+  CardsResponse,
+  DeckEntry,
+  DeckResponse,
+  Hero,
+  HeroesResponse,
+  MeResponse,
+} from "./types";
 
 const QUICK_USERS = ["dev", "roman", "test", "rosa"];
 
-type Hero = {
-  hero_id: number;
-  hero_code: string;
-  name: string;
-  description: string;
-  image_key: string;
-  level: number;
-  health_points: number;
-  attack_power: number;
-  attack_cooldown: number;
-};
-
-type HeroesResponse = {
-  heroes: Hero[];
-};
-
-function resolveImageSrc(key?: string): string {
-  if (!key) {
-    return "/assets/placeholders/hero_image.svg";
-  }
-  return `/assets/${key.replace(/^\/+/, "").replace(/\/+/g, "/")}.png`;
-}
-
-async function request<T>(url: string, init?: RequestInit): Promise<T> {
-  const response = await fetch(url, {
-    credentials: "include",
-    headers: {
-      "Content-Type": "application/json",
-      ...(init?.headers ?? {}),
-    },
-    ...init,
-  });
-
-  if (!response.ok) {
-    const text = await response.text();
-    throw new Error(text || `Request failed: ${response.status}`);
-  }
-
-  return response.json() as Promise<T>;
-}
+type Screen = "menu" | "inventory";
 
 export function App() {
+  const [screen, setScreen] = useState<Screen>("menu");
   const [username, setUsername] = useState("dev");
   const [userId, setUserId] = useState("");
   const [me, setMe] = useState<MeResponse | null>(null);
   const [heroes, setHeroes] = useState<Hero[]>([]);
+  const [battleCards, setBattleCards] = useState<BattleCard[]>([]);
+  const [buffCards, setBuffCards] = useState<BuffCard[]>([]);
+  const [deckEntries, setDeckEntries] = useState<DeckEntry[]>([]);
   const [busy, setBusy] = useState(true);
   const [error, setError] = useState("");
   const [selectedHeroCode, setSelectedHeroCode] = useState("");
@@ -76,11 +44,25 @@ export function App() {
     setError("");
   }
 
+  async function loadInventory() {
+    const [cards, deck] = await Promise.all([
+      request<CardsResponse>("/cards"),
+      request<DeckResponse>("/deck"),
+    ]);
+    setBattleCards(cards.battle);
+    setBuffCards(cards.buff);
+    setDeckEntries(deck.entries);
+  }
+
   useEffect(() => {
     loadSession()
+      .then(() => loadInventory())
       .catch(() => {
         setMe(null);
         setHeroes([]);
+        setBattleCards([]);
+        setBuffCards([]);
+        setDeckEntries([]);
         setSelectedHeroCode("");
       })
       .finally(() => setBusy(false));
@@ -95,6 +77,7 @@ export function App() {
         body: JSON.stringify({ username: nextUsername }),
       });
       await loadSession();
+      await loadInventory();
       setUsername(nextUsername);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Login failed");
@@ -118,6 +101,7 @@ export function App() {
         body: JSON.stringify({ user_id: parsed }),
       });
       await loadSession();
+      await loadInventory();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Login failed");
     } finally {
@@ -142,48 +126,24 @@ export function App() {
 
   return (
     <main className="app-shell">
-      <section className="main-menu surface">
-        <div className="video-stage" aria-hidden="true">
-          <div className="video-stage__glow" />
-          <div className="video-stage__label">video / key art zone</div>
-        </div>
-
-        <header className="menu-topbar">
-          <button type="button" className="top-slot top-slot--left">
-            Friends
-          </button>
-          <h1 className="menu-title">PROJECT ROSE</h1>
-          <button type="button" className="top-slot top-slot--right">
-            Balance
-          </button>
-        </header>
-
-        <section className="hero-focus">
-          <button type="button" className="hero-avatar" onClick={() => setHeroPickerOpen(true)}>
-            {selectedHero ? (
-              <img src={resolveImageSrc(selectedHero.image_key)} alt={selectedHero.name} />
-            ) : (
-              <span>Hero</span>
-            )}
-          </button>
-          <div className="hero-nameplate">{selectedHero?.name ?? "No hero selected"}</div>
-          <div className="player-tag">
-            {me ? `${me.username} / rating ${me.rating}` : "guest / no session"}
-          </div>
-        </section>
-
-        <section className="menu-actions">
-          <button type="button" className="menu-button menu-button--primary">
-            Start Match
-          </button>
-          <button type="button" className="menu-button">
-            Inventory
-          </button>
-          <button type="button" className="menu-panel">
-            Shop Placeholder
-          </button>
-        </section>
-      </section>
+      {screen === "menu" ? (
+        <MainMenu
+          me={me}
+          selectedHero={selectedHero}
+          heroes={heroes}
+          heroPickerOpen={heroPickerOpen}
+          setHeroPickerOpen={setHeroPickerOpen}
+          chooseHero={chooseHero}
+          onInventory={() => setScreen("inventory")}
+        />
+      ) : (
+        <InventoryScreen
+          deckEntries={deckEntries}
+          battleCards={battleCards}
+          buffCards={buffCards}
+          onBack={() => setScreen("menu")}
+        />
+      )}
 
       <section className="card surface dev-panel">
         <div className="section-head">
@@ -235,37 +195,6 @@ export function App() {
 
         {error ? <p className="error-text">{error}</p> : null}
       </section>
-
-      {heroPickerOpen ? (
-        <div className="overlay" onClick={() => setHeroPickerOpen(false)}>
-          <div className="picker surface" onClick={(event) => event.stopPropagation()}>
-            <div className="section-head">
-              <div>
-                <p className="eyebrow">Hero Select</p>
-                <h2>Выбор персонажа</h2>
-              </div>
-              <button type="button" className="picker-close" onClick={() => setHeroPickerOpen(false)}>
-                Close
-              </button>
-            </div>
-            <div className="hero-grid">
-              {heroes.map((hero) => (
-                <button
-                  key={hero.hero_code}
-                  type="button"
-                  className={`hero-card ${hero.hero_code === selectedHeroCode ? "hero-card--active" : ""}`}
-                  onClick={() => chooseHero(hero)}
-                >
-                  <span className="hero-card__avatar">
-                    <img src={resolveImageSrc(hero.image_key)} alt={hero.name} />
-                  </span>
-                  <strong>{hero.name}</strong>
-                </button>
-              ))}
-            </div>
-          </div>
-        </div>
-      ) : null}
     </main>
   );
 }
