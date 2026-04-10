@@ -294,6 +294,7 @@ button {
 
 .chip,
 .primary-button,
+.secondary-button,
 .picker-close,
 .hero-card {
   border: none;
@@ -319,8 +320,20 @@ button {
   font-weight: 800;
 }
 
+.secondary-button {
+  width: 100%;
+  margin-top: 10px;
+  padding: 13px 18px;
+  border-radius: 14px;
+  background: rgba(98, 114, 167, 0.18);
+  color: #dce8ff;
+  border: 1px solid rgba(157, 173, 231, 0.18);
+  font-weight: 700;
+}
+
 .chip:disabled,
-.primary-button:disabled {
+.primary-button:disabled,
+.secondary-button:disabled {
   opacity: 0.6;
   cursor: not-allowed;
 }

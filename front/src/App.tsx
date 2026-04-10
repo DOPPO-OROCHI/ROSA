@@ -55,6 +55,7 @@ async function request<T>(url: string, init?: RequestInit): Promise<T> {
 
 export function App() {
   const [username, setUsername] = useState("dev");
+  const [userId, setUserId] = useState("");
   const [me, setMe] = useState<MeResponse | null>(null);
   const [heroes, setHeroes] = useState<Hero[]>([]);
   const [busy, setBusy] = useState(true);
@@ -95,6 +96,28 @@ export function App() {
       });
       await loadSession();
       setUsername(nextUsername);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Login failed");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function loginAsUserId() {
+    const parsed = Number(userId);
+    if (!Number.isInteger(parsed) || parsed <= 0) {
+      setError("Введите корректный user ID");
+      return;
+    }
+
+    setBusy(true);
+    setError("");
+    try {
+      await request("/auth/dev", {
+        method: "POST",
+        body: JSON.stringify({ user_id: parsed }),
+      });
+      await loadSession();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Login failed");
     } finally {
@@ -183,6 +206,17 @@ export function App() {
           />
         </label>
 
+        <label className="field">
+          <span>User ID</span>
+          <input
+            value={userId}
+            onChange={(event) => setUserId(event.target.value)}
+            placeholder="4"
+            inputMode="numeric"
+            autoComplete="off"
+          />
+        </label>
+
         <div className="quick-row">
           {QUICK_USERS.map((item) => (
             <button key={item} type="button" className="chip" onClick={() => login(item)} disabled={busy}>
@@ -193,6 +227,10 @@ export function App() {
 
         <button type="button" className="primary-button" onClick={() => login(username)} disabled={busy}>
           {busy ? "Подключаем..." : "Войти как dev user"}
+        </button>
+
+        <button type="button" className="secondary-button" onClick={loginAsUserId} disabled={busy}>
+          {busy ? "Подключаем..." : "Войти по user ID"}
         </button>
 
         {error ? <p className="error-text">{error}</p> : null}
