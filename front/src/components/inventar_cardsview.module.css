@@ -6,6 +6,15 @@
   background: transparent;
 }
 
+.root :global(.game-card--catalog) {
+  --catalog-frame-left: 8.8%;
+  --catalog-frame-top: 8.6%;
+  --catalog-frame-right: 8.8%;
+  --catalog-frame-bottom: 8.8%;
+  --catalog-anchor-inset-x: 3.1%;
+  --catalog-anchor-inset-y: 3.2%;
+}
+
 .root :global(.game-card--catalog .game-card__name) {
   display: none;
 }
@@ -42,19 +51,19 @@
 
 /* Inventory anchors: tweak these values to move stats over icon zones */
 .root :global(.game-card--catalog .game-card__stat--mana) {
-  top: 10.4%;
-  left: 7.9%;
+  top: calc(var(--catalog-frame-top) + var(--catalog-anchor-inset-y));
+  left: calc(var(--catalog-frame-left) + var(--catalog-anchor-inset-x));
   transform: translate(-50%, -50%);
 }
 
 .root :global(.game-card--catalog .game-card__stat--attack) {
-  top: 80.8%;
-  left: 9.5%;
+  top: calc(100% - var(--catalog-frame-bottom) - var(--catalog-anchor-inset-y));
+  left: calc(var(--catalog-frame-left) + var(--catalog-anchor-inset-x));
   transform: translate(-50%, -50%);
 }
 
 .root :global(.game-card--catalog .game-card__stat--hp) {
-  top: 80.8%;
-  left: 83.2%;
+  top: calc(100% - var(--catalog-frame-bottom) - var(--catalog-anchor-inset-y));
+  left: calc(100% - var(--catalog-frame-right) - var(--catalog-anchor-inset-x));
   transform: translate(-50%, -50%);
 }
