@@ -12,8 +12,8 @@
   --catalog-frame-right: 8.8%;
   --catalog-frame-bottom: 8.8%;
   --catalog-anchor-size: 9.6%;
-  --catalog-anchor-mana-x: calc(var(--catalog-frame-left) + 3.1%);
-  --catalog-anchor-mana-y: calc(var(--catalog-frame-top) + 3.2%);
+--catalog-anchor-mana-x: calc(var(--catalog-anchor-size) / 2);
+--catalog-anchor-mana-y: calc(var(--catalog-anchor-size) / 2);
   --catalog-anchor-attack-x: calc(var(--catalog-frame-left) + 3.1%);
   --catalog-anchor-attack-y: calc(100% - var(--catalog-frame-bottom) - 3.2%);
   --catalog-anchor-hp-x: calc(100% - var(--catalog-frame-right) - 3.1%);
