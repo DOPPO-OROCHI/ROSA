@@ -1588,30 +1588,72 @@ pre {
   object-position: center center;
 }
 
-.card-viewer-info {
+.card-viewer-meta {
   position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  z-index: 2;
-  display: flex;
-  flex-direction: column;
-  gap: 0.22rem;
-  padding: 0.75rem 0.8rem 0.82rem;
-  text-align: left;
+  inset: 0;
+  z-index: 3;
+  pointer-events: none;
 }
 
-.card-viewer-info strong {
-  font-size: 0.9rem;
-  letter-spacing: 0.05em;
+.card-viewer-pill {
+  position: absolute;
+  min-width: 42px;
+  min-height: 42px;
+  padding: 0.15rem 0.4rem;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.96rem;
+  line-height: 1;
+  font-weight: 900;
+  color: #f8e9be;
+  border: 1px solid rgba(231, 219, 192, 0.38);
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.85);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.45);
+}
+
+.card-viewer-pill-mana {
+  top: 22px;
+  left: 20px;
+  background: radial-gradient(circle at 30% 25%, rgba(92, 199, 255, 0.86), rgba(11, 30, 57, 0.95));
+}
+
+.card-viewer-pill-attack {
+  left: 16px;
+  bottom: 22px;
+  background: radial-gradient(circle at 30% 25%, rgba(255, 159, 110, 0.86), rgba(66, 16, 7, 0.95));
+}
+
+.card-viewer-pill-hp {
+  right: 16px;
+  bottom: 22px;
+  background: radial-gradient(circle at 30% 25%, rgba(255, 103, 113, 0.9), rgba(70, 8, 18, 0.95));
+}
+
+.card-viewer-copy {
+  position: absolute;
+  left: 12%;
+  right: 12%;
+  bottom: 10%;
+  display: grid;
+  gap: 0.42rem;
+  text-align: center;
+}
+
+.card-viewer-copy strong {
+  font-size: 1.04rem;
+  letter-spacing: 0.06em;
   text-transform: uppercase;
   color: #f3dfb8;
+  text-shadow: 0 4px 14px rgba(0, 0, 0, 0.8);
 }
 
-.card-viewer-info span {
-  font-size: 0.72rem;
-  line-height: 1.2;
-  color: #d7ccbb;
+.card-viewer-copy span {
+  font-size: 0.82rem;
+  line-height: 1.28;
+  color: #ddd1b9;
+  text-shadow: 0 3px 12px rgba(0, 0, 0, 0.82);
 }
 
 @keyframes card-viewer-enter {

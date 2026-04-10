@@ -3125,18 +3125,23 @@ export default function App() {
               fallbackSrc={resolveCardFallbackSrc()}
               className="card-viewer-image"
             />
-            <div className="card-viewer-info">
-              <strong>{cardPreview.name}</strong>
+            <div className="card-viewer-meta">
+              <span className="card-viewer-pill card-viewer-pill-mana">{cardPreview.mana ?? 0}</span>
               {cardPreview.kind === "battle" ? (
-                <span>
-                  MANA {cardPreview.mana ?? 0} | HP {cardPreview.hp ?? 0} | ATK {cardPreview.attack ?? 0} | CD {cardPreview.cooldown ?? 0}
-                </span>
+                <>
+                  <span className="card-viewer-pill card-viewer-pill-attack">{cardPreview.attack ?? 0}</span>
+                  <span className="card-viewer-pill card-viewer-pill-hp">{cardPreview.hp ?? 0}</span>
+                </>
               ) : (
-                <span>
-                  MANA {cardPreview.mana ?? 0} | {cardPreview.buffType || "Buff"} {cardPreview.buffValue ?? 0} | DUR {cardPreview.duration ?? 0}
-                </span>
+                <>
+                  <span className="card-viewer-pill card-viewer-pill-attack">{cardPreview.buffValue ?? 0}</span>
+                  <span className="card-viewer-pill card-viewer-pill-hp">{cardPreview.duration ?? 0}</span>
+                </>
               )}
-              <span>{cardPreview.description}</span>
+              <div className="card-viewer-copy">
+                <strong>{cardPreview.name}</strong>
+                <span>{cardPreview.description}</span>
+              </div>
             </div>
           </div>
         </div>

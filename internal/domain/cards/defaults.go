@@ -1250,7 +1250,7 @@ var DefaultBattleCards = []BattleCardTemplate{
 		SplashRadius:      0,
 		IsTank:            true,
 		CardType:          Demonical,
-		BaseCooldown:      10,
+		BaseCooldown:      2,
 		ManaCost:          9,
 		MaxCopies:         2,
 		ImageKey:          "",
