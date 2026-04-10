@@ -1679,6 +1679,26 @@ pre {
   text-shadow: 0 4px 14px rgba(0, 0, 0, 0.8);
 }
 
+.card-viewer-cd {
+  position: absolute;
+  left: 16%;
+  right: 16%;
+  bottom: 27.5%;
+  text-align: center;
+  font-family: "Bebas Neue", "Impact", "Arial Narrow", sans-serif;
+  font-size: 0.92rem;
+  letter-spacing: 0.06em;
+  line-height: 1.1;
+  color: #d9cdb7;
+  text-transform: uppercase;
+  text-shadow: 0 3px 10px rgba(0, 0, 0, 0.86);
+  min-height: 1.1em;
+  max-height: 1.1em;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
 .card-viewer-race {
   position: absolute;
   left: 24%;

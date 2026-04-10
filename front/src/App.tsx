@@ -302,6 +302,7 @@ type CardPreview = {
   hp?: number;
   attack?: number;
   cooldown?: number;
+  skillCooldown?: number;
   buffType?: string;
   buffValue?: number;
   duration?: number;
@@ -637,6 +638,7 @@ export default function App() {
       attack: 3,
       hp: 3,
       cooldown: 0,
+      skillCooldown: 3,
     };
 
     return (
@@ -654,6 +656,14 @@ export default function App() {
               <span className="card-viewer-pill card-viewer-pill-hp">{cardPreview.hp}</span>
               <div className="card-viewer-copy">
                 <span className="card-viewer-desc">{cardPreview.description}</span>
+                {cardPreview.kind === "battle" && (
+                  <span className="card-viewer-cd">
+                    ATK CD {cardPreview.cooldown ?? 0} | SKILL CD {cardPreview.skillCooldown ?? 0}
+                  </span>
+                )}
+                <span className="card-viewer-cd">
+                  ATK CD {cardPreview.cooldown ?? 0} | SKILL CD {cardPreview.skillCooldown ?? 0}
+                </span>
                 <strong className="card-viewer-name">{cardPreview.name}</strong>
                 <em className="card-viewer-race">{cardPreview.race}</em>
               </div>
@@ -2828,6 +2838,7 @@ export default function App() {
                                 hp: card.health_points,
                                 attack: card.attack,
                                 cooldown: card.cooldown,
+                                skillCooldown: card.skill_cooldown,
                               }
                             : {
                                 kind: "buff",
