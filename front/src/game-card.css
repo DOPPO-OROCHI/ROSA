@@ -1,0 +1,184 @@
+.game-card {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 2 / 3;
+  border-radius: 14px;
+  overflow: hidden;
+  background: rgba(8, 11, 14, 0.85);
+  border: 1px solid rgba(231, 219, 192, 0.16);
+}
+
+.game-card__image {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center center;
+}
+
+.game-card__overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+}
+
+.game-card__stat {
+  position: absolute;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-family: "Bebas Neue", "Impact", "Arial Narrow", sans-serif;
+  font-size: clamp(1rem, 2.5vw, 2rem);
+  line-height: 1;
+  letter-spacing: 0.02em;
+  font-weight: 900;
+  color: #f8e9be;
+  text-shadow:
+    -1px -1px 0 #000,
+    1px -1px 0 #000,
+    -1px 1px 0 #000,
+    1px 1px 0 #000,
+    0 3px 10px rgba(0, 0, 0, 0.9);
+}
+
+.game-card__stat--mana {
+  top: 8.3%;
+  left: 12.1%;
+  transform: translate(-50%, -50%);
+}
+
+.game-card__stat--attack {
+  left: 12.3%;
+  bottom: 5.2%;
+  transform: translate(-50%, 50%);
+}
+
+.game-card__stat--hp {
+  right: 9.8%;
+  bottom: 5.2%;
+  transform: translate(50%, 50%);
+}
+
+.game-card__desc {
+  position: absolute;
+  left: 16%;
+  right: 16%;
+  top: 55%;
+  text-align: center;
+  font-size: clamp(0.56rem, 1.6vw, 1rem);
+  line-height: 1.3;
+  min-height: 3.9em;
+  max-height: 3.9em;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  word-break: break-word;
+  color: #ddd1b9;
+  text-shadow: 0 3px 12px rgba(0, 0, 0, 0.82);
+}
+
+.game-card__cd {
+  position: absolute;
+  left: 16%;
+  right: 16%;
+  bottom: 27.5%;
+  text-align: center;
+  font-family: "Bebas Neue", "Impact", "Arial Narrow", sans-serif;
+  font-size: clamp(0.5rem, 1.2vw, 0.92rem);
+  letter-spacing: 0.06em;
+  line-height: 1.1;
+  color: #d9cdb7;
+  text-transform: uppercase;
+  text-shadow: 0 3px 10px rgba(0, 0, 0, 0.86);
+  min-height: 1.1em;
+  max-height: 1.1em;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.game-card__name {
+  position: absolute;
+  left: 12%;
+  right: 12%;
+  bottom: 17.6%;
+  text-align: center;
+  font-size: clamp(0.62rem, 1.7vw, 1.16rem);
+  line-height: 1.08;
+  min-height: 2.16em;
+  max-height: 2.16em;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  word-break: break-word;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #f3dfb8;
+  text-shadow: 0 4px 14px rgba(0, 0, 0, 0.8);
+}
+
+.game-card__race {
+  position: absolute;
+  left: 24%;
+  right: 24%;
+  bottom: 10.7%;
+  text-align: center;
+  font-family: "Bebas Neue", "Impact", "Arial Narrow", sans-serif;
+  font-size: clamp(0.48rem, 1.2vw, 0.92rem);
+  line-height: 1.15;
+  min-height: 1.15em;
+  max-height: 1.15em;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  letter-spacing: 0.08em;
+  color: #c9bfae;
+  text-transform: uppercase;
+  text-shadow: 0 3px 12px rgba(0, 0, 0, 0.8);
+}
+
+.game-card--catalog .game-card__desc,
+.game-card--catalog .game-card__cd,
+.game-card--catalog .game-card__race {
+  display: none;
+}
+
+.game-card--catalog .game-card__name {
+  left: 8%;
+  right: 8%;
+  bottom: 7%;
+  font-size: clamp(0.54rem, 1.4vw, 0.82rem);
+  min-height: 2.2em;
+  max-height: 2.2em;
+}
+
+.game-card--catalog .game-card__stat {
+  font-size: clamp(0.9rem, 2.1vw, 1.35rem);
+}
+
+.game-card--hand .game-card__desc,
+.game-card--hand .game-card__cd,
+.game-card--hand .game-card__race {
+  display: none;
+}
+
+.game-card--hand .game-card__name {
+  left: 8%;
+  right: 8%;
+  bottom: 8%;
+  font-size: clamp(0.38rem, 1.2vw, 0.58rem);
+  min-height: 2.25em;
+  max-height: 2.25em;
+  letter-spacing: 0.04em;
+}
+
+.game-card--hand .game-card__stat {
+  font-size: clamp(0.72rem, 1.7vw, 1rem);
+}
+

@@ -18,6 +18,7 @@ import {
   isMiniAppFullscreen,
   requestMiniAppFullscreen,
 } from "./telegram";
+import { GameCard, type GameCardData } from "./components/GameCard";
 
 type TabId = "home" | "inventory";
 
@@ -540,6 +541,24 @@ function cardRaceLabel(cardType?: string): string {
   }
 }
 
+function toGameCardData(preview: CardPreview): GameCardData {
+  return {
+    kind: preview.kind,
+    name: preview.name,
+    description: preview.description,
+    imageKey: preview.imageKey,
+    race: preview.race,
+    mana: preview.mana,
+    attack: preview.attack,
+    hp: preview.hp,
+    cooldown: preview.cooldown,
+    skillCooldown: preview.skillCooldown,
+    buffType: preview.buffType,
+    buffValue: preview.buffValue,
+    duration: preview.duration,
+  };
+}
+
 function unitSummonedInTurn(unit: UnitState): number {
   return unit.summoned_in_turn ?? unit.SummonedInTurn ?? -1;
 }
@@ -644,27 +663,9 @@ export default function App() {
     return (
       <div className="card-viewer-overlay">
         <div className="card-viewer-window">
-          <AssetImage
-            imageKey={cardPreview.imageKey}
-            alt={cardPreview.name}
-            fallbackSrc={resolveCardFallbackSrc()}
-            className="card-viewer-image"
-          />
-            <div className="card-viewer-meta">
-              <span className="card-viewer-pill card-viewer-pill-mana">{cardPreview.mana}</span>
-              <span className="card-viewer-pill card-viewer-pill-attack">{cardPreview.attack}</span>
-              <span className="card-viewer-pill card-viewer-pill-hp">{cardPreview.hp}</span>
-              <div className="card-viewer-copy">
-                <span className="card-viewer-desc">{cardPreview.description}</span>
-                <span className="card-viewer-cd">
-                  ATK CD {cardPreview.cooldown ?? 0} | SKILL CD {cardPreview.skillCooldown ?? 0}
-                </span>
-                <strong className="card-viewer-name">{cardPreview.name}</strong>
-                <em className="card-viewer-race">{cardPreview.race}</em>
-              </div>
-            </div>
-          </div>
+          <GameCard data={toGameCardData(cardPreview)} mode="viewer" />
         </div>
+      </div>
     );
   }
 
@@ -2849,11 +2850,23 @@ export default function App() {
                       }
                     >
                       <div className="asset-frame">
-                        <AssetImage
-                          imageKey={imageKey}
-                          alt={card.name}
-                          fallbackSrc={resolveCardFallbackSrc()}
-                          className="asset-frame-media"
+                        <GameCard
+                          mode="catalog"
+                          data={{
+                            kind: card.kind,
+                            name: card.name,
+                            description: card.description,
+                            imageKey,
+                            race: card.kind === "battle" ? cardRaceLabel(card.card_type) : "ЭФФЕКТ",
+                            mana: card.mana_cost,
+                            attack: card.kind === "battle" ? card.attack : undefined,
+                            hp: card.kind === "battle" ? card.health_points : undefined,
+                            cooldown: card.kind === "battle" ? card.cooldown : undefined,
+                            skillCooldown: card.kind === "battle" ? card.skill_cooldown : undefined,
+                            buffType: card.kind === "buff" ? card.buff_type : undefined,
+                            buffValue: card.kind === "buff" ? card.buff_value : undefined,
+                            duration: card.kind === "buff" ? card.duration : undefined,
+                          }}
                         />
                         <button
                           className="asset-add"
@@ -2869,7 +2882,6 @@ export default function App() {
                           +
                         </button>
                       </div>
-                      <strong>{card.name}</strong>
                     </article>
                   );
                 })}
@@ -3121,21 +3133,51 @@ export default function App() {
                               style={fanStyle}
                               onClick={() => setSelectedHandCardId(cardInstanceId(card))}
                             >
-                              <AssetImage
-                                imageKey={cardImageKeyForTemplate(templateId)}
-                                alt={templateId}
-                                fallbackSrc={resolveCardFallbackSrc()}
-                                className="hand-card-media"
+                              <GameCard
+                                mode="hand"
+                                data={{
+                                  kind:
+                                    "attack" in (meta ?? {}) && meta?.attack !== undefined
+                                      ? "battle"
+                                      : "buff",
+                                  name: meta?.name || resolveAssetLabel(templateId),
+                                  description: meta?.description || "",
+                                  imageKey: cardImageKeyForTemplate(templateId),
+                                  race: undefined,
+                                  mana: meta?.mana_cost ?? 0,
+                                  attack:
+                                    "attack" in (meta ?? {}) && meta?.attack !== undefined
+                                      ? meta.attack
+                                      : undefined,
+                                  hp:
+                                    "health_points" in (meta ?? {}) &&
+                                    meta?.health_points !== undefined
+                                      ? meta.health_points
+                                      : undefined,
+                                  cooldown:
+                                    "cooldown" in (meta ?? {}) && meta?.cooldown !== undefined
+                                      ? meta.cooldown
+                                      : undefined,
+                                  skillCooldown:
+                                    "skill_cooldown" in (meta ?? {}) &&
+                                    meta?.skill_cooldown !== undefined
+                                      ? meta.skill_cooldown
+                                      : undefined,
+                                  buffType:
+                                    "buff_type" in (meta ?? {}) && meta?.buff_type !== undefined
+                                      ? String(meta.buff_type)
+                                      : undefined,
+                                  buffValue:
+                                    "buff_value" in (meta ?? {}) &&
+                                    meta?.buff_value !== undefined
+                                      ? Number(meta.buff_value)
+                                      : undefined,
+                                  duration:
+                                    "duration" in (meta ?? {}) && meta?.duration !== undefined
+                                      ? Number(meta.duration)
+                                      : undefined,
+                                }}
                               />
-                              <span className="hand-card-mana">{meta?.mana_cost ?? "?"}</span>
-                              <div className="hand-card-bottom">
-                                <strong className="hand-card-name">{resolveAssetLabel(templateId)}</strong>
-                                <div className="hand-card-stats">
-                                  {"attack" in (meta ?? {}) && meta?.attack !== undefined ? <span>ATK {meta.attack}</span> : <span>{meta?.buff_type || cardKind(card)}</span>}
-                                  {"health_points" in (meta ?? {}) && meta?.health_points !== undefined ? <span>HP {meta.health_points}</span> : <span>VAL {meta?.buff_value ?? "-"}</span>}
-                                  {"cooldown" in (meta ?? {}) && meta?.cooldown !== undefined ? <span>CD {meta.cooldown}</span> : <span>LVL {card.card_level ?? card.CardLevel ?? 1}</span>}
-                                </div>
-                              </div>
                             </button>
                           );
                         })}
@@ -3186,37 +3228,8 @@ export default function App() {
             <button className="card-viewer-close" onClick={() => setCardPreview(null)}>
               X
             </button>
-            <AssetImage
-              imageKey={cardPreview.imageKey}
-              alt={cardPreview.name}
-              fallbackSrc={resolveCardFallbackSrc()}
-              className="card-viewer-image"
-            />
-            <div className="card-viewer-meta">
-              <span className="card-viewer-pill card-viewer-pill-mana">{cardPreview.mana ?? 0}</span>
-              {cardPreview.kind === "battle" ? (
-                <>
-                  <span className="card-viewer-pill card-viewer-pill-attack">{cardPreview.attack ?? 0}</span>
-                  <span className="card-viewer-pill card-viewer-pill-hp">{cardPreview.hp ?? 0}</span>
-                </>
-              ) : (
-                <>
-                  <span className="card-viewer-pill card-viewer-pill-attack">{cardPreview.buffValue ?? 0}</span>
-                  <span className="card-viewer-pill card-viewer-pill-hp">{cardPreview.duration ?? 0}</span>
-                </>
-              )}
-              <div className="card-viewer-copy">
-                <span className="card-viewer-desc">{cardPreview.description}</span>
-                {cardPreview.kind === "battle" && (
-                  <span className="card-viewer-cd">
-                    ATK CD {cardPreview.cooldown ?? 0} | SKILL CD {cardPreview.skillCooldown ?? 0}
-                  </span>
-                )}
-                <strong className="card-viewer-name">{cardPreview.name}</strong>
-                <em className="card-viewer-race">{cardPreview.race || "ЭФФЕКТ"}</em>
-              </div>
+            <GameCard data={toGameCardData(cardPreview)} mode="viewer" />
             </div>
-          </div>
         </div>
       )}
       <div className="toast-stack" aria-live="polite" aria-atomic="true">
