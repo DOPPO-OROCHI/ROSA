@@ -10,6 +10,14 @@ type MeResponse = {
 };
 
 const QUICK_USERS = ["dev", "roman", "test", "rosa"];
+const HEROES = [
+  "Astra Vanguard",
+  "Hex Runner",
+  "Ivory Saint",
+  "Rust King",
+  "Noctis Bloom",
+  "Signal Warden",
+] as const;
 
 async function request<T>(url: string, init?: RequestInit): Promise<T> {
   const response = await fetch(url, {
@@ -34,6 +42,8 @@ export function App() {
   const [me, setMe] = useState<MeResponse | null>(null);
   const [busy, setBusy] = useState(true);
   const [error, setError] = useState("");
+  const [selectedHero, setSelectedHero] = useState<(typeof HEROES)[number]>(HEROES[0]);
+  const [heroPickerOpen, setHeroPickerOpen] = useState(false);
 
   useEffect(() => {
     request<MeResponse>("/me")
@@ -67,11 +77,46 @@ export function App() {
 
   return (
     <main className="app-shell">
-      <section className="hero-panel">
-        <h1>PROJECT ROSE</h1>
+      <section className="main-menu surface">
+        <div className="video-stage" aria-hidden="true">
+          <div className="video-stage__glow" />
+          <div className="video-stage__label">video / key art zone</div>
+        </div>
+
+        <header className="menu-topbar">
+          <button type="button" className="top-slot top-slot--left">
+            Friends
+          </button>
+          <h1 className="menu-title">PROJECT ROSE</h1>
+          <button type="button" className="top-slot top-slot--right">
+            Balance
+          </button>
+        </header>
+
+        <section className="hero-focus">
+          <button type="button" className="hero-avatar" onClick={() => setHeroPickerOpen(true)}>
+            <span>Hero</span>
+          </button>
+          <div className="hero-nameplate">{selectedHero}</div>
+          <div className="player-tag">
+            {me ? `${me.username} / rating ${me.rating}` : "guest / no session"}
+          </div>
+        </section>
+
+        <section className="menu-actions">
+          <button type="button" className="menu-button menu-button--primary">
+            Start Match
+          </button>
+          <button type="button" className="menu-button">
+            Inventory
+          </button>
+          <button type="button" className="menu-panel">
+            Shop Placeholder
+          </button>
+        </section>
       </section>
 
-      <section className="card surface">
+      <section className="card surface dev-panel">
         <div className="section-head">
           <div>
             <p className="eyebrow">Dev Auth</p>
@@ -107,37 +152,37 @@ export function App() {
         {error ? <p className="error-text">{error}</p> : null}
       </section>
 
-      <section className="card surface">
-        <div className="section-head">
-          <div>
-            <p className="eyebrow">Session</p>
-            <h2>Текущее состояние</h2>
+      {heroPickerOpen ? (
+        <div className="overlay" onClick={() => setHeroPickerOpen(false)}>
+          <div className="picker surface" onClick={(event) => event.stopPropagation()}>
+            <div className="section-head">
+              <div>
+                <p className="eyebrow">Hero Select</p>
+                <h2>Выбор персонажа</h2>
+              </div>
+              <button type="button" className="picker-close" onClick={() => setHeroPickerOpen(false)}>
+                Close
+              </button>
+            </div>
+            <div className="hero-grid">
+              {HEROES.map((hero) => (
+                <button
+                  key={hero}
+                  type="button"
+                  className={`hero-card ${hero === selectedHero ? "hero-card--active" : ""}`}
+                  onClick={() => {
+                    setSelectedHero(hero);
+                    setHeroPickerOpen(false);
+                  }}
+                >
+                  <span className="hero-card__avatar">Avatar</span>
+                  <strong>{hero}</strong>
+                </button>
+              ))}
+            </div>
           </div>
         </div>
-
-        {me ? (
-          <div className="profile-grid">
-            <div className="metric">
-              <span>ID</span>
-              <strong>{me.user_id}</strong>
-            </div>
-            <div className="metric">
-              <span>Username</span>
-              <strong>{me.username}</strong>
-            </div>
-            <div className="metric">
-              <span>Rating</span>
-              <strong>{me.rating}</strong>
-            </div>
-            <div className="metric">
-              <span>XP</span>
-              <strong>{me.xp}</strong>
-            </div>
-          </div>
-        ) : (
-          <p className="empty-state">Сессии пока нет. Нажми кнопку входа выше.</p>
-        )}
-      </section>
+      ) : null}
     </main>
   );
 }
