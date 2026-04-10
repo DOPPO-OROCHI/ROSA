@@ -6,6 +6,18 @@
   background: transparent;
 }
 
+/* Catalog-only sizing sync: make the rendered card use the full catalog slot area */
+.root :global(.catalog-grid .asset-card) {
+  min-height: 0;
+  padding: 0;
+  gap: 0;
+}
+
+.root :global(.catalog-grid .asset-frame) {
+  min-height: 0;
+  height: 100%;
+}
+
 .root :global(.game-card--catalog) {
   --catalog-frame-left: 8.8%;
   --catalog-frame-top: 8.6%;
