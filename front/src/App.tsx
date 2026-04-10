@@ -297,6 +297,7 @@ type CardPreview = {
   name: string;
   description: string;
   imageKey: string;
+  race?: string;
   mana?: number;
   hp?: number;
   attack?: number;
@@ -514,6 +515,28 @@ function unitBaseCooldown(unit: UnitState): number {
 
 function unitIsTank(unit: UnitState): boolean {
   return unit.is_tank ?? unit.IsTank ?? false;
+}
+
+function cardRaceLabel(cardType?: string): string {
+  if (!cardType) {
+    return "НЕИЗВЕСТНО";
+  }
+  const normalized = cardType.trim().toLowerCase();
+  switch (normalized) {
+    case "human":
+    case "человек":
+      return "ЛЮДИ";
+    case "mechanical":
+    case "машина":
+      return "МЕХАНИКА";
+    case "demonical":
+    case "демонический":
+    case "vespid":
+    case "веспид":
+      return "ВЕСПИДЫ";
+    default:
+      return cardType.toUpperCase();
+  }
 }
 
 function unitSummonedInTurn(unit: UnitState): number {
@@ -2763,6 +2786,7 @@ export default function App() {
                                 name: card.name,
                                 description: card.description,
                                 imageKey,
+                                race: cardRaceLabel(card.card_type),
                                 mana: card.mana_cost,
                                 hp: card.health_points,
                                 attack: card.attack,
@@ -3139,8 +3163,9 @@ export default function App() {
                 </>
               )}
               <div className="card-viewer-copy">
-                <strong>{cardPreview.name}</strong>
                 <span>{cardPreview.description}</span>
+                <strong>{cardPreview.name}</strong>
+                <em className="card-viewer-race">{cardPreview.race || "ЭФФЕКТ"}</em>
               </div>
             </div>
           </div>

@@ -1597,63 +1597,78 @@ pre {
 
 .card-viewer-pill {
   position: absolute;
-  min-width: 42px;
-  min-height: 42px;
-  padding: 0.15rem 0.4rem;
-  border-radius: 999px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  font-size: 0.96rem;
+  font-family: "Bebas Neue", "Impact", "Arial Narrow", sans-serif;
+  font-size: 2rem;
+  letter-spacing: 0.02em;
   line-height: 1;
   font-weight: 900;
   color: #f8e9be;
-  border: 1px solid rgba(231, 219, 192, 0.38);
-  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.85);
-  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.45);
+  text-shadow:
+    -1px -1px 0 #000,
+    1px -1px 0 #000,
+    -1px 1px 0 #000,
+    1px 1px 0 #000,
+    0 3px 10px rgba(0, 0, 0, 0.9);
 }
 
 .card-viewer-pill-mana {
-  top: 22px;
-  left: 20px;
-  background: radial-gradient(circle at 30% 25%, rgba(92, 199, 255, 0.86), rgba(11, 30, 57, 0.95));
+  top: 80px;
+  left: 78px;
+  transform: translate(-50%, -50%);
 }
 
 .card-viewer-pill-attack {
-  left: 16px;
-  bottom: 22px;
-  background: radial-gradient(circle at 30% 25%, rgba(255, 159, 110, 0.86), rgba(66, 16, 7, 0.95));
+  left: 80px;
+  bottom: 50px;
+  transform: translate(-50%, 50%);
 }
 
 .card-viewer-pill-hp {
-  right: 16px;
-  bottom: 22px;
-  background: radial-gradient(circle at 30% 25%, rgba(255, 103, 113, 0.9), rgba(70, 8, 18, 0.95));
+  right: 64px;
+  bottom: 50px;
+  transform: translate(50%, 50%);
 }
 
 .card-viewer-copy {
   position: absolute;
-  left: 12%;
-  right: 12%;
-  bottom: 10%;
+  left: 18%;
+  right: 18%;
+  top: 54%;
+  bottom: auto;
   display: grid;
-  gap: 0.42rem;
+  gap: 0.5rem;
   text-align: center;
 }
 
 .card-viewer-copy strong {
-  font-size: 1.04rem;
+  font-size: 1.2rem;
   letter-spacing: 0.06em;
   text-transform: uppercase;
   color: #f3dfb8;
   text-shadow: 0 4px 14px rgba(0, 0, 0, 0.8);
+  order: 2;
 }
 
 .card-viewer-copy span {
-  font-size: 0.82rem;
-  line-height: 1.28;
+  font-size: 1rem;
+  line-height: 1.34;
   color: #ddd1b9;
   text-shadow: 0 3px 12px rgba(0, 0, 0, 0.82);
+  order: 1;
+}
+
+.card-viewer-race {
+  font-family: "Bebas Neue", "Impact", "Arial Narrow", sans-serif;
+  font-style: normal;
+  font-size: 0.96rem;
+  letter-spacing: 0.08em;
+  color: #c9bfae;
+  text-transform: uppercase;
+  text-shadow: 0 3px 12px rgba(0, 0, 0, 0.8);
+  order: 3;
 }
 
 @keyframes card-viewer-enter {
