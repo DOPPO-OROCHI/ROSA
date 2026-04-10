@@ -656,11 +656,6 @@ export default function App() {
               <span className="card-viewer-pill card-viewer-pill-hp">{cardPreview.hp}</span>
               <div className="card-viewer-copy">
                 <span className="card-viewer-desc">{cardPreview.description}</span>
-                {cardPreview.kind === "battle" && (
-                  <span className="card-viewer-cd">
-                    ATK CD {cardPreview.cooldown ?? 0} | SKILL CD {cardPreview.skillCooldown ?? 0}
-                  </span>
-                )}
                 <span className="card-viewer-cd">
                   ATK CD {cardPreview.cooldown ?? 0} | SKILL CD {cardPreview.skillCooldown ?? 0}
                 </span>
@@ -3212,6 +3207,11 @@ export default function App() {
               )}
               <div className="card-viewer-copy">
                 <span className="card-viewer-desc">{cardPreview.description}</span>
+                {cardPreview.kind === "battle" && (
+                  <span className="card-viewer-cd">
+                    ATK CD {cardPreview.cooldown ?? 0} | SKILL CD {cardPreview.skillCooldown ?? 0}
+                  </span>
+                )}
                 <strong className="card-viewer-name">{cardPreview.name}</strong>
                 <em className="card-viewer-race">{cardPreview.race || "ЭФФЕКТ"}</em>
               </div>
