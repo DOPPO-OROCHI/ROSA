@@ -20,12 +20,12 @@ import {
 } from "./telegram";
 import { GameCard, type GameCardData } from "./components/GameCard";
 import { InventarCardsView, type InventoryCardItem } from "./components/inventar_cardsview";
-import "./components/battle_cardsview.css";
-import "./components/battle_overlays.css";
-import "./components/deck_cardsview.css";
-import "./components/deck_layout.css";
-import "./components/hand_cardsview.css";
-import "./components/viewer_cardsview.css";
+import battleCardsStyles from "./components/battle_cardsview.module.css";
+import battleOverlaysStyles from "./components/battle_overlays.module.css";
+import deckCardsStyles from "./components/deck_cardsview.module.css";
+import deckLayoutStyles from "./components/deck_layout.module.css";
+import handCardsStyles from "./components/hand_cardsview.module.css";
+import viewerCardsStyles from "./components/viewer_cardsview.module.css";
 
 type TabId = "home" | "inventory";
 
@@ -669,7 +669,7 @@ export default function App() {
     };
 
     return (
-      <div className="card-viewer-overlay">
+      <div className={`card-viewer-overlay ${viewerCardsStyles.viewerScope}`}>
         <div className="card-viewer-window">
           <GameCard data={toGameCardData(cardPreview)} mode="viewer" />
         </div>
@@ -2635,7 +2635,7 @@ export default function App() {
 
         {!activeBattle && tab === "inventory" && (
           <section className="screen-grid">
-            <div className="panel inventory-panel">
+            <div className={`panel inventory-panel ${deckCardsStyles.deckScope} ${deckLayoutStyles.deckScope}`}>
               <div className="section-head inventory-deck-head">
                 <button className="ghost-button inventory-inline-back" onClick={() => setTab("home")}>
                   {"<"} Back
@@ -2939,7 +2939,7 @@ export default function App() {
         )}
 
         {activeBattle && (
-          <section className="battle-screen">
+          <section className={`battle-screen ${battleCardsStyles.battleScope} ${battleOverlaysStyles.battleScope} ${handCardsStyles.handScope}`}>
             <section
               className="battle-board panel"
               ref={battleBoardRef}
@@ -3247,7 +3247,7 @@ export default function App() {
         <ProfilePanel me={me} matches={matches} onClose={() => setShowProfile(false)} />
       )}
       {cardPreview && (
-        <div className="card-viewer-overlay" onClick={() => setCardPreview(null)}>
+        <div className={`card-viewer-overlay ${viewerCardsStyles.viewerScope}`} onClick={() => setCardPreview(null)}>
           <div className="card-viewer-window" onClick={(event) => event.stopPropagation()}>
             <button className="card-viewer-close" onClick={() => setCardPreview(null)}>
               X

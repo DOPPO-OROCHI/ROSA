@@ -1,5 +1,5 @@
 import { GameCard } from "./GameCard";
-import "./inventar_cardsview.css";
+import styles from "./inventar_cardsview.module.css";
 
 export type InventoryCatalogKind = "battle" | "buff";
 export type InventoryCatalogSort = "mana" | "attack" | "hp" | "tank";
@@ -44,7 +44,7 @@ type Props = {
 
 export function InventarCardsView(props: Props) {
   return (
-    <div className="panel inventory-panel catalog-panel">
+    <div className={`panel inventory-panel catalog-panel ${styles.root}`}>
       <div className="catalog-toolbar">
         <div className="catalog-kind-switch">
           <button

@@ -1,10 +1,10 @@
-.deck-grid {
+.deckScope :global(.deck-grid) {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 0.55rem;
 }
 
-.deck-preview-shell {
+.deckScope :global(.deck-preview-shell) {
   width: 100%;
   padding: 0;
   border: 0;
@@ -12,22 +12,22 @@
   text-align: left;
 }
 
-.deck-grid-preview {
+.deckScope :global(.deck-grid-preview) {
   display: flex;
   flex-wrap: nowrap;
   gap: 0.45rem;
 }
 
-.deck-grid-preview > * {
+.deckScope :global(.deck-grid-preview > *) {
   flex: 1 1 0;
   min-width: 0;
 }
 
-.deck-grid-preview .deck-slot {
+.deckScope :global(.deck-grid-preview .deck-slot) {
   min-height: 96px;
 }
 
-.deck-slot-more {
+.deckScope :global(.deck-slot-more) {
   display: grid;
   place-items: center;
   min-height: 96px;
@@ -39,7 +39,7 @@
   letter-spacing: 0.08em;
 }
 
-.deck-overview-overlay {
+.deckScope :global(.deck-overview-overlay) {
   position: fixed;
   inset: 0;
   z-index: 43;
@@ -50,7 +50,7 @@
   backdrop-filter: blur(8px);
 }
 
-.deck-overview-window {
+.deckScope :global(.deck-overview-window) {
   position: relative;
   width: min(100%, 460px);
   max-height: min(86vh, 760px);
@@ -66,7 +66,7 @@
   gap: 0.8rem;
 }
 
-.deck-overview-close {
+.deckScope :global(.deck-overview-close) {
   position: absolute;
   top: 12px;
   right: 12px;
@@ -79,7 +79,7 @@
   color: #ffe2de;
 }
 
-.deck-overview-head {
+.deckScope :global(.deck-overview-head) {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -88,24 +88,24 @@
   text-align: center;
 }
 
-.deck-overview-head strong {
+.deckScope :global(.deck-overview-head strong) {
   font-size: 1.08rem;
   letter-spacing: 0.12em;
   text-transform: uppercase;
   color: #f3ddb2;
 }
 
-.deck-overview-head span {
+.deckScope :global(.deck-overview-head span) {
   color: #bfb5a3;
   font-size: 0.82rem;
 }
 
-.deck-grid-overview {
+.deckScope :global(.deck-grid-overview) {
   grid-template-columns: repeat(4, minmax(0, 1fr));
   align-content: start;
 }
 
-.deck-slot {
+.deckScope :global(.deck-slot) {
   position: relative;
   min-height: 112px;
   border-radius: 12px;
@@ -114,16 +114,16 @@
   background: rgba(7, 10, 13, 0.62);
 }
 
-.deck-slot.filled {
+.deckScope :global(.deck-slot.filled) {
   box-shadow: 0 8px 18px rgba(0, 0, 0, 0.28);
 }
 
-.deck-slot.interactive {
+.deckScope :global(.deck-slot.interactive) {
   cursor: pointer;
   padding: 0;
 }
 
-.deck-slot.empty {
+.deckScope :global(.deck-slot.empty) {
   display: grid;
   place-items: center;
   color: rgba(231, 219, 192, 0.42);
@@ -132,11 +132,11 @@
   text-transform: uppercase;
 }
 
-.deck-slot::after {
+.deckScope :global(.deck-slot::after) {
   display: none;
 }
 
-.deck-slot .game-card {
+.deckScope :global(.deck-slot .game-card) {
   width: 100%;
   height: 100%;
   border: none;
@@ -144,7 +144,7 @@
   background: transparent;
 }
 
-.deck-slot-count {
+.deckScope :global(.deck-slot-count) {
   position: absolute;
   top: 6px;
   right: 6px;
@@ -160,12 +160,12 @@
   font-weight: 700;
 }
 
-.deck-slot-empty-wide {
+.deckScope :global(.deck-slot-empty-wide) {
   grid-column: 1 / -1;
   min-height: 88px;
 }
 
-.deck-fan-overlay {
+.deckScope :global(.deck-fan-overlay) {
   position: fixed;
   inset: 0;
   z-index: 44;
@@ -175,7 +175,7 @@
   backdrop-filter: blur(6px);
 }
 
-.deck-fan-window {
+.deckScope :global(.deck-fan-window) {
   position: relative;
   width: min(92vw, 460px);
   height: min(58vh, 520px);
@@ -191,7 +191,7 @@
   overflow: hidden;
 }
 
-.deck-fan-close {
+.deckScope :global(.deck-fan-close) {
   position: absolute;
   top: 10px;
   right: 10px;
@@ -205,20 +205,20 @@
   color: #ffe2de;
 }
 
-.deck-fan-head {
+.deckScope :global(.deck-fan-head) {
   display: flex;
   align-items: center;
   gap: 0.6rem;
   padding-right: 38px;
 }
 
-.deck-fan-head strong {
+.deckScope :global(.deck-fan-head strong) {
   font-size: 0.96rem;
   letter-spacing: 0.05em;
   text-transform: uppercase;
 }
 
-.deck-fan-row {
+.deckScope :global(.deck-fan-row) {
   position: relative;
   flex: 1;
   min-height: 170px;
@@ -227,7 +227,7 @@
   overflow: hidden;
 }
 
-.deck-fan-dense {
+.deckScope :global(.deck-fan-dense) {
   position: absolute;
   left: 50%;
   top: 50%;
@@ -239,7 +239,7 @@
   overflow: visible;
 }
 
-.deck-fan-card {
+.deckScope :global(.deck-fan-card) {
   position: relative;
   width: clamp(
     56px,
@@ -257,11 +257,11 @@
   box-shadow: 0 10px 24px rgba(0, 0, 0, 0.34);
 }
 
-.deck-fan-card:first-child {
+.deckScope :global(.deck-fan-card:first-child) {
   margin-left: 0;
 }
 
-.deck-fan-card .game-card {
+.deckScope :global(.deck-fan-card .game-card) {
   width: 100%;
   height: 100%;
   border: none;
@@ -269,7 +269,7 @@
   background: transparent;
 }
 
-.deck-fan-remove {
+.deckScope :global(.deck-fan-remove) {
   position: absolute;
   top: 6px;
   right: 6px;
@@ -284,7 +284,7 @@
   font-weight: 700;
 }
 
-.deck-fan-info {
+.deckScope :global(.deck-fan-info) {
   border-top: 1px solid rgba(231, 219, 192, 0.1);
   padding-top: 0.55rem;
   display: flex;
@@ -292,35 +292,35 @@
   gap: 0.24rem;
 }
 
-.deck-fan-info span {
+.deckScope :global(.deck-fan-info span) {
   font-size: 0.73rem;
   line-height: 1.2;
   color: #d7ccbb;
 }
 
 @media (max-width: 380px) {
-  .deck-grid {
+  .deckScope :global(.deck-grid) {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 
-  .deck-grid-preview .deck-slot,
-  .deck-slot-more {
+  .deckScope :global(.deck-grid-preview .deck-slot),
+  .deckScope :global(.deck-slot-more) {
     min-height: 96px;
   }
 
-  .deck-fan-window {
+  .deckScope :global(.deck-fan-window) {
     height: min(60vh, 500px);
   }
 
-  .deck-fan-card {
+  .deckScope :global(.deck-fan-card) {
     margin-left: -14px;
   }
 
-  .deck-fan-dense {
+  .deckScope :global(.deck-fan-dense) {
     width: min(100%, 310px);
   }
 
-  .deck-grid-overview {
+  .deckScope :global(.deck-grid-overview) {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }

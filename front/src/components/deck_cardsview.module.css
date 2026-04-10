@@ -1,0 +1,34 @@
+.deckScope :global(.game-card--deck .game-card__desc),
+.deckScope :global(.game-card--deck .game-card__cd),
+.deckScope :global(.game-card--deck .game-card__race) {
+  display: none;
+}
+
+.deckScope :global(.game-card--deck .game-card__name) {
+  left: 8%;
+  right: 8%;
+  bottom: 8.5%;
+  font-size: clamp(0.48rem, 1.15vw, 0.74rem);
+  min-height: 2.15em;
+  max-height: 2.15em;
+  letter-spacing: 0.04em;
+}
+
+.deckScope :global(.game-card--deck .game-card__stat) {
+  font-size: clamp(0.82rem, 1.9vw, 1.2rem);
+}
+
+.deckScope :global(.game-card--deck .game-card__stat--mana) {
+  top: 12.2%;
+  left: 13.4%;
+}
+
+.deckScope :global(.game-card--deck .game-card__stat--attack) {
+  top: 86.1%;
+  left: 13.7%;
+}
+
+.deckScope :global(.game-card--deck .game-card__stat--hp) {
+  top: 86.1%;
+  left: 86.4%;
+}

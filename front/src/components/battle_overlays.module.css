@@ -1,47 +1,33 @@
-.deck-pile-mini {
+.battleScope :global(.deck-pile-mini) {
   display: inline-flex;
   align-items: center;
   gap: 0.35rem;
-}
-
-.deck-pile-stack {
+}.battleScope :global(.deck-pile-stack) {
   position: relative;
   width: 28px;
   height: 40px;
-}
-
-.deck-back {
+}.battleScope :global(.deck-back) {
   position: absolute;
   width: 24px;
   height: 36px;
   margin-left: 0;
   transform: none;
   border-radius: 8px;
-}
-
-.deck-back:nth-child(1) {
+}.battleScope :global(.deck-back:nth-child(1)) {
   left: 0;
   top: 4px;
   opacity: 0.75;
-}
-
-.deck-back:nth-child(2) {
+}.battleScope :global(.deck-back:nth-child(2)) {
   left: 2px;
   top: 2px;
   opacity: 0.88;
-}
-
-.deck-back:nth-child(3) {
+}.battleScope :global(.deck-back:nth-child(3)) {
   left: 4px;
   top: 0;
-}
-
-.deck-pile-count {
+}.battleScope :global(.deck-pile-count) {
   font-size: 0.82rem;
   color: #d7ccbb;
-}
-
-.grave-trigger {
+}.battleScope :global(.grave-trigger) {
   position: relative;
   width: 48px;
   min-height: 44px;
@@ -59,29 +45,19 @@
   font-weight: 800;
   box-shadow: 0 10px 24px rgba(0, 0, 0, 0.34);
   z-index: 3;
-}
-
-.grave-trigger span {
+}.battleScope :global(.grave-trigger span) {
   font-size: 0.68rem;
   color: #ffd896;
-}
-
-.grave-trigger.active {
+}.battleScope :global(.grave-trigger.active) {
   box-shadow:
     0 0 0 1px rgba(111, 214, 255, 0.36),
     0 0 20px rgba(91, 196, 255, 0.24),
     0 10px 24px rgba(0, 0, 0, 0.34);
-}
-
-.grave-top {
+}.battleScope :global(.grave-top) {
   left: 0;
-}
-
-.grave-bottom {
+}.battleScope :global(.grave-bottom) {
   left: 0;
-}
-
-.deck-trigger {
+}.battleScope :global(.deck-trigger) {
   position: relative;
   width: 48px;
   min-height: 44px;
@@ -97,21 +73,15 @@
   gap: 0.16rem;
   box-shadow: 0 10px 24px rgba(0, 0, 0, 0.34);
   z-index: 3;
-}
-
-.deck-top,
-.deck-bottom {
+}.battleScope :global(.deck-top),
+.battleScope :global(.deck-bottom) {
   right: 0;
-}
-
-.deck-trigger-stack {
+}.battleScope :global(.deck-trigger-stack) {
   position: relative;
   width: 18px;
   height: 18px;
   display: block;
-}
-
-.deck-trigger-stack span {
+}.battleScope :global(.deck-trigger-stack span) {
   position: absolute;
   inset: 0;
   border-radius: 5px;
@@ -126,28 +96,18 @@
       transparent 10px
     );
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.26);
-}
-
-.deck-trigger-stack span:nth-child(1) {
+}.battleScope :global(.deck-trigger-stack span:nth-child(1)) {
   transform: translate(-3px, 2px) rotate(-10deg);
-}
-
-.deck-trigger-stack span:nth-child(2) {
+}.battleScope :global(.deck-trigger-stack span:nth-child(2)) {
   transform: translate(0, 0);
-}
-
-.deck-trigger-stack span:nth-child(3) {
+}.battleScope :global(.deck-trigger-stack span:nth-child(3)) {
   transform: translate(3px, 2px) rotate(10deg);
-}
-
-.deck-trigger-count {
+}.battleScope :global(.deck-trigger-count) {
   font-size: 0.72rem;
   font-weight: 800;
   color: #ffd896;
   line-height: 1;
-}
-
-.grave-panel {
+}.battleScope :global(.grave-panel) {
   position: absolute;
   left: 12px;
   width: min(250px, calc(100% - 24px));
@@ -160,30 +120,20 @@
   backdrop-filter: blur(10px);
   z-index: 5;
   overflow: hidden;
-}
-
-.grave-panel.top {
+}.battleScope :global(.grave-panel.top) {
   top: 18px;
-}
-
-.grave-panel.bottom {
+}.battleScope :global(.grave-panel.bottom) {
   bottom: 104px;
-}
-
-.grave-panel-head {
+}.battleScope :global(.grave-panel-head) {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 0.5rem;
   margin-bottom: 0.55rem;
-}
-
-.grave-panel-head strong {
+}.battleScope :global(.grave-panel-head strong) {
   font-size: 0.8rem;
   color: #eef7fb;
-}
-
-.grave-panel-close {
+}.battleScope :global(.grave-panel-close) {
   width: 28px;
   height: 28px;
   min-height: 28px;
@@ -193,18 +143,14 @@
   color: #dcebf1;
   font-size: 0.8rem;
   font-weight: 800;
-}
-
-.grave-panel-list {
+}.battleScope :global(.grave-panel-list) {
   display: flex;
   flex-direction: column;
   gap: 0.45rem;
   max-height: 165px;
   overflow: auto;
   padding-right: 0.1rem;
-}
-
-.grave-card-row {
+}.battleScope :global(.grave-card-row) {
   display: grid;
   grid-template-columns: 42px 1fr;
   gap: 0.55rem;
@@ -213,37 +159,27 @@
   border-radius: 14px;
   background: rgba(7, 10, 13, 0.52);
   border: 1px solid rgba(231, 219, 192, 0.06);
-}
-
-.grave-card-thumb {
+}.battleScope :global(.grave-card-thumb) {
   width: 42px;
   height: 56px;
   object-fit: cover;
   border-radius: 10px;
-}
-
-.grave-card-copy {
+}.battleScope :global(.grave-card-copy) {
   display: flex;
   flex-direction: column;
   gap: 0.16rem;
   min-width: 0;
-}
-
-.grave-card-copy strong {
+}.battleScope :global(.grave-card-copy strong) {
   color: #eef7fb;
   font-size: 0.72rem;
   line-height: 1.1;
-}
-
-.grave-card-copy span,
-.grave-card-turn,
-.grave-panel-empty {
+}.battleScope :global(.grave-card-copy span),
+.battleScope :global(.grave-card-turn),
+.battleScope :global(.grave-panel-empty) {
   color: #9eb5bf;
   font-size: 0.68rem;
   line-height: 1.15;
-}
-
-.battle-deck-anchor {
+}.battleScope :global(.battle-deck-anchor) {
   position: absolute;
   right: -24px;
   bottom: 82px;
@@ -251,9 +187,7 @@
   width: 56px;
   height: 84px;
   pointer-events: none;
-}
-
-.battle-deck-peek {
+}.battleScope :global(.battle-deck-peek) {
   position: absolute;
   left: 10px;
   top: -2px;
@@ -275,9 +209,7 @@
     inset 0 0 22px rgba(0, 0, 0, 0.34);
   transform: rotate(8deg);
   opacity: 0.92;
-}
-
-.battle-deck-count {
+}.battleScope :global(.battle-deck-count) {
   position: absolute;
   left: -8px;
   bottom: 2px;
@@ -294,9 +226,7 @@
   background: linear-gradient(135deg, rgba(20, 82, 107, 0.96), rgba(10, 35, 49, 0.96));
   border: 1px solid rgba(121, 194, 214, 0.4);
   box-shadow: 0 8px 18px rgba(0, 0, 0, 0.36);
-}
-
-.battle-cinematic {
+}.battleScope :global(.battle-cinematic) {
   position: absolute;
   top: 12px;
   right: 12px;
@@ -312,9 +242,7 @@
   align-items: center;
   z-index: 4;
   pointer-events: none;
-}
-
-.battle-cinematic-media {
+}.battleScope :global(.battle-cinematic-media) {
   width: 48px;
   height: 68px;
   flex: 0 0 auto;
@@ -322,36 +250,26 @@
   overflow: hidden;
   background: rgba(6, 10, 14, 0.9);
   border: 1px solid rgba(231, 219, 192, 0.08);
-}
-
-.battle-cinematic-image {
+}.battleScope :global(.battle-cinematic-image) {
   width: 100%;
   height: 100%;
   object-fit: cover;
-}
-
-.battle-cinematic-copy {
+}.battleScope :global(.battle-cinematic-copy) {
   display: flex;
   flex-direction: column;
   gap: 0.16rem;
   min-width: 0;
-}
-
-.battle-cinematic-kicker {
+}.battleScope :global(.battle-cinematic-kicker) {
   color: #71d6ff;
   font-size: 0.56rem;
   font-weight: 800;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-}
-
-.battle-cinematic-copy strong {
+}.battleScope :global(.battle-cinematic-copy strong) {
   color: #eef7fb;
   font-size: 0.78rem;
   line-height: 1.1;
-}
-
-.battle-cinematic-copy span {
+}.battleScope :global(.battle-cinematic-copy span) {
   color: #a8bec7;
   font-size: 0.64rem;
   line-height: 1.15;

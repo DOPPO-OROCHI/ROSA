@@ -1,4 +1,4 @@
-.game-card--viewer .game-card__desc {
+.viewerScope :global(.game-card--viewer .game-card__desc) {
   left: 16%;
   right: 16%;
   top: 55%;
@@ -8,19 +8,19 @@
   -webkit-line-clamp: 3;
 }
 
-.game-card--viewer .game-card__cd {
+.viewerScope :global(.game-card--viewer .game-card__cd) {
   left: 16%;
   right: 16%;
   bottom: 27.5%;
 }
 
-.game-card--viewer .game-card__name {
+.viewerScope :global(.game-card--viewer .game-card__name) {
   left: 12%;
   right: 12%;
   bottom: 17.6%;
 }
 
-.game-card--viewer .game-card__race {
+.viewerScope :global(.game-card--viewer .game-card__race) {
   left: 24%;
   right: 24%;
   bottom: 10.7%;
