@@ -11,7 +11,7 @@
 }
 
 .root :global(.game-card--catalog .game-card__stat) {
-  font-size: clamp(1.12rem, 2.35vw, 1.62rem);
+  font-size: clamp(1.02rem, 2.1vw, 1.36rem);
   z-index: 7;
   opacity: 1;
   color: #fff1cc;
@@ -42,19 +42,19 @@
 
 /* Inventory anchors: tweak these values to move stats over icon zones */
 .root :global(.game-card--catalog .game-card__stat--mana) {
-  top: 11.6%;
-  left: 12.9%;
+  top: 10.8%;
+  left: 9.4%;
   transform: translate(-50%, -50%);
 }
 
 .root :global(.game-card--catalog .game-card__stat--attack) {
-  top: 82.9%;
-  left: 13.8%;
+  top: 87.2%;
+  left: 9.8%;
   transform: translate(-50%, -50%);
 }
 
 .root :global(.game-card--catalog .game-card__stat--hp) {
-  top: 82.9%;
-  left: 86.4%;
+  top: 87.2%;
+  left: 82.4%;
   transform: translate(-50%, -50%);
 }
