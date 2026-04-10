@@ -1,4 +1,4 @@
-import { GameCard } from "./GameCard";
+import { CatalogCardPreview } from "./CatalogCardPreview";
 import styles from "./inventar_cardsview.module.css";
 
 export type InventoryCatalogKind = "battle" | "buff";
@@ -84,12 +84,11 @@ export function InventarCardsView(props: Props) {
           return (
             <article
               key={templateKey}
-              className={`asset-card ${styles.catalogCard} tone-${props.getTone(card.asset_base_key)} clickable ${exhausted ? "exhausted" : ""}`}
+              className={`${styles.catalogCard} clickable ${exhausted ? styles.catalogCardExhausted : ""}`}
               onClick={() => props.onCardPreview(card, imageKey)}
             >
-              <div className={`asset-frame ${styles.catalogFrame}`}>
-                <GameCard
-                  mode="catalog"
+              <div className={styles.catalogFrame}>
+                <CatalogCardPreview
                   data={{
                     kind: card.kind,
                     name: card.name,
@@ -107,7 +106,7 @@ export function InventarCardsView(props: Props) {
                   }}
                 />
                 <button
-                  className={`asset-add ${styles.catalogAdd}`}
+                  className={styles.catalogAdd}
                   disabled={exhausted}
                   onClick={(event) => {
                     event.stopPropagation();

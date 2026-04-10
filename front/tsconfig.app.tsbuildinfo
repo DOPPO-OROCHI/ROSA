@@ -1,1 +1,1 @@
-{"root":["./src/app.tsx","./src/assets.ts","./src/config.ts","./src/main.tsx","./src/telegram.ts","./src/vite-env.d.ts","./src/components/gamecard.tsx","./src/components/inventar_cardsview.tsx"],"version":"5.9.3"}
+{"root":["./src/app.tsx","./src/assets.ts","./src/config.ts","./src/main.tsx","./src/telegram.ts","./src/vite-env.d.ts","./src/components/catalogcardpreview.tsx","./src/components/gamecard.tsx","./src/components/inventar_cardsview.tsx"],"version":"5.9.3"}
