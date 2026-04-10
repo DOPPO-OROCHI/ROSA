@@ -1,7 +1,7 @@
 import { resolveCardFallbackSrc, resolveImageSrc } from "../assets";
 import "../game-card.css";
 
-export type GameCardMode = "viewer" | "hand" | "catalog";
+export type GameCardMode = "viewer" | "hand" | "catalog" | "deck";
 
 export type GameCardData = {
   kind: "battle" | "buff";
@@ -62,4 +62,3 @@ export function GameCard({ data, mode, className }: Props) {
     </div>
   );
 }
-

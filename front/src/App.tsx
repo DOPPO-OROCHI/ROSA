@@ -106,6 +106,7 @@ type CardCatalogEntry = {
   name: string;
   description: string;
   mana_cost: number;
+  card_type?: string;
   image_key: string;
   attack?: number;
   health_points?: number;
@@ -2653,16 +2654,48 @@ export default function App() {
                       setDeckOverviewOpen(true);
                     }}
                   >
-                    <AssetImage
-                      imageKey={group.imageKey}
-                      alt={group.name}
-                      fallbackSrc={resolveCardFallbackSrc()}
-                      className="deck-slot-media"
+                    <GameCard
+                      mode="deck"
+                      data={{
+                        kind: group.kind,
+                        name: group.name,
+                        description: cardCatalog.get(group.templateId)?.description || "",
+                        imageKey: group.imageKey,
+                        race:
+                          group.kind === "battle"
+                            ? cardRaceLabel(cardCatalog.get(group.templateId)?.card_type as string)
+                            : "ЭФФЕКТ",
+                        mana: group.mana,
+                        attack:
+                          group.kind === "battle"
+                            ? (cardCatalog.get(group.templateId)?.attack as number | undefined)
+                            : undefined,
+                        hp:
+                          group.kind === "battle"
+                            ? (cardCatalog.get(group.templateId)?.health_points as number | undefined)
+                            : undefined,
+                        cooldown:
+                          group.kind === "battle"
+                            ? (cardCatalog.get(group.templateId)?.cooldown as number | undefined)
+                            : undefined,
+                        skillCooldown:
+                          group.kind === "battle"
+                            ? (cardCatalog.get(group.templateId)?.skill_cooldown as number | undefined)
+                            : undefined,
+                        buffType:
+                          group.kind === "buff"
+                            ? (cardCatalog.get(group.templateId)?.buff_type as string | undefined)
+                            : undefined,
+                        buffValue:
+                          group.kind === "buff"
+                            ? (cardCatalog.get(group.templateId)?.buff_value as number | undefined)
+                            : undefined,
+                        duration:
+                          group.kind === "buff"
+                            ? (cardCatalog.get(group.templateId)?.duration as number | undefined)
+                            : undefined,
+                      }}
                     />
-                    <div className="deck-slot-meta">
-                      <span className="deck-slot-mana">{group.mana}</span>
-                      <strong>{group.name}</strong>
-                    </div>
                     <span className="deck-slot-count">x{group.count}</span>
                   </button>
                 ))}
@@ -2695,16 +2728,48 @@ export default function App() {
                           className="deck-slot filled interactive"
                           onClick={() => setDeckInspectorKey(group.key)}
                         >
-                          <AssetImage
-                            imageKey={group.imageKey}
-                            alt={group.name}
-                            fallbackSrc={resolveCardFallbackSrc()}
-                            className="deck-slot-media"
+                          <GameCard
+                            mode="deck"
+                            data={{
+                              kind: group.kind,
+                              name: group.name,
+                              description: cardCatalog.get(group.templateId)?.description || "",
+                              imageKey: group.imageKey,
+                              race:
+                                group.kind === "battle"
+                                  ? cardRaceLabel(cardCatalog.get(group.templateId)?.card_type as string)
+                                  : "ЭФФЕКТ",
+                              mana: group.mana,
+                              attack:
+                                group.kind === "battle"
+                                  ? (cardCatalog.get(group.templateId)?.attack as number | undefined)
+                                  : undefined,
+                              hp:
+                                group.kind === "battle"
+                                  ? (cardCatalog.get(group.templateId)?.health_points as number | undefined)
+                                  : undefined,
+                              cooldown:
+                                group.kind === "battle"
+                                  ? (cardCatalog.get(group.templateId)?.cooldown as number | undefined)
+                                  : undefined,
+                              skillCooldown:
+                                group.kind === "battle"
+                                  ? (cardCatalog.get(group.templateId)?.skill_cooldown as number | undefined)
+                                  : undefined,
+                              buffType:
+                                group.kind === "buff"
+                                  ? (cardCatalog.get(group.templateId)?.buff_type as string | undefined)
+                                  : undefined,
+                              buffValue:
+                                group.kind === "buff"
+                                  ? (cardCatalog.get(group.templateId)?.buff_value as number | undefined)
+                                  : undefined,
+                              duration:
+                                group.kind === "buff"
+                                  ? (cardCatalog.get(group.templateId)?.duration as number | undefined)
+                                  : undefined,
+                            }}
                           />
-                          <div className="deck-slot-meta">
-                            <span className="deck-slot-mana">{group.mana}</span>
-                            <strong>{group.name}</strong>
-                          </div>
                           <span className="deck-slot-count">x{group.count}</span>
                         </button>
                       ))}
@@ -2737,11 +2802,47 @@ export default function App() {
                               } as CSSProperties
                             }
                           >
-                            <AssetImage
-                              imageKey={inspectedDeckGroup.imageKey}
-                              alt={inspectedDeckGroup.name}
-                              fallbackSrc={resolveCardFallbackSrc()}
-                              className="deck-fan-media"
+                            <GameCard
+                              mode="deck"
+                              data={{
+                                kind: inspectedDeckGroup.kind,
+                                name: inspectedDeckGroup.name,
+                                description: inspectedDeckMeta?.description || "",
+                                imageKey: inspectedDeckGroup.imageKey,
+                                race:
+                                  inspectedDeckGroup.kind === "battle"
+                                    ? cardRaceLabel(inspectedDeckMeta?.card_type as string)
+                                    : "ЭФФЕКТ",
+                                mana: inspectedDeckMeta?.mana_cost ?? 0,
+                                attack:
+                                  inspectedDeckGroup.kind === "battle"
+                                    ? inspectedDeckMeta?.attack
+                                    : undefined,
+                                hp:
+                                  inspectedDeckGroup.kind === "battle"
+                                    ? inspectedDeckMeta?.health_points
+                                    : undefined,
+                                cooldown:
+                                  inspectedDeckGroup.kind === "battle"
+                                    ? inspectedDeckMeta?.cooldown
+                                    : undefined,
+                                skillCooldown:
+                                  inspectedDeckGroup.kind === "battle"
+                                    ? inspectedDeckMeta?.skill_cooldown
+                                    : undefined,
+                                buffType:
+                                  inspectedDeckGroup.kind === "buff"
+                                    ? inspectedDeckMeta?.buff_type
+                                    : undefined,
+                                buffValue:
+                                  inspectedDeckGroup.kind === "buff"
+                                    ? inspectedDeckMeta?.buff_value
+                                    : undefined,
+                                duration:
+                                  inspectedDeckGroup.kind === "buff"
+                                    ? inspectedDeckMeta?.duration
+                                    : undefined,
+                              }}
                             />
                             <button
                               className="deck-fan-remove"
