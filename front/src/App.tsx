@@ -68,11 +68,7 @@ export function App() {
   return (
     <main className="app-shell">
       <section className="hero-panel">
-        <p className="eyebrow">ROSA mobile web build</p>
-        <h1>Browser-first game shell</h1>
-        <p className="lede">
-          Быстрый дев-вход без Telegram. Это временный стартовый экран, чтобы спокойно собирать новый мобильный фронт.
-        </p>
+        <h1>PROJECT ROSE</h1>
       </section>
 
       <section className="card surface">
