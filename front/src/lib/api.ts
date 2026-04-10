@@ -23,6 +23,13 @@ export function resolveImageSrc(key?: string, fallback = "/assets/placeholders/h
   return `/assets/${key.replace(/^\/+/, "").replace(/\/+/g, "/")}.png`;
 }
 
-export function resolveCardImageSrc(key?: string): string {
+export function resolveCardImageSrc(
+  kind?: "battle" | "buff",
+  templateId?: string,
+  key?: string,
+): string {
+  if (kind && templateId) {
+    return `/assets/cards/${kind}/${templateId}/image.png`;
+  }
   return resolveImageSrc(key, "/assets/placeholders/card_image.svg");
 }

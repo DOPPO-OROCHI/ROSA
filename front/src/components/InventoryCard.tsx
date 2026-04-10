@@ -12,7 +12,7 @@ export function InventoryCard({ card, size = "grid" }: Props) {
       <div className="inventory-card__frame">
         <img
           className="inventory-card__art"
-          src={resolveCardImageSrc(card.image_key)}
+          src={resolveCardImageSrc(card.kind, card.template_id, card.image_key)}
           alt={card.name}
           loading="lazy"
         />
