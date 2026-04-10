@@ -67,6 +67,7 @@ func main() {
 		SelectHero:   handlers.NewSelectedHeroHandler(db.DB),
 		StreamMatch:  handlers.NewStreamMatchHandler(handlers.StreamMatchDeps{Hub: hub, Store: store}),
 		AuthTelegram: handlers.NewAuthTelegramHandler(handlers.AuthTelegramDeps{DB: db.DB, Store: store}),
+		AuthDev:      handlers.NewAuthDevHandler(handlers.AuthDevDeps{DB: db.DB, Store: store}),
 		JoinQueue:    handlers.JoinQueue(handlers.NewJoinHandler(handlers.JoinQueueHandlerDeps{DB: db.DB, Queue: matchQueue})),
 		LeaveQueue:   handlers.LeaveQueue(handlers.NewLeaveQueueHandler(handlers.LeaveQueueHandlerDeps{Queue: matchQueue})),
 		QueueStatus:  handlers.QueueStatus(handlers.NewQueueStatusHandler(handlers.QueueStatusHandlerDeps{Queue: matchQueue})),
