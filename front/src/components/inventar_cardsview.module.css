@@ -11,8 +11,13 @@
   --catalog-frame-top: 8.6%;
   --catalog-frame-right: 8.8%;
   --catalog-frame-bottom: 8.8%;
-  --catalog-anchor-inset-x: 3.1%;
-  --catalog-anchor-inset-y: 3.2%;
+  --catalog-anchor-size: 9.6%;
+  --catalog-anchor-mana-x: calc(var(--catalog-frame-left) + 3.1%);
+  --catalog-anchor-mana-y: calc(var(--catalog-frame-top) + 3.2%);
+  --catalog-anchor-attack-x: calc(var(--catalog-frame-left) + 3.1%);
+  --catalog-anchor-attack-y: calc(100% - var(--catalog-frame-bottom) - 3.2%);
+  --catalog-anchor-hp-x: calc(100% - var(--catalog-frame-right) - 3.1%);
+  --catalog-anchor-hp-y: calc(100% - var(--catalog-frame-bottom) - 3.2%);
 }
 
 .root :global(.game-card--catalog .game-card__name) {
@@ -20,6 +25,11 @@
 }
 
 .root :global(.game-card--catalog .game-card__stat) {
+  width: var(--catalog-anchor-size);
+  height: var(--catalog-anchor-size);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   font-size: clamp(1.02rem, 2.1vw, 1.36rem);
   z-index: 7;
   opacity: 1;
@@ -49,21 +59,21 @@
   display: none;
 }
 
-/* Inventory anchors: tweak these values to move stats over icon zones */
+/* Inventory catalog anchor zones inside frame icon sockets */
 .root :global(.game-card--catalog .game-card__stat--mana) {
-  top: calc(var(--catalog-frame-top) + var(--catalog-anchor-inset-y));
-  left: calc(var(--catalog-frame-left) + var(--catalog-anchor-inset-x));
-  transform: translate(-50%, -50%);
+  left: calc(var(--catalog-anchor-mana-x) - (var(--catalog-anchor-size) / 2));
+  top: calc(var(--catalog-anchor-mana-y) - (var(--catalog-anchor-size) / 2));
+  transform: none;
 }
 
 .root :global(.game-card--catalog .game-card__stat--attack) {
-  top: calc(100% - var(--catalog-frame-bottom) - var(--catalog-anchor-inset-y));
-  left: calc(var(--catalog-frame-left) + var(--catalog-anchor-inset-x));
-  transform: translate(-50%, -50%);
+  left: calc(var(--catalog-anchor-attack-x) - (var(--catalog-anchor-size) / 2));
+  top: calc(var(--catalog-anchor-attack-y) - (var(--catalog-anchor-size) / 2));
+  transform: none;
 }
 
 .root :global(.game-card--catalog .game-card__stat--hp) {
-  top: calc(100% - var(--catalog-frame-bottom) - var(--catalog-anchor-inset-y));
-  left: calc(100% - var(--catalog-frame-right) - var(--catalog-anchor-inset-x));
-  transform: translate(-50%, -50%);
+  left: calc(var(--catalog-anchor-hp-x) - (var(--catalog-anchor-size) / 2));
+  top: calc(var(--catalog-anchor-hp-y) - (var(--catalog-anchor-size) / 2));
+  transform: none;
 }
