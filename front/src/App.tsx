@@ -19,6 +19,7 @@ import {
   requestMiniAppFullscreen,
 } from "./telegram";
 import { GameCard, type GameCardData } from "./components/GameCard";
+import { InventarCardsView, type InventoryCardItem } from "./components/inventar_cardsview";
 
 type TabId = "home" | "inventory";
 
@@ -2873,140 +2874,56 @@ export default function App() {
               )}
             </div>
 
-            <div className="panel inventory-panel catalog-panel">
-              <div className="catalog-toolbar">
-                <div className="catalog-kind-switch">
-                  <button
-                    className={catalogKind === "battle" ? "nav-pill active" : "nav-pill"}
-                    onClick={() => {
-                      setCatalogKind("battle");
-                      setCatalogPage(0);
-                    }}
-                  >
-                    Battle Cards
-                  </button>
-                  <button
-                    className={catalogKind === "buff" ? "nav-pill active" : "nav-pill"}
-                    onClick={() => {
-                      setCatalogKind("buff");
-                      setCatalogPage(0);
-                    }}
-                  >
-                    Buff Cards
-                  </button>
-                </div>
-                <label className="catalog-sort">
-                  <span>Sort</span>
-                  <select
-                    value={catalogSort}
-                    onChange={(event) => setCatalogSort(event.target.value as CatalogSort)}
-                  >
-                    <option value="mana">Mana</option>
-                    <option value="attack">Attack</option>
-                    <option value="hp">HP</option>
-                    <option value="tank">Tank / Non-tank</option>
-                  </select>
-                </label>
-              </div>
-              <div className="catalog-grid">
-                {catalogPageItems.map((card) => {
-                  const imageKey =
-                    card.kind === "battle"
-                      ? card.image_key || resolveBattleCardImageKey(card.template_id)
-                      : card.image_key || resolveBuffCardImageKey(card.template_id);
-                  const templateKey = `${card.kind}:${card.template_id}`;
-                  const deckCount = deckCountMap.get(templateKey) ?? 0;
-                  const addLimit = Math.min(card.max_copies, card.copies);
-                  const exhausted = deckCount >= addLimit;
-                  return (
-                    <article
-                      key={templateKey}
-                      className={`asset-card tone-${getAssetTone(card.asset_base_key)} clickable ${exhausted ? "exhausted" : ""}`}
-                      onClick={() =>
-                        setCardPreview(
-                          card.kind === "battle"
-                            ? {
-                                kind: "battle",
-                                name: card.name,
-                                description: card.description,
-                                imageKey,
-                                race: cardRaceLabel(card.card_type),
-                                mana: card.mana_cost,
-                                hp: card.health_points,
-                                attack: card.attack,
-                                cooldown: card.cooldown,
-                                skillCooldown: card.skill_cooldown,
-                              }
-                            : {
-                                kind: "buff",
-                                name: card.name,
-                                description: card.description,
-                                imageKey,
-                                mana: card.mana_cost,
-                                buffType: card.buff_type,
-                                buffValue: card.buff_value,
-                                duration: card.duration,
-                              },
-                        )
+            <InventarCardsView
+              catalogKind={catalogKind}
+              catalogSort={catalogSort}
+              catalogPage={catalogPage}
+              catalogPages={catalogPages}
+              catalogPageItems={catalogPageItems as InventoryCardItem[]}
+              deckCountMap={deckCountMap}
+              getTone={(assetBaseKey) => getAssetTone(assetBaseKey ?? "")}
+              resolveImageKey={(card) =>
+                card.kind === "battle"
+                  ? card.image_key || resolveBattleCardImageKey(card.template_id)
+                  : card.image_key || resolveBuffCardImageKey(card.template_id)
+              }
+              raceLabel={cardRaceLabel}
+              onCatalogKindChange={(kind) => {
+                setCatalogKind(kind);
+                setCatalogPage(0);
+              }}
+              onCatalogSortChange={(sort) => setCatalogSort(sort as CatalogSort)}
+              onCardPreview={(card, imageKey) =>
+                setCardPreview(
+                  card.kind === "battle"
+                    ? {
+                        kind: "battle",
+                        name: card.name,
+                        description: card.description,
+                        imageKey,
+                        race: cardRaceLabel(card.card_type),
+                        mana: card.mana_cost,
+                        hp: card.health_points,
+                        attack: card.attack,
+                        cooldown: card.cooldown,
+                        skillCooldown: card.skill_cooldown,
                       }
-                    >
-                      <div className="asset-frame">
-                        <GameCard
-                          mode="catalog"
-                          data={{
-                            kind: card.kind,
-                            name: card.name,
-                            description: card.description,
-                            imageKey,
-                            race: card.kind === "battle" ? cardRaceLabel(card.card_type) : "ЭФФЕКТ",
-                            mana: card.mana_cost,
-                            attack: card.kind === "battle" ? card.attack : undefined,
-                            hp: card.kind === "battle" ? card.health_points : undefined,
-                            cooldown: card.kind === "battle" ? card.cooldown : undefined,
-                            skillCooldown: card.kind === "battle" ? card.skill_cooldown : undefined,
-                            buffType: card.kind === "buff" ? card.buff_type : undefined,
-                            buffValue: card.kind === "buff" ? card.buff_value : undefined,
-                            duration: card.kind === "buff" ? card.duration : undefined,
-                          }}
-                        />
-                        <button
-                          className="asset-add"
-                          disabled={exhausted}
-                          onClick={(event) => {
-                            event.stopPropagation();
-                            if (exhausted) {
-                              return;
-                            }
-                            void runTask(() => addCardToDeck(card.kind, card.template_id));
-                          }}
-                        >
-                          +
-                        </button>
-                      </div>
-                    </article>
-                  );
-                })}
-              </div>
-              <div className="catalog-pager">
-                <button
-                  className="ghost-button"
-                  onClick={() => setCatalogPage((prev) => Math.max(0, prev - 1))}
-                  disabled={catalogPage === 0}
-                >
-                  {"<"}
-                </button>
-                <span>
-                  {catalogPage + 1} / {catalogPages}
-                </span>
-                <button
-                  className="ghost-button"
-                  onClick={() => setCatalogPage((prev) => Math.min(catalogPages - 1, prev + 1))}
-                  disabled={catalogPage >= catalogPages - 1}
-                >
-                  {">"}
-                </button>
-              </div>
-            </div>
+                    : {
+                        kind: "buff",
+                        name: card.name,
+                        description: card.description,
+                        imageKey,
+                        mana: card.mana_cost,
+                        buffType: card.buff_type,
+                        buffValue: card.buff_value,
+                        duration: card.duration,
+                      },
+                )
+              }
+              onAddCard={(kind, templateId) => void runTask(() => addCardToDeck(kind, templateId))}
+              onPrevPage={() => setCatalogPage((prev) => Math.max(0, prev - 1))}
+              onNextPage={() => setCatalogPage((prev) => Math.min(catalogPages - 1, prev + 1))}
+            />
             <div className="panel inventory-panel inventory-placeholder-card">
               <span className="panel-kicker">Store</span>
               <strong>Soon</strong>
