@@ -1,4 +1,5 @@
 import { GameCard } from "./GameCard";
+import "./inventar_cardsview.css";
 
 export type InventoryCatalogKind = "battle" | "buff";
 export type InventoryCatalogSort = "mana" | "attack" | "hp" | "tank";
@@ -142,4 +143,3 @@ export function InventarCardsView(props: Props) {
     </div>
   );
 }
-

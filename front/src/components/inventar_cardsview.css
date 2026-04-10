@@ -1,0 +1,40 @@
+.game-card--catalog .game-card__name {
+  display: none;
+}
+
+.game-card--catalog .game-card__stat {
+  font-size: clamp(0.95rem, 2.15vw, 1.42rem);
+}
+
+.game-card--catalog .game-card__desc {
+  left: 14%;
+  right: 14%;
+  top: 57.2%;
+  font-size: clamp(0.44rem, 1.08vw, 0.72rem);
+  min-height: 3.05em;
+  max-height: 3.05em;
+  -webkit-line-clamp: 2;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.game-card--catalog .game-card__cd,
+.game-card--catalog .game-card__race {
+  display: none;
+}
+
+/* Inventory anchors: tweak these values to move stats over icon zones */
+.game-card--catalog .game-card__stat--mana {
+  top: 11.8%;
+  left: 13.2%;
+}
+
+.game-card--catalog .game-card__stat--attack {
+  top: 86.4%;
+  left: 14.1%;
+}
+
+.game-card--catalog .game-card__stat--hp {
+  top: 86.4%;
+  left: 86.2%;
+}
