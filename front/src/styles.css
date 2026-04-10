@@ -1653,7 +1653,7 @@ pre {
   position: absolute;
   left: 16%;
   right: 16%;
-  bottom: 20%;
+  bottom: 10%;
   text-align: center;
   font-size: 1.2rem;
   letter-spacing: 0.06em;
@@ -1666,7 +1666,7 @@ pre {
   position: absolute;
   left: 22%;
   right: 22%;
-  bottom: 10%;
+  bottom: 7%;
   text-align: center;
   font-family: "Bebas Neue", "Impact", "Arial Narrow", sans-serif;
   font-style: normal;
