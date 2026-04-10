@@ -1615,8 +1615,8 @@ pre {
 }
 
 .card-viewer-pill-mana {
-  top: 80px;
-  left: 78px;
+  top: 75px;
+  left: 70px;
   transform: translate(-50%, -50%);
 }
 
@@ -1634,33 +1634,40 @@ pre {
 
 .card-viewer-copy {
   position: absolute;
-  left: 18%;
-  right: 18%;
-  top: 54%;
-  bottom: auto;
-  display: grid;
-  gap: 0.5rem;
-  text-align: center;
+  inset: 0;
 }
 
-.card-viewer-copy strong {
+.card-viewer-desc {
+  position: absolute;
+  left: 18%;
+  right: 18%;
+  top: 56%;
+  text-align: center;
+  font-size: 1rem;
+  line-height: 1.34;
+  color: #ddd1b9;
+  text-shadow: 0 3px 12px rgba(0, 0, 0, 0.82);
+}
+
+.card-viewer-name {
+  position: absolute;
+  left: 16%;
+  right: 16%;
+  bottom: 20%;
+  text-align: center;
   font-size: 1.2rem;
   letter-spacing: 0.06em;
   text-transform: uppercase;
   color: #f3dfb8;
   text-shadow: 0 4px 14px rgba(0, 0, 0, 0.8);
-  order: 2;
-}
-
-.card-viewer-copy span {
-  font-size: 1rem;
-  line-height: 1.34;
-  color: #ddd1b9;
-  text-shadow: 0 3px 12px rgba(0, 0, 0, 0.82);
-  order: 1;
 }
 
 .card-viewer-race {
+  position: absolute;
+  left: 22%;
+  right: 22%;
+  bottom: 14%;
+  text-align: center;
   font-family: "Bebas Neue", "Impact", "Arial Narrow", sans-serif;
   font-style: normal;
   font-size: 0.96rem;
@@ -1668,7 +1675,6 @@ pre {
   color: #c9bfae;
   text-transform: uppercase;
   text-shadow: 0 3px 12px rgba(0, 0, 0, 0.8);
-  order: 3;
 }
 
 @keyframes card-viewer-enter {

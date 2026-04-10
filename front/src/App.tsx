@@ -626,6 +626,43 @@ function ProfilePanel(props: {
 }
 
 export default function App() {
+  if (import.meta.env.DEV) {
+    const cardPreview: CardPreview = {
+      kind: "battle",
+      name: "ОМНИЦИДЫ",
+      description: "Наносит периодический урон противнику",
+      imageKey: "cards/battle/omnicides/image",
+      race: "ВЕСПИДЫ",
+      mana: 1,
+      attack: 3,
+      hp: 3,
+      cooldown: 0,
+    };
+
+    return (
+      <div className="card-viewer-overlay">
+        <div className="card-viewer-window">
+          <AssetImage
+            imageKey={cardPreview.imageKey}
+            alt={cardPreview.name}
+            fallbackSrc={resolveCardFallbackSrc()}
+            className="card-viewer-image"
+          />
+            <div className="card-viewer-meta">
+              <span className="card-viewer-pill card-viewer-pill-mana">{cardPreview.mana}</span>
+              <span className="card-viewer-pill card-viewer-pill-attack">{cardPreview.attack}</span>
+              <span className="card-viewer-pill card-viewer-pill-hp">{cardPreview.hp}</span>
+              <div className="card-viewer-copy">
+                <span className="card-viewer-desc">{cardPreview.description}</span>
+                <strong className="card-viewer-name">{cardPreview.name}</strong>
+                <em className="card-viewer-race">{cardPreview.race}</em>
+              </div>
+            </div>
+          </div>
+        </div>
+    );
+  }
+
   const [tab, setTab] = useState<TabId>("home");
   const [loading, setLoading] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
@@ -3163,8 +3200,8 @@ export default function App() {
                 </>
               )}
               <div className="card-viewer-copy">
-                <span>{cardPreview.description}</span>
-                <strong>{cardPreview.name}</strong>
+                <span className="card-viewer-desc">{cardPreview.description}</span>
+                <strong className="card-viewer-name">{cardPreview.name}</strong>
                 <em className="card-viewer-race">{cardPreview.race || "ЭФФЕКТ"}</em>
               </div>
             </div>
