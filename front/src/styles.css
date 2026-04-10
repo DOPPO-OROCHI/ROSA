@@ -1622,13 +1622,13 @@ pre {
 
 .card-viewer-pill-attack {
   left: 70px;
-  bottom: 65px;
+  bottom: 75px;
   transform: translate(-50%, 50%);
 }
 
 .card-viewer-pill-hp {
-  right: 64px;
-  bottom: 50px;
+  right: 70px;
+  bottom: 75px;
   transform: translate(50%, 50%);
 }
 
