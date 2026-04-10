@@ -84,10 +84,10 @@ export function InventarCardsView(props: Props) {
           return (
             <article
               key={templateKey}
-              className={`asset-card tone-${props.getTone(card.asset_base_key)} clickable ${exhausted ? "exhausted" : ""}`}
+              className={`asset-card ${styles.catalogCard} tone-${props.getTone(card.asset_base_key)} clickable ${exhausted ? "exhausted" : ""}`}
               onClick={() => props.onCardPreview(card, imageKey)}
             >
-              <div className="asset-frame">
+              <div className={`asset-frame ${styles.catalogFrame}`}>
                 <GameCard
                   mode="catalog"
                   data={{
@@ -107,7 +107,7 @@ export function InventarCardsView(props: Props) {
                   }}
                 />
                 <button
-                  className="asset-add"
+                  className={`asset-add ${styles.catalogAdd}`}
                   disabled={exhausted}
                   onClick={(event) => {
                     event.stopPropagation();
