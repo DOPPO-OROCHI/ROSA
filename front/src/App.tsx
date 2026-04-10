@@ -26,6 +26,7 @@ export function App() {
   const [battleCards, setBattleCards] = useState<BattleCard[]>([]);
   const [buffCards, setBuffCards] = useState<BuffCard[]>([]);
   const [deckEntries, setDeckEntries] = useState<DeckEntry[]>([]);
+  const [draftDeckEntries, setDraftDeckEntries] = useState<DeckEntry[]>([]);
   const [busy, setBusy] = useState(true);
   const [error, setError] = useState("");
   const [selectedHeroCode, setSelectedHeroCode] = useState("");
@@ -52,6 +53,7 @@ export function App() {
     setBattleCards(cards.battle);
     setBuffCards(cards.buff);
     setDeckEntries(deck.entries);
+    setDraftDeckEntries(deck.entries);
   }
 
   useEffect(() => {
@@ -63,6 +65,7 @@ export function App() {
         setBattleCards([]);
         setBuffCards([]);
         setDeckEntries([]);
+        setDraftDeckEntries([]);
         setSelectedHeroCode("");
       })
       .finally(() => setBusy(false));
@@ -138,10 +141,13 @@ export function App() {
         />
       ) : (
         <InventoryScreen
-          deckEntries={deckEntries}
+          draftDeckEntries={draftDeckEntries}
+          savedDeckEntries={deckEntries}
           battleCards={battleCards}
           buffCards={buffCards}
           onBack={() => setScreen("menu")}
+          onDraftDeckChange={setDraftDeckEntries}
+          onDeckSaved={setDeckEntries}
         />
       )}
 

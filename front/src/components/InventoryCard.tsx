@@ -4,9 +4,24 @@ import type { BattleCard } from "../types";
 type Props = {
   card: BattleCard;
   size?: "deck" | "grid";
+  description?: string;
+  countBadge?: number | null;
+  onAdd?: (() => void) | null;
+  onRemove?: (() => void) | null;
+  addDisabled?: boolean;
+  removeDisabled?: boolean;
 };
 
-export function InventoryCard({ card, size = "grid" }: Props) {
+export function InventoryCard({
+  card,
+  size = "grid",
+  description,
+  countBadge = null,
+  onAdd = null,
+  onRemove = null,
+  addDisabled = false,
+  removeDisabled = false,
+}: Props) {
   return (
     <article className={`inventory-card inventory-card--${size}`}>
       <div className="inventory-card__frame">
@@ -25,11 +40,31 @@ export function InventoryCard({ card, size = "grid" }: Props) {
         <div className="inventory-card__stat-slot inventory-card__stat-slot--hp">
           <span className="inventory-card__stat">{card.health_points}</span>
         </div>
+        {countBadge && countBadge > 1 ? <div className="inventory-card__count-badge">x{countBadge}</div> : null}
+        {onRemove ? (
+          <button
+            type="button"
+            className="inventory-card__deck-action inventory-card__deck-action--remove"
+            onClick={onRemove}
+            disabled={removeDisabled}
+            aria-label={`Remove ${card.name} from deck`}
+          >
+            x
+          </button>
+        ) : null}
+        {onAdd ? (
+          <button
+            type="button"
+            className="inventory-card__catalog-action"
+            onClick={onAdd}
+            disabled={addDisabled}
+            aria-label={`Add ${card.name} to deck`}
+          >
+            +
+          </button>
+        ) : null}
         <div className="inventory-card__text-slot">
-          <div className="inventory-card__name">{card.name}</div>
-          <div className="inventory-card__meta">
-            x{card.copies} / max {card.max_copies}
-          </div>
+          <div className="inventory-card__description">{description ?? card.description}</div>
         </div>
       </div>
     </article>
