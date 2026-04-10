@@ -20,6 +20,12 @@ import {
 } from "./telegram";
 import { GameCard, type GameCardData } from "./components/GameCard";
 import { InventarCardsView, type InventoryCardItem } from "./components/inventar_cardsview";
+import "./components/battle_cardsview.css";
+import "./components/battle_overlays.css";
+import "./components/deck_cardsview.css";
+import "./components/deck_layout.css";
+import "./components/hand_cardsview.css";
+import "./components/viewer_cardsview.css";
 
 type TabId = "home" | "inventory";
 

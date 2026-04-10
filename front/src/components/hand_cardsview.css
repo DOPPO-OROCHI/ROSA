@@ -1,0 +1,19 @@
+.game-card--hand .game-card__desc,
+.game-card--hand .game-card__cd,
+.game-card--hand .game-card__race {
+  display: none;
+}
+
+.game-card--hand .game-card__name {
+  left: 8%;
+  right: 8%;
+  bottom: 8%;
+  font-size: clamp(0.38rem, 1.2vw, 0.58rem);
+  min-height: 2.25em;
+  max-height: 2.25em;
+  letter-spacing: 0.04em;
+}
+
+.game-card--hand .game-card__stat {
+  font-size: clamp(0.72rem, 1.7vw, 1rem);
+}

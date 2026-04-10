@@ -1,3 +1,11 @@
+.asset-frame .game-card {
+  width: 100%;
+  height: 100%;
+  border: none;
+  border-radius: inherit;
+  background: transparent;
+}
+
 .game-card--catalog .game-card__name {
   display: none;
 }

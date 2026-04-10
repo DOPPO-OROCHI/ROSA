@@ -1,0 +1,326 @@
+.deck-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.55rem;
+}
+
+.deck-preview-shell {
+  width: 100%;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  text-align: left;
+}
+
+.deck-grid-preview {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 0.45rem;
+}
+
+.deck-grid-preview > * {
+  flex: 1 1 0;
+  min-width: 0;
+}
+
+.deck-grid-preview .deck-slot {
+  min-height: 96px;
+}
+
+.deck-slot-more {
+  display: grid;
+  place-items: center;
+  min-height: 96px;
+  background:
+    linear-gradient(180deg, rgba(19, 24, 31, 0.94), rgba(8, 10, 14, 0.96));
+  color: #f2dfb6;
+  font-size: 0.92rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+}
+
+.deck-overview-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 43;
+  display: grid;
+  place-items: center;
+  padding: 12px;
+  background: rgba(6, 9, 13, 0.54);
+  backdrop-filter: blur(8px);
+}
+
+.deck-overview-window {
+  position: relative;
+  width: min(100%, 460px);
+  max-height: min(86vh, 760px);
+  overflow: auto;
+  border-radius: 22px;
+  padding: 1rem 0.9rem 0.95rem;
+  background:
+    linear-gradient(180deg, rgba(21, 25, 33, 0.98), rgba(8, 10, 14, 0.98));
+  border: 1px solid rgba(231, 219, 192, 0.08);
+  box-shadow: 0 24px 54px rgba(0, 0, 0, 0.42);
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+}
+
+.deck-overview-close {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 30px;
+  height: 30px;
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+  background: rgba(123, 41, 49, 0.9);
+  color: #ffe2de;
+}
+
+.deck-overview-head {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.2rem;
+  padding-top: 0.15rem;
+  text-align: center;
+}
+
+.deck-overview-head strong {
+  font-size: 1.08rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #f3ddb2;
+}
+
+.deck-overview-head span {
+  color: #bfb5a3;
+  font-size: 0.82rem;
+}
+
+.deck-grid-overview {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  align-content: start;
+}
+
+.deck-slot {
+  position: relative;
+  min-height: 112px;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid rgba(231, 219, 192, 0.12);
+  background: rgba(7, 10, 13, 0.62);
+}
+
+.deck-slot.filled {
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.28);
+}
+
+.deck-slot.interactive {
+  cursor: pointer;
+  padding: 0;
+}
+
+.deck-slot.empty {
+  display: grid;
+  place-items: center;
+  color: rgba(231, 219, 192, 0.42);
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.deck-slot::after {
+  display: none;
+}
+
+.deck-slot .game-card {
+  width: 100%;
+  height: 100%;
+  border: none;
+  border-radius: inherit;
+  background: transparent;
+}
+
+.deck-slot-count {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  z-index: 6;
+  min-width: 24px;
+  height: 24px;
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+  background: rgba(7, 10, 13, 0.78);
+  color: #f2e3bf;
+  font-size: 0.68rem;
+  font-weight: 700;
+}
+
+.deck-slot-empty-wide {
+  grid-column: 1 / -1;
+  min-height: 88px;
+}
+
+.deck-fan-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 44;
+  display: grid;
+  place-items: center;
+  background: rgba(6, 9, 13, 0.3);
+  backdrop-filter: blur(6px);
+}
+
+.deck-fan-window {
+  position: relative;
+  width: min(92vw, 460px);
+  height: min(58vh, 520px);
+  border-radius: 18px;
+  border: 0;
+  background: rgba(10, 14, 20, 0.44);
+  backdrop-filter: blur(14px) saturate(0.92);
+  box-shadow: 0 24px 54px rgba(0, 0, 0, 0.46);
+  padding: 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+  overflow: hidden;
+}
+
+.deck-fan-close {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 3;
+  width: 30px;
+  height: 30px;
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+  background: rgba(123, 41, 49, 0.9);
+  color: #ffe2de;
+}
+
+.deck-fan-head {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding-right: 38px;
+}
+
+.deck-fan-head strong {
+  font-size: 0.96rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.deck-fan-row {
+  position: relative;
+  flex: 1;
+  min-height: 170px;
+  display: block;
+  padding: 0.25rem 0.2rem 0.45rem;
+  overflow: hidden;
+}
+
+.deck-fan-dense {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: min(100%, 380px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  overflow: visible;
+}
+
+.deck-fan-card {
+  position: relative;
+  width: clamp(
+    56px,
+    calc((100% + ((var(--fan-count, 1) - 1) * 20px)) / var(--fan-count, 1)),
+    108px
+  );
+  aspect-ratio: 0.7;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid rgba(231, 219, 192, 0.14);
+  background: rgba(7, 10, 13, 0.68);
+  margin-left: -20px;
+  transform: rotate(calc(var(--fan-offset, 0) * 6deg));
+  flex: 0 0 auto;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.34);
+}
+
+.deck-fan-card:first-child {
+  margin-left: 0;
+}
+
+.deck-fan-card .game-card {
+  width: 100%;
+  height: 100%;
+  border: none;
+  border-radius: inherit;
+  background: transparent;
+}
+
+.deck-fan-remove {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  z-index: 2;
+  width: 24px;
+  height: 24px;
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+  background: rgba(127, 34, 46, 0.9);
+  color: #ffe3de;
+  font-weight: 700;
+}
+
+.deck-fan-info {
+  border-top: 1px solid rgba(231, 219, 192, 0.1);
+  padding-top: 0.55rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.24rem;
+}
+
+.deck-fan-info span {
+  font-size: 0.73rem;
+  line-height: 1.2;
+  color: #d7ccbb;
+}
+
+@media (max-width: 380px) {
+  .deck-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .deck-grid-preview .deck-slot,
+  .deck-slot-more {
+    min-height: 96px;
+  }
+
+  .deck-fan-window {
+    height: min(60vh, 500px);
+  }
+
+  .deck-fan-card {
+    margin-left: -14px;
+  }
+
+  .deck-fan-dense {
+    width: min(100%, 310px);
+  }
+
+  .deck-grid-overview {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
