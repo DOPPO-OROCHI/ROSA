@@ -25,4 +25,5 @@ cookies*.txt
 # Frontend caches
 front/.vite/
 front/.cache/
+front/*.tsbuildinfo
 /.gocache/
