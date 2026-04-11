@@ -692,11 +692,11 @@ button {
   border-radius: 22px;
   overflow: hidden;
   filter: drop-shadow(0 18px 28px rgba(0, 0, 0, 0.32));
-  --viewer-mana-x: 12.1%;
+  --viewer-mana-x: 14%;
   --viewer-mana-y: 12.8%;
-  --viewer-attack-x: 12.2%;
+  --viewer-attack-x: 14%;
   --viewer-attack-y: 88.1%;
-  --viewer-hp-x: 85.2%;
+  --viewer-hp-x: 87%;
   --viewer-hp-y: 88.5%;
   --viewer-slot-size: 23%;
 }
