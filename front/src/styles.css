@@ -328,6 +328,27 @@ button {
   gap: 4px;
 }
 
+.inventory-deck-modal {
+  width: min(100%, 430px);
+  max-height: calc(100dvh - 34px - env(safe-area-inset-bottom));
+  padding: 16px 14px 14px;
+  display: grid;
+  gap: 14px;
+  overflow: hidden;
+}
+
+.inventory-deck-modal__grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 4px;
+  overflow-y: auto;
+  padding-right: 2px;
+}
+
+.inventory-toggle--modal {
+  margin-top: 0;
+}
+
 .inventory-catalog__tabs {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));

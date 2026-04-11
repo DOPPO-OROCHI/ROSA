@@ -138,17 +138,17 @@ export function InventoryScreen({
           if (delta <= 0) {
             return current;
           }
-        return [...current, { kind: "battle", template_id: templateId, count: delta }];
-      }
+          return [...current, { kind: "battle", template_id: templateId, count: delta }];
+        }
 
-      const next = [...current];
-      const target = next[index];
-      const nextCount = target.count + delta;
+        const next = [...current];
+        const target = next[index];
+        const nextCount = target.count + delta;
 
-      if (nextCount <= 0) {
-        next.splice(index, 1);
-        return next;
-      }
+        if (nextCount <= 0) {
+          next.splice(index, 1);
+          return next;
+        }
 
         next[index] = { ...target, count: nextCount };
         return next;
@@ -207,24 +207,9 @@ export function InventoryScreen({
               </div>
             ))}
           </div>
-          <button type="button" className="inventory-toggle" onClick={() => setShowFullDeck((value) => !value)}>
-            {showFullDeck ? "Спрятать" : "Показать все"}
+          <button type="button" className="inventory-toggle" onClick={() => setShowFullDeck(true)}>
+            Показать все
           </button>
-          {showFullDeck ? (
-            <div className="inventory-deck__all">
-              {groupedDeck.map((stack) => (
-                <div key={stack.card.template_id} className="inventory-deck__all-slot">
-                  <InventoryCard
-                    card={stack.card}
-                    size="deck"
-                    countBadge={stack.count}
-                    onRemove={() => removeCard(stack.card.template_id)}
-                    description={stack.card.description}
-                  />
-                </div>
-              ))}
-            </div>
-          ) : null}
         </section>
 
         <section className="inventory-catalog surface-shell">
@@ -283,6 +268,29 @@ export function InventoryScreen({
 
         <section className="inventory-shop surface-shell">Shop Placeholder</section>
       </div>
+
+      {showFullDeck ? (
+        <div className="overlay">
+          <section className="inventory-deck-modal surface">
+            <div className="inventory-deck-modal__grid">
+              {groupedDeck.map((stack) => (
+                <div key={stack.card.template_id} className="inventory-deck__all-slot">
+                  <InventoryCard
+                    card={stack.card}
+                    size="deck"
+                    countBadge={stack.count}
+                    onRemove={() => removeCard(stack.card.template_id)}
+                    description={stack.card.description}
+                  />
+                </div>
+              ))}
+            </div>
+            <button type="button" className="inventory-toggle inventory-toggle--modal" onClick={() => setShowFullDeck(false)}>
+              Скрыть
+            </button>
+          </section>
+        </div>
+      ) : null}
     </section>
   );
 }
