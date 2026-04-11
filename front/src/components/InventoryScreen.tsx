@@ -39,6 +39,16 @@ function groupDeck(entries: DeckEntry[], battleCards: BattleCard[]): DeckStack[]
     .filter((stack): stack is DeckStack => stack !== null);
 }
 
+function battleSortLabel(sortKey: BattleSortKey): string {
+  if (sortKey === "hp") {
+    return "Жизни";
+  }
+  if (sortKey === "attack") {
+    return "Атака";
+  }
+  return "Стоимость";
+}
+
 export function InventoryScreen({
   draftDeckEntries,
   savedDeckEntries,
@@ -51,6 +61,7 @@ export function InventoryScreen({
   const [showFullDeck, setShowFullDeck] = useState(false);
   const [catalogKind, setCatalogKind] = useState<"battle" | "buff">("battle");
   const [battleSortKey, setBattleSortKey] = useState<BattleSortKey>("mana");
+  const [filterOpen, setFilterOpen] = useState(false);
   const [battlePage, setBattlePage] = useState(0);
   const [buffPage, setBuffPage] = useState(0);
   const [deckSyncState, setDeckSyncState] = useState<"idle" | "syncing" | "saved" | "error">("idle");
@@ -76,7 +87,7 @@ export function InventoryScreen({
           ? right.health_points - left.health_points
           : battleSortKey === "attack"
             ? right.attack - left.attack
-            : right.mana_cost - left.mana_cost;
+            : left.mana_cost - right.mana_cost;
 
       if (diff !== 0) {
         return diff;
@@ -156,6 +167,7 @@ export function InventoryScreen({
   function selectBattleSort(nextKey: BattleSortKey) {
     setBattleSortKey(nextKey);
     setBattlePage(0);
+    setFilterOpen(false);
   }
 
   function updateDraftDeck(templateId: string, delta: number) {
@@ -245,42 +257,44 @@ export function InventoryScreen({
             <button
               type="button"
               className={`inventory-tab ${catalogKind === "battle" ? "inventory-tab--active" : ""}`}
-              onClick={() => setCatalogKind("battle")}
+              onClick={() => {
+                setCatalogKind("battle");
+                setFilterOpen(false);
+              }}
             >
               Battle
             </button>
             <button
               type="button"
               className={`inventory-tab ${catalogKind === "buff" ? "inventory-tab--active" : ""}`}
-              onClick={() => setCatalogKind("buff")}
+              onClick={() => {
+                setCatalogKind("buff");
+                setFilterOpen(false);
+              }}
             >
               Buff
             </button>
           </div>
 
           {catalogKind === "battle" ? (
-            <div className="inventory-sortbar">
-              <button
-                type="button"
-                className={`inventory-sortbar__button ${battleSortKey === "hp" ? "inventory-sortbar__button--active" : ""}`}
-                onClick={() => selectBattleSort("hp")}
-              >
-                HP
+            <div className="inventory-filter">
+              <button type="button" className="inventory-filter__button" onClick={() => setFilterOpen((value) => !value)}>
+                ФИЛЬТР
               </button>
-              <button
-                type="button"
-                className={`inventory-sortbar__button ${battleSortKey === "attack" ? "inventory-sortbar__button--active" : ""}`}
-                onClick={() => selectBattleSort("attack")}
-              >
-                ATK
-              </button>
-              <button
-                type="button"
-                className={`inventory-sortbar__button ${battleSortKey === "mana" ? "inventory-sortbar__button--active" : ""}`}
-                onClick={() => selectBattleSort("mana")}
-              >
-                MANA
-              </button>
+              {filterOpen ? (
+                <div className="inventory-filter__menu">
+                  <button type="button" className="inventory-filter__option" onClick={() => selectBattleSort("hp")}>
+                    Жизни
+                  </button>
+                  <button type="button" className="inventory-filter__option" onClick={() => selectBattleSort("mana")}>
+                    Стоимость
+                  </button>
+                  <button type="button" className="inventory-filter__option" onClick={() => selectBattleSort("attack")}>
+                    Атака
+                  </button>
+                </div>
+              ) : null}
+              <span className="inventory-filter__current">Сейчас: {battleSortLabel(battleSortKey)}</span>
             </div>
           ) : null}
 
