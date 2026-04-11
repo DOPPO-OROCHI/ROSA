@@ -776,7 +776,7 @@ button {
 .card-viewer__combat {
   left: 11%;
   right: 11%;
-  top: 83%;
+  top: 73%;
   font-size: clamp(0.66rem, 1.6vw, 0.86rem);
   line-height: 1.15;
   letter-spacing: 0.03em;
