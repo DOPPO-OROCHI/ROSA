@@ -398,6 +398,7 @@ button {
   --hp-x: 87.4%;
   --hp-y: 87.2%;
   --slot-size: 14%;
+  --stat-font-size: clamp(0.9rem, 2.6vw, 1.3rem);
 }
 
 .inventory-card__art {
@@ -434,7 +435,7 @@ button {
 
 .inventory-card__stat {
   font-family: Georgia, "Times New Roman", serif;
-  font-size: clamp(0.9rem, 2.6vw, 1.3rem);
+  font-size: var(--stat-font-size);
   font-weight: 900;
   line-height: 1;
   color: #fff1cc;
@@ -539,6 +540,11 @@ button {
   right: 10%;
   top: 58%;
   bottom: auto;
+}
+
+.inventory-card--deck .inventory-card__frame {
+  --slot-size: 11.5%;
+  --stat-font-size: clamp(0.68rem, 1.55vw, 0.95rem);
 }
 
 .inventory-card--deck .inventory-card__description {
