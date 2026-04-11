@@ -1,3 +1,11 @@
+@font-face {
+  font-family: "Dwarven Stonecraft Cyr";
+  src: url("/fonts/DwarvenStonecraftCyrExtended.otf") format("opentype");
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+}
+
 :root {
   color-scheme: dark;
   font-family: "Trebuchet MS", "Segoe UI", sans-serif;
@@ -734,7 +742,7 @@ button {
 }
 
 .card-viewer__stat {
-  font-family: Georgia, "Times New Roman", serif;
+  font-family: "Dwarven Stonecraft Cyr", Georgia, "Times New Roman", serif;
   font-size: clamp(4.7rem, 12.8vw, 7.6rem);
   font-weight: 900;
   line-height: 1;
@@ -754,6 +762,7 @@ button {
   position: absolute;
   z-index: 2;
   color: #ffffff;
+  font-family: "Dwarven Stonecraft Cyr", Georgia, "Times New Roman", serif;
   text-align: center;
   text-shadow:
     0 1px 2px rgba(0, 0, 0, 0.96),
