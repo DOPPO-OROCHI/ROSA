@@ -735,7 +735,7 @@ button {
 
 .card-viewer__stat {
   font-family: Georgia, "Times New Roman", serif;
-  font-size: clamp(2.6rem, 7vw, 4.2rem);
+  font-size: clamp(5.2rem, 14vw, 8.4rem);
   font-weight: 900;
   line-height: 1;
   color: #fff1cc;
