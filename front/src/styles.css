@@ -302,7 +302,7 @@ button {
 .inventory-deck__slots {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 4px;
+  gap: 7px;
 }
 
 .inventory-deck__slot,
@@ -337,7 +337,7 @@ button {
   margin-top: 10px;
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 4px;
+  gap: 7px;
 }
 
 .inventory-deck-modal {
@@ -352,7 +352,7 @@ button {
 .inventory-deck-modal__grid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 4px;
+  gap: 7px;
   overflow-y: auto;
   padding-right: 2px;
 }
