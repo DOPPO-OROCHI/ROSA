@@ -291,18 +291,19 @@ button {
 .inventory-deck__slots {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 8px;
+  gap: 2px;
 }
 
 .inventory-deck__slot,
 .inventory-deck__all-slot {
   min-height: 0;
-  border-radius: 18px;
-  background: rgba(8, 11, 18, 0.34);
-  border: 1px solid rgba(185, 165, 255, 0.16);
+  border-radius: 0;
+  background: transparent;
+  border: none;
   display: grid;
   place-items: center;
-  padding: 4px;
+  padding: 0;
+  overflow: visible;
 }
 
 .inventory-toggle,
@@ -324,7 +325,7 @@ button {
   margin-top: 10px;
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 8px;
+  gap: 2px;
 }
 
 .inventory-catalog__tabs {
@@ -543,13 +544,33 @@ button {
 }
 
 .inventory-card--deck .inventory-card__frame {
-  --slot-size: 11.5%;
-  --stat-font-size: clamp(0.68rem, 1.55vw, 0.95rem);
+  --slot-size: 14.8%;
+  --stat-font-size: clamp(0.9rem, 2vw, 1.24rem);
 }
 
 .inventory-card--deck .inventory-card__description {
   min-height: auto;
+  font-size: clamp(0.56rem, 1.65vw, 0.82rem);
+  line-height: 1.12;
   -webkit-line-clamp: 3;
+}
+
+.inventory-card--deck {
+  width: 128%;
+  margin-left: -14%;
+  margin-right: -14%;
+}
+
+.inventory-card--deck .inventory-card__count-badge {
+  top: 4.5%;
+  min-width: 34%;
+  padding: 5px 10px;
+  font-size: clamp(0.62rem, 1.7vw, 0.88rem);
+}
+
+.inventory-card--deck .inventory-card__deck-action {
+  width: 21%;
+  font-size: clamp(0.84rem, 2vw, 1.08rem);
 }
 
 .inventory-card--grid .inventory-card__description {
