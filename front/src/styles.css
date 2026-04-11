@@ -509,21 +509,25 @@ button {
   position: absolute;
   left: 12%;
   right: 12%;
-  bottom: 9%;
+  top: 56%;
+  bottom: auto;
   z-index: 2;
   display: grid;
   justify-items: stretch;
 }
 
 .inventory-card__description {
-  padding: 6px 8px;
-  border-radius: 8px;
-  background: rgba(7, 10, 16, 0.54);
+  padding: 0;
+  border-radius: 0;
+  background: transparent;
   min-height: 18%;
   font-size: clamp(0.42rem, 1.35vw, 0.63rem);
   line-height: 1.18;
-  color: #d6dcf7;
+  color: #ffffff;
   text-align: center;
+  text-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.95),
+    0 0 8px rgba(0, 0, 0, 0.45);
   display: -webkit-box;
   -webkit-line-clamp: 4;
   -webkit-box-orient: vertical;
@@ -533,7 +537,8 @@ button {
 .inventory-card--deck .inventory-card__text-slot {
   left: 10%;
   right: 10%;
-  bottom: 8%;
+  top: 58%;
+  bottom: auto;
 }
 
 .inventory-card--deck .inventory-card__description {
