@@ -33,3 +33,11 @@ export function resolveCardImageSrc(
   }
   return resolveImageSrc(key, "/assets/placeholders/card_image.svg");
 }
+
+export function resolveCardAssetVariantSrc(
+  kind: "battle" | "buff",
+  templateId: string,
+  variant: "view" | "full_art" | "on_table",
+): string {
+  return `/assets/cards/${kind}/${templateId}/${variant}/image.png`;
+}

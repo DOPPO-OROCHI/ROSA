@@ -29,10 +29,16 @@ export type BattleCard = {
   template_id: string;
   name: string;
   description: string;
+  card_type: string;
   mana_cost: number;
   health_points: number;
   attack: number;
+  splash_radius: number;
   base_cooldown: number;
+  has_skill?: boolean;
+  skill?: {
+    base_cooldown: number;
+  } | null;
   max_copies: number;
   copies: number;
   image_key: string;

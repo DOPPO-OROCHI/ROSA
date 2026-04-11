@@ -1,7 +1,8 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+п»їimport { useEffect, useMemo, useRef, useState } from "react";
 import { request } from "../lib/api";
-import { InventoryCard } from "./InventoryCard";
 import type { BattleCard, BuffCard, DeckEntry } from "../types";
+import { CardViewer } from "./CardViewer";
+import { InventoryCard } from "./InventoryCard";
 
 type Props = {
   draftDeckEntries: DeckEntry[];
@@ -41,12 +42,12 @@ function groupDeck(entries: DeckEntry[], battleCards: BattleCard[]): DeckStack[]
 
 function battleSortLabel(sortKey: BattleSortKey): string {
   if (sortKey === "hp") {
-    return "Жизни";
+    return "Р–РёР·РЅРё";
   }
   if (sortKey === "attack") {
-    return "Атака";
+    return "РђС‚Р°РєР°";
   }
-  return "Стоимость";
+  return "РЎС‚РѕРёРјРѕСЃС‚СЊ";
 }
 
 export function InventoryScreen({
@@ -66,6 +67,7 @@ export function InventoryScreen({
   const [buffPage, setBuffPage] = useState(0);
   const [deckSyncState, setDeckSyncState] = useState<"idle" | "syncing" | "saved" | "error">("idle");
   const [deckMessage, setDeckMessage] = useState("");
+  const [viewerCard, setViewerCard] = useState<BattleCard | null>(null);
   const lastSavedDeckRef = useRef(JSON.stringify(savedDeckEntries));
 
   const groupedDeck = useMemo(() => groupDeck(draftDeckEntries, battleCards), [draftDeckEntries, battleCards]);
@@ -240,6 +242,7 @@ export function InventoryScreen({
                     card={previewDeck[index].card}
                     size="deck"
                     countBadge={previewDeck[index].count}
+                    onOpen={() => setViewerCard(previewDeck[index].card)}
                     onRemove={() => removeCard(previewDeck[index].card.template_id)}
                     description={previewDeck[index].card.description}
                   />
@@ -248,7 +251,7 @@ export function InventoryScreen({
             ))}
           </div>
           <button type="button" className="inventory-toggle" onClick={() => setShowFullDeck(true)}>
-            Показать все
+            РџРѕРєР°Р·Р°С‚СЊ РІСЃРµ
           </button>
         </section>
 
@@ -279,22 +282,22 @@ export function InventoryScreen({
           {catalogKind === "battle" ? (
             <div className="inventory-filter">
               <button type="button" className="inventory-filter__button" onClick={() => setFilterOpen((value) => !value)}>
-                ФИЛЬТР
+                Р¤РР›Р¬РўР 
               </button>
               {filterOpen ? (
                 <div className="inventory-filter__menu">
                   <button type="button" className="inventory-filter__option" onClick={() => selectBattleSort("hp")}>
-                    Жизни
+                    Р–РёР·РЅРё
                   </button>
                   <button type="button" className="inventory-filter__option" onClick={() => selectBattleSort("mana")}>
-                    Стоимость
+                    РЎС‚РѕРёРјРѕСЃС‚СЊ
                   </button>
                   <button type="button" className="inventory-filter__option" onClick={() => selectBattleSort("attack")}>
-                    Атака
+                    РђС‚Р°РєР°
                   </button>
                 </div>
               ) : null}
-              <span className="inventory-filter__current">Сейчас: {battleSortLabel(battleSortKey)}</span>
+              <span className="inventory-filter__current">РЎРµР№С‡Р°СЃ: {battleSortLabel(battleSortKey)}</span>
             </div>
           ) : null}
 
@@ -306,6 +309,7 @@ export function InventoryScreen({
                   card={card}
                   description={card.description}
                   countBadge={deckCountMap.get(card.template_id) ?? null}
+                  onOpen={() => setViewerCard(card)}
                   onAdd={() => addCard(card.template_id)}
                   addDisabled={!canAddCard(card)}
                 />
@@ -347,6 +351,7 @@ export function InventoryScreen({
                     card={stack.card}
                     size="deck"
                     countBadge={stack.count}
+                    onOpen={() => setViewerCard(stack.card)}
                     onRemove={() => removeCard(stack.card.template_id)}
                     description={stack.card.description}
                   />
@@ -354,11 +359,13 @@ export function InventoryScreen({
               ))}
             </div>
             <button type="button" className="inventory-toggle inventory-toggle--modal" onClick={() => setShowFullDeck(false)}>
-              Скрыть
+              РЎРєСЂС‹С‚СЊ
             </button>
           </section>
         </div>
       ) : null}
+
+      {viewerCard ? <CardViewer card={viewerCard} onClose={() => setViewerCard(null)} /> : null}
     </section>
   );
 }

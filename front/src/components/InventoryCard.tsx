@@ -6,6 +6,7 @@ type Props = {
   size?: "deck" | "grid";
   description?: string;
   countBadge?: number | null;
+  onOpen?: (() => void) | null;
   onAdd?: (() => void) | null;
   onRemove?: (() => void) | null;
   addDisabled?: boolean;
@@ -17,13 +18,17 @@ export function InventoryCard({
   size = "grid",
   description,
   countBadge = null,
+  onOpen = null,
   onAdd = null,
   onRemove = null,
   addDisabled = false,
   removeDisabled = false,
 }: Props) {
   return (
-    <article className={`inventory-card inventory-card--${size}`}>
+    <article
+      className={`inventory-card inventory-card--${size} ${onOpen ? "inventory-card--interactive" : ""}`}
+      onClick={onOpen ?? undefined}
+    >
       <div className="inventory-card__frame">
         <img
           className="inventory-card__art"
@@ -55,7 +60,10 @@ export function InventoryCard({
           <button
             type="button"
             className="inventory-card__deck-action inventory-card__deck-action--remove"
-            onClick={onRemove}
+            onClick={(event) => {
+              event.stopPropagation();
+              onRemove();
+            }}
             disabled={removeDisabled}
             aria-label={`Remove ${card.name} from deck`}
           >
@@ -66,7 +74,10 @@ export function InventoryCard({
           <button
             type="button"
             className="inventory-card__catalog-action"
-            onClick={onAdd}
+            onClick={(event) => {
+              event.stopPropagation();
+              onAdd();
+            }}
             disabled={addDisabled}
             aria-label={`Add ${card.name} to deck`}
           >

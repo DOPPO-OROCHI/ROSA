@@ -462,6 +462,10 @@ button {
   width: 100%;
 }
 
+.inventory-card--interactive {
+  cursor: pointer;
+}
+
 .inventory-card__frame {
   position: relative;
   width: 100%;
@@ -652,6 +656,143 @@ button {
 
 .inventory-card--grid .inventory-card__description {
   padding-bottom: 18px;
+}
+
+.card-viewer {
+  width: min(100%, 430px);
+  max-height: calc(100dvh - 22px - env(safe-area-inset-bottom));
+  padding: 16px 14px 14px;
+  position: relative;
+  display: grid;
+  place-items: center;
+}
+
+.card-viewer__close {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  z-index: 5;
+  width: 42px;
+  height: 42px;
+  border-radius: 999px;
+  border: 1px solid rgba(214, 224, 255, 0.34);
+  background: rgba(8, 12, 19, 0.84);
+  color: #eff4ff;
+  font-size: 1.1rem;
+}
+
+.card-viewer__frame {
+  position: relative;
+  width: min(100%, 370px);
+  aspect-ratio: 2 / 3;
+  border-radius: 22px;
+  overflow: hidden;
+  filter: drop-shadow(0 18px 28px rgba(0, 0, 0, 0.32));
+  --viewer-mana-x: 12.4%;
+  --viewer-mana-y: 9.8%;
+  --viewer-attack-x: 12.5%;
+  --viewer-attack-y: 86.4%;
+  --viewer-hp-x: 87.6%;
+  --viewer-hp-y: 86.4%;
+  --viewer-slot-size: 16%;
+}
+
+.card-viewer__art {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.card-viewer__anchor {
+  position: absolute;
+  width: var(--viewer-slot-size);
+  aspect-ratio: 1 / 1;
+  display: grid;
+  place-items: center;
+  z-index: 2;
+}
+
+.card-viewer__anchor--mana {
+  left: calc(var(--viewer-mana-x) - (var(--viewer-slot-size) / 2));
+  top: calc(var(--viewer-mana-y) - (var(--viewer-slot-size) / 2));
+}
+
+.card-viewer__anchor--attack {
+  left: calc(var(--viewer-attack-x) - (var(--viewer-slot-size) / 2));
+  top: calc(var(--viewer-attack-y) - (var(--viewer-slot-size) / 2));
+}
+
+.card-viewer__anchor--hp {
+  left: calc(var(--viewer-hp-x) - (var(--viewer-slot-size) / 2));
+  top: calc(var(--viewer-hp-y) - (var(--viewer-slot-size) / 2));
+}
+
+.card-viewer__stat {
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(1.3rem, 4vw, 2rem);
+  font-weight: 900;
+  line-height: 1;
+  color: #fff1cc;
+  text-shadow:
+    -1px -1px 0 #000,
+    1px -1px 0 #000,
+    -1px 1px 0 #000,
+    1px 1px 0 #000,
+    0 5px 12px rgba(0, 0, 0, 0.95);
+}
+
+.card-viewer__description,
+.card-viewer__combat,
+.card-viewer__name,
+.card-viewer__race {
+  position: absolute;
+  z-index: 2;
+  color: #ffffff;
+  text-align: center;
+  text-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.96),
+    0 0 10px rgba(0, 0, 0, 0.52);
+}
+
+.card-viewer__description {
+  left: 13%;
+  right: 13%;
+  top: 53.5%;
+  min-height: 14%;
+  font-size: clamp(0.8rem, 2vw, 1rem);
+  line-height: 1.18;
+  display: -webkit-box;
+  -webkit-line-clamp: 5;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.card-viewer__combat {
+  left: 11%;
+  right: 11%;
+  top: 71%;
+  font-size: clamp(0.66rem, 1.6vw, 0.86rem);
+  line-height: 1.15;
+  letter-spacing: 0.03em;
+}
+
+.card-viewer__name {
+  left: 18%;
+  right: 18%;
+  top: 85.2%;
+  font-size: clamp(1.02rem, 2.8vw, 1.34rem);
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.card-viewer__race {
+  left: 22%;
+  right: 22%;
+  top: 91.2%;
+  font-size: clamp(0.76rem, 2vw, 0.96rem);
+  letter-spacing: 0.04em;
 }
 
 .dev-panel {
