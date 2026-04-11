@@ -692,7 +692,7 @@ button {
   border-radius: 22px;
   overflow: hidden;
   filter: drop-shadow(0 18px 28px rgba(0, 0, 0, 0.32));
-  --viewer-mana-x: 14%;
+  --viewer-mana-x: 13%;
   --viewer-mana-y: 14%;
   --viewer-attack-x: 14%;
   --viewer-attack-y: 90%;
