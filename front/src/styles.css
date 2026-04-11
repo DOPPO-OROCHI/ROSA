@@ -743,7 +743,7 @@ button {
 
 .card-viewer__stat {
   font-family: "Zenter SP Demo Black", Georgia, "Times New Roman", serif;
-  font-size: clamp(4.7rem, 12.8vw, 7.6rem);
+  font-size: clamp(4.2rem, 11.4vw, 6.8rem);
   font-weight: 900;
   line-height: 1;
   color: #fff1cc;
