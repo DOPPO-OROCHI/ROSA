@@ -692,13 +692,13 @@ button {
   border-radius: 22px;
   overflow: hidden;
   filter: drop-shadow(0 18px 28px rgba(0, 0, 0, 0.32));
-  --viewer-mana-x: 12.4%;
-  --viewer-mana-y: 9.8%;
-  --viewer-attack-x: 12.5%;
-  --viewer-attack-y: 86.4%;
-  --viewer-hp-x: 87.6%;
-  --viewer-hp-y: 86.4%;
-  --viewer-slot-size: 16%;
+  --viewer-mana-x: 13.1%;
+  --viewer-mana-y: 10.8%;
+  --viewer-attack-x: 12.2%;
+  --viewer-attack-y: 85.1%;
+  --viewer-hp-x: 87.4%;
+  --viewer-hp-y: 85.5%;
+  --viewer-slot-size: 23%;
 }
 
 .card-viewer__art {
@@ -735,7 +735,7 @@ button {
 
 .card-viewer__stat {
   font-family: Georgia, "Times New Roman", serif;
-  font-size: clamp(1.3rem, 4vw, 2rem);
+  font-size: clamp(2.6rem, 7vw, 4.2rem);
   font-weight: 900;
   line-height: 1;
   color: #fff1cc;
