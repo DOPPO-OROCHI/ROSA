@@ -8,7 +8,7 @@
 
 :root {
   color-scheme: dark;
-  font-family: "Trebuchet MS", "Segoe UI", sans-serif;
+  font-family: "Zenter SP Demo Black", "Trebuchet MS", "Segoe UI", sans-serif;
   background: #070a11;
   color: #eef3ff;
   --line: rgba(179, 157, 255, 0.34);
@@ -129,7 +129,6 @@ button {
 .menu-title {
   margin: 0;
   text-align: center;
-  font-family: Georgia, "Times New Roman", serif;
   font-size: clamp(1.6rem, 6vw, 2.45rem);
   line-height: 0.95;
   letter-spacing: 0.06em;
@@ -524,7 +523,7 @@ button {
 }
 
 .inventory-card__stat {
-  font-family: Georgia, "Times New Roman", serif;
+  font-family: "Zenter SP Demo Black", Georgia, "Times New Roman", serif;
   font-size: var(--stat-font-size);
   font-weight: 900;
   line-height: 1;
@@ -822,7 +821,6 @@ button {
 
 .section-head h2 {
   margin: 0;
-  font-family: Georgia, "Times New Roman", serif;
   letter-spacing: 0.02em;
 }
 
