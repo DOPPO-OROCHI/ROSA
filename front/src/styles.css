@@ -477,7 +477,7 @@ button {
   --mana-y: 11.8%;
   --attack-x: 25.7%;
   --attack-y: 92.2%;
-  --hp-x: 99.4%;
+  --hp-x: 199.4%;
   --hp-y: 92.2%;
   --slot-size: 14%;
   --stat-font-size: clamp(0.9rem, 2.6vw, 1.3rem);
