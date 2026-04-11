@@ -30,6 +30,16 @@ export function InventoryCard({
           src={resolveCardImageSrc(card.kind, card.template_id, card.image_key)}
           alt={card.name}
           loading="lazy"
+          onError={(event) => {
+            const target = event.currentTarget;
+            if (target.dataset.fallbackApplied === "1") {
+              return;
+            }
+            target.dataset.fallbackApplied = "1";
+            target.src = card.image_key
+              ? `/assets/${card.image_key.replace(/^\/+/, "").replace(/\/+/g, "/")}.png`
+              : "/assets/placeholders/card_image.svg";
+          }}
         />
         <div className="inventory-card__stat-slot inventory-card__stat-slot--mana">
           <span className="inventory-card__stat">{card.mana_cost}</span>

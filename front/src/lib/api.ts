@@ -29,7 +29,7 @@ export function resolveCardImageSrc(
   key?: string,
 ): string {
   if (kind && templateId) {
-    return `/assets/cards/${kind}/${templateId}/image.png`;
+    return `/assets/cards/${kind}/${templateId}/view/image.png`;
   }
   return resolveImageSrc(key, "/assets/placeholders/card_image.svg");
 }
