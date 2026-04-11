@@ -475,10 +475,10 @@ button {
   filter: drop-shadow(0 12px 18px rgba(0, 0, 0, 0.3));
   --mana-x: 12.3%;
   --mana-y: 11.8%;
-  --attack-x: 14.7%;
-  --attack-y: 89.2%;
-  --hp-x: 89.4%;
-  --hp-y: 89.2%;
+  --attack-x: 16.7%;
+  --attack-y: 92.2%;
+  --hp-x: 92.4%;
+  --hp-y: 92.2%;
   --slot-size: 14%;
   --stat-font-size: clamp(0.9rem, 2.6vw, 1.3rem);
 }
