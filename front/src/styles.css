@@ -606,6 +606,11 @@ button {
   justify-items: stretch;
 }
 
+.inventory-card--grid .inventory-card__text-slot,
+.inventory-card--deck .inventory-card__text-slot {
+  display: none;
+}
+
 .inventory-card__description {
   padding: 0;
   border-radius: 0;
@@ -624,23 +629,9 @@ button {
   overflow: hidden;
 }
 
-.inventory-card--deck .inventory-card__text-slot {
-  left: 10%;
-  right: 10%;
-  top: 58%;
-  bottom: auto;
-}
-
 .inventory-card--deck .inventory-card__frame {
   --slot-size: 14.8%;
   --stat-font-size: clamp(0.9rem, 2vw, 1.24rem);
-}
-
-.inventory-card--deck .inventory-card__description {
-  min-height: auto;
-  font-size: clamp(0.56rem, 1.65vw, 0.82rem);
-  line-height: 1.12;
-  -webkit-line-clamp: 3;
 }
 
 .inventory-card--deck {
@@ -659,10 +650,6 @@ button {
 .inventory-card--deck .inventory-card__deck-action {
   width: 21%;
   font-size: clamp(0.84rem, 2vw, 1.08rem);
-}
-
-.inventory-card--grid .inventory-card__description {
-  padding-bottom: 18px;
 }
 
 .card-viewer {
