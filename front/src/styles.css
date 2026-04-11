@@ -291,7 +291,7 @@ button {
 .inventory-deck__slots {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 2px;
+  gap: 4px;
 }
 
 .inventory-deck__slot,
@@ -325,7 +325,7 @@ button {
   margin-top: 10px;
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 2px;
+  gap: 4px;
 }
 
 .inventory-catalog__tabs {
@@ -556,9 +556,9 @@ button {
 }
 
 .inventory-card--deck {
-  width: 128%;
-  margin-left: -14%;
-  margin-right: -14%;
+  width: 118%;
+  margin-left: -9%;
+  margin-right: -9%;
 }
 
 .inventory-card--deck .inventory-card__count-badge {
