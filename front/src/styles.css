@@ -772,7 +772,7 @@ button {
 .card-viewer__description {
   left: 13%;
   right: 13%;
-  top: 63.5%;
+  top: 60.5%;
   min-height: 14%;
   font-size: clamp(0.8rem, 2vw, 1rem);
   line-height: 1.18;
