@@ -785,7 +785,7 @@ button {
 .card-viewer__name {
   left: 18%;
   right: 18%;
-  top: 85.2%;
+  top: 83.2%;
   font-size: clamp(1.02rem, 2.8vw, 1.34rem);
   font-weight: 800;
   text-transform: uppercase;
@@ -794,7 +794,7 @@ button {
 .card-viewer__race {
   left: 22%;
   right: 22%;
-  top: 91.2%;
+  top: 89.2%;
   font-size: clamp(0.76rem, 2vw, 0.96rem);
   letter-spacing: 0.04em;
 }
