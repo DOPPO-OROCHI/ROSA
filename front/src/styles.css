@@ -360,15 +360,37 @@ button {
   margin-bottom: 8px;
 }
 
+.inventory-sortbar {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
 .inventory-tab {
   min-height: 38px;
   border-radius: 14px;
   font-weight: 700;
 }
 
+.inventory-sortbar__button {
+  min-height: 34px;
+  border-radius: 12px;
+  border: 1px solid rgba(187, 166, 255, 0.24);
+  background: rgba(20, 25, 39, 0.72);
+  color: #edf0ff;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
 .inventory-tab--active {
   background: rgba(116, 92, 255, 0.28);
   border-color: rgba(193, 181, 255, 0.42);
+}
+
+.inventory-sortbar__button--active {
+  background: rgba(116, 92, 255, 0.22);
+  border-color: rgba(193, 181, 255, 0.4);
 }
 
 .inventory-catalog__grid {

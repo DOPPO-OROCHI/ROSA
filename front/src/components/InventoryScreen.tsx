@@ -18,6 +18,8 @@ type DeckStack = {
   count: number;
 };
 
+type BattleSortKey = "hp" | "attack" | "mana";
+
 function groupDeck(entries: DeckEntry[], battleCards: BattleCard[]): DeckStack[] {
   const battleMap = new Map(battleCards.map((card) => [card.template_id, card] as const));
 
@@ -48,18 +50,13 @@ export function InventoryScreen({
 }: Props) {
   const [showFullDeck, setShowFullDeck] = useState(false);
   const [catalogKind, setCatalogKind] = useState<"battle" | "buff">("battle");
+  const [battleSortKey, setBattleSortKey] = useState<BattleSortKey>("mana");
   const [battlePage, setBattlePage] = useState(0);
   const [buffPage, setBuffPage] = useState(0);
   const [deckSyncState, setDeckSyncState] = useState<"idle" | "syncing" | "saved" | "error">("idle");
   const [deckMessage, setDeckMessage] = useState("");
   const lastSavedDeckRef = useRef(JSON.stringify(savedDeckEntries));
 
-  const pageSize = 6;
-  const page = catalogKind === "battle" ? battlePage : buffPage;
-  const battleVisibleCards = battleCards.slice(battlePage * pageSize, battlePage * pageSize + pageSize);
-  const buffVisibleCards = buffCards.slice(buffPage * pageSize, buffPage * pageSize + pageSize);
-  const totalCards = catalogKind === "battle" ? battleCards.length : buffCards.length;
-  const pageCount = Math.max(1, Math.ceil(totalCards / pageSize));
   const groupedDeck = useMemo(() => groupDeck(draftDeckEntries, battleCards), [draftDeckEntries, battleCards]);
   const previewDeck = groupedDeck.slice(0, 4);
   const deckCardCount = useMemo(
@@ -70,6 +67,32 @@ export function InventoryScreen({
     () => new Map(groupedDeck.map((stack) => [stack.card.template_id, stack.count] as const)),
     [groupedDeck],
   );
+
+  const sortedBattleCards = useMemo(() => {
+    const cards = [...battleCards];
+    cards.sort((left, right) => {
+      const diff =
+        battleSortKey === "hp"
+          ? right.health_points - left.health_points
+          : battleSortKey === "attack"
+            ? right.attack - left.attack
+            : right.mana_cost - left.mana_cost;
+
+      if (diff !== 0) {
+        return diff;
+      }
+
+      return left.name.localeCompare(right.name);
+    });
+    return cards;
+  }, [battleCards, battleSortKey]);
+
+  const pageSize = 6;
+  const page = catalogKind === "battle" ? battlePage : buffPage;
+  const battleVisibleCards = sortedBattleCards.slice(battlePage * pageSize, battlePage * pageSize + pageSize);
+  const buffVisibleCards = buffCards.slice(buffPage * pageSize, buffPage * pageSize + pageSize);
+  const totalCards = catalogKind === "battle" ? sortedBattleCards.length : buffCards.length;
+  const pageCount = Math.max(1, Math.ceil(totalCards / pageSize));
 
   useEffect(() => {
     lastSavedDeckRef.current = JSON.stringify(savedDeckEntries);
@@ -128,6 +151,11 @@ export function InventoryScreen({
       return;
     }
     setBuffPage(nextPage);
+  }
+
+  function selectBattleSort(nextKey: BattleSortKey) {
+    setBattleSortKey(nextKey);
+    setBattlePage(0);
   }
 
   function updateDraftDeck(templateId: string, delta: number) {
@@ -229,6 +257,32 @@ export function InventoryScreen({
               Buff
             </button>
           </div>
+
+          {catalogKind === "battle" ? (
+            <div className="inventory-sortbar">
+              <button
+                type="button"
+                className={`inventory-sortbar__button ${battleSortKey === "hp" ? "inventory-sortbar__button--active" : ""}`}
+                onClick={() => selectBattleSort("hp")}
+              >
+                HP
+              </button>
+              <button
+                type="button"
+                className={`inventory-sortbar__button ${battleSortKey === "attack" ? "inventory-sortbar__button--active" : ""}`}
+                onClick={() => selectBattleSort("attack")}
+              >
+                ATK
+              </button>
+              <button
+                type="button"
+                className={`inventory-sortbar__button ${battleSortKey === "mana" ? "inventory-sortbar__button--active" : ""}`}
+                onClick={() => selectBattleSort("mana")}
+              >
+                MANA
+              </button>
+            </div>
+          ) : null}
 
           {catalogKind === "battle" ? (
             <div className="inventory-catalog__grid">
