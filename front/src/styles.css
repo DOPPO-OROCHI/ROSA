@@ -967,18 +967,18 @@ button {
 .hero-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0;
+  gap: 10px 8px;
   align-items: start;
 }
 
 .hero-card {
-  padding: 0;
+  padding: 4px 0 0;
   border-radius: 0;
   background: transparent;
   border: none;
   color: #f1f4ff;
   text-align: center;
-  overflow: hidden;
+  overflow: visible;
 }
 
 .hero-card--active {
@@ -988,17 +988,18 @@ button {
 
 .hero-card__frame {
   position: relative;
-  width: 119%;
-  aspect-ratio: 0.74 / 1;
-  margin: -16% -10%;
+  width: 100%;
+  max-width: 214px;
+  aspect-ratio: 0.72 / 1;
+  margin: 0 auto;
   overflow: hidden;
   --hero-attack-x: 12%;
   --hero-attack-y: 88%;
   --hero-hp-x: 88%;
   --hero-hp-y: 88%;
-  --hero-name-left: 14%;
-  --hero-name-right: 14%;
-  --hero-name-top: 79%;
+  --hero-name-left: 18%;
+  --hero-name-right: 18%;
+  --hero-name-top: 81%;
   --hero-slot-size: 17%;
 }
 
@@ -1059,8 +1060,8 @@ button {
 .hero-card__name {
   display: block;
   width: 100%;
-  font-size: clamp(0.46rem, 1.2vw, 0.62rem);
-  line-height: 1;
+  font-size: clamp(0.62rem, 1.7vw, 0.82rem);
+  line-height: 1.05;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
