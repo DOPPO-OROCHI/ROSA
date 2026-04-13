@@ -1,6 +1,7 @@
-﻿import type { SyntheticEvent } from "react";
+import type { SyntheticEvent } from "react";
 import { resolveHeroAssetVariantSrc, resolveImageSrc } from "../lib/api";
 import type { Hero, MeResponse } from "../types";
+import { HeroSelect } from "./HeroSelect";
 
 type Props = {
   me: MeResponse | null;
@@ -8,7 +9,7 @@ type Props = {
   heroes: Hero[];
   heroPickerOpen: boolean;
   setHeroPickerOpen: (open: boolean) => void;
-  chooseHero: (hero: Hero) => void;
+  chooseHero: (hero: Hero) => Promise<void> | void;
   onInventory: () => void;
 };
 
@@ -71,49 +72,12 @@ export function MainMenu(props: Props) {
         </section>
       </section>
 
-      {props.heroPickerOpen ? (
-        <div className="overlay" onClick={() => props.setHeroPickerOpen(false)}>
-          <div className="picker surface" onClick={(event) => event.stopPropagation()}>
-            <div className="section-head">
-              <div className="section-head__title section-head__title--centered">
-                <p className="eyebrow">Hero Select</p>
-              </div>
-              <button type="button" className="picker-close" onClick={() => props.setHeroPickerOpen(false)}>
-                Close
-              </button>
-            </div>
-            <div className="hero-grid">
-              {props.heroes.map((hero) => (
-                <button
-                  key={hero.hero_code}
-                  type="button"
-                  className={`hero-card ${hero.hero_code === props.selectedHero?.hero_code ? "hero-card--active" : ""}`}
-                  onClick={() => props.chooseHero(hero)}
-                >
-                  <span className="hero-card__frame">
-                    <img
-                      className="hero-card__avatar"
-                      src={resolveHeroAssetVariantSrc(hero.hero_code, "view")}
-                      alt={hero.name}
-                      onError={(event) => handleHeroImageError(event, hero)}
-                    />
-                    <span className="hero-card__anchor hero-card__anchor--attack">
-                      <span className="hero-card__stat">{hero.attack_power}</span>
-                    </span>
-                    <span className="hero-card__anchor hero-card__anchor--hp">
-                      <span className="hero-card__stat">{hero.health_points}</span>
-                    </span>
-                    <span className="hero-card__anchor hero-card__anchor--name">
-                      <span className="hero-card__name">{hero.name}</span>
-                    </span>
-                  </span>
-                </button>
-              ))}
-            </div>
-          </div>
-        </div>
-      ) : null}
+      <HeroSelect
+        open={props.heroPickerOpen}
+        heroes={props.heroes}
+        onClose={() => props.setHeroPickerOpen(false)}
+        onChooseHero={props.chooseHero}
+      />
     </>
   );
 }
-

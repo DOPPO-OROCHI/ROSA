@@ -113,17 +113,21 @@ export function App() {
   }
 
   async function chooseHero(hero: Hero) {
-    setSelectedHeroCode(hero.hero_code);
+    setError("");
     try {
       await request("/heroes/select", {
         method: "POST",
         body: JSON.stringify({ hero_code: hero.hero_code }),
       });
       const nextMe = await request<MeResponse>("/me");
+      setSelectedHeroCode(hero.hero_code);
       setMe(nextMe);
       setHeroPickerOpen(false);
+      setScreen("menu");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to select hero");
+      const message = err instanceof Error ? err.message : "Failed to select hero";
+      setError(message);
+      throw new Error(message);
     }
   }
 
