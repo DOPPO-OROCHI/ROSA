@@ -967,18 +967,18 @@ button {
 .hero-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 10px 8px;
+  gap: 12px 10px;
   align-items: start;
 }
 
 .hero-card {
-  padding: 4px 0 0;
+  padding: 0;
   border-radius: 0;
   background: transparent;
   border: none;
   color: #f1f4ff;
   text-align: center;
-  overflow: visible;
+  overflow: hidden;
 }
 
 .hero-card--active {
@@ -989,17 +989,17 @@ button {
 .hero-card__frame {
   position: relative;
   width: 100%;
-  max-width: 214px;
+  max-width: 188px;
   aspect-ratio: 0.72 / 1;
   margin: 0 auto;
   overflow: hidden;
   --hero-attack-left: 6%;
-  --hero-attack-bottom: 3%;
+  --hero-attack-bottom: 6%;
   --hero-hp-right: 6%;
-  --hero-hp-bottom: 3%;
-  --hero-name-left: 14%;
-  --hero-name-right: 14%;
-  --hero-name-top: 50%;
+  --hero-hp-bottom: 6%;
+  --hero-name-left: 16%;
+  --hero-name-right: 16%;
+  --hero-name-top: 52%;
 }
 
 .hero-card__avatar {
@@ -1013,13 +1013,13 @@ button {
 .hero-card__anchor {
   position: absolute;
   z-index: 2;
+  pointer-events: none;
 }
 
 .hero-card__anchor--attack,
 .hero-card__anchor--hp {
-  position: absolute;
   z-index: 3;
-  min-width: 20%;
+  width: 30%;
   display: flex;
   align-items: center;
 }
@@ -1059,7 +1059,7 @@ button {
 
 .hero-card__stat {
   display: block;
-  font-size: clamp(1.45rem, 3.5vw, 2rem);
+  font-size: clamp(1.2rem, 3vw, 1.7rem);
   line-height: 1;
 }
 
@@ -1067,7 +1067,7 @@ button {
   display: block;
   width: 100%;
   text-align: center;
-  font-size: clamp(0.72rem, 1.9vw, 0.92rem);
+  font-size: clamp(0.64rem, 1.55vw, 0.82rem);
   line-height: 1.05;
   white-space: nowrap;
   overflow: hidden;
