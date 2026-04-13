@@ -956,7 +956,7 @@ button {
 .hero-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 2px 0;
+  gap: 0;
 }
 
 .hero-card {
@@ -978,9 +978,9 @@ button {
   display: grid;
   place-items: center;
   overflow: hidden;
-  width: 148%;
+  width: 132%;
   aspect-ratio: 0.74 / 1;
-  margin: 0 -24%;
+  margin: -10% -16%;
   border-radius: 0;
   border: none;
   background: transparent;
