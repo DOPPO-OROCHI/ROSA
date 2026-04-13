@@ -968,17 +968,21 @@ button {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 12px 10px;
+  justify-items: center;
   align-items: start;
 }
 
 .hero-card {
+  position: relative;
+  width: 100%;
+  max-width: 188px;
   padding: 0;
   border-radius: 0;
   background: transparent;
   border: none;
   color: #f1f4ff;
   text-align: center;
-  overflow: hidden;
+  overflow: visible;
 }
 
 .hero-card--active {
@@ -989,25 +993,26 @@ button {
 .hero-card__frame {
   position: relative;
   width: 100%;
-  max-width: 188px;
   aspect-ratio: 0.72 / 1;
-  margin: 0 auto;
-  overflow: visible;
-  --hero-attack-left: 4%;
-  --hero-attack-bottom: 2%;
-  --hero-hp-right: 4%;
-  --hero-hp-bottom: 2%;
-  --hero-name-left: 13%;
-  --hero-name-right: 13%;
-  --hero-name-top: 53%;
+  margin: 0;
+  overflow: hidden;
+  --hero-attack-left: 5%;
+  --hero-attack-bottom: 4%;
+  --hero-hp-right: 5%;
+  --hero-hp-bottom: 4%;
+  --hero-name-left: 16%;
+  --hero-name-right: 16%;
+  --hero-name-top: 52%;
 }
 
 .hero-card__avatar {
+  position: absolute;
+  inset: 0;
   display: block;
   width: 100%;
   height: 100%;
   border-radius: 0;
-  object-fit: contain;
+  object-fit: cover;
 }
 
 .hero-card__anchor {
@@ -1019,7 +1024,7 @@ button {
 .hero-card__anchor--attack,
 .hero-card__anchor--hp {
   z-index: 3;
-  width: 34%;
+  width: 24%;
   display: flex;
   align-items: center;
 }
@@ -1059,7 +1064,7 @@ button {
 
 .hero-card__stat {
   display: block;
-  font-size: clamp(1.3rem, 3.1vw, 1.82rem);
+  font-size: clamp(1.15rem, 2.8vw, 1.56rem);
   line-height: 1;
 }
 
@@ -1071,7 +1076,7 @@ button {
   border-radius: 999px;
   background: rgba(7, 11, 19, 0.74);
   border: 1px solid rgba(210, 223, 255, 0.24);
-  font-size: clamp(0.66rem, 1.6vw, 0.84rem);
+  font-size: clamp(0.62rem, 1.45vw, 0.78rem);
   line-height: 1.05;
   white-space: nowrap;
   overflow: hidden;
