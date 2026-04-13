@@ -90,14 +90,23 @@ export function MainMenu(props: Props) {
                   className={`hero-card ${hero.hero_code === props.selectedHero?.hero_code ? "hero-card--active" : ""}`}
                   onClick={() => props.chooseHero(hero)}
                 >
-                  <span className="hero-card__avatar">
+                  <span className="hero-card__frame">
                     <img
+                      className="hero-card__avatar"
                       src={resolveHeroAssetVariantSrc(hero.hero_code, "view")}
                       alt={hero.name}
                       onError={(event) => handleHeroImageError(event, hero)}
                     />
+                    <span className="hero-card__anchor hero-card__anchor--attack">
+                      <span className="hero-card__stat">{hero.attack_power}</span>
+                    </span>
+                    <span className="hero-card__anchor hero-card__anchor--hp">
+                      <span className="hero-card__stat">{hero.health_points}</span>
+                    </span>
+                    <span className="hero-card__anchor hero-card__anchor--name">
+                      <span className="hero-card__name">{hero.name}</span>
+                    </span>
                   </span>
-                  <strong>{hero.name}</strong>
                 </button>
               ))}
             </div>

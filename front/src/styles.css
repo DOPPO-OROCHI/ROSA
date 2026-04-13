@@ -808,6 +808,7 @@ button {
 }
 
 .section-head {
+  position: relative;
   display: flex;
   align-items: start;
   justify-content: space-between;
@@ -816,7 +817,10 @@ button {
 }
 
 .section-head__title--centered {
-  flex: 1;
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  width: max-content;
   display: grid;
   justify-items: center;
 }
@@ -953,6 +957,7 @@ button {
 }
 
 .picker-close {
+  margin-left: auto;
   padding: 9px 12px;
   border-radius: 12px;
   background: rgba(97, 107, 142, 0.18);
@@ -981,29 +986,84 @@ button {
   border: none;
 }
 
-.hero-card__avatar {
-  display: grid;
-  place-items: center;
-  overflow: hidden;
+.hero-card__frame {
+  position: relative;
   width: 119%;
   aspect-ratio: 0.74 / 1;
   margin: -16% -10%;
-  border-radius: 0;
-  border: none;
-  background: transparent;
-  font-size: 0.8rem;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
+  overflow: hidden;
+  --hero-attack-x: 12%;
+  --hero-attack-y: 88%;
+  --hero-hp-x: 88%;
+  --hero-hp-y: 88%;
+  --hero-name-left: 14%;
+  --hero-name-right: 14%;
+  --hero-name-top: 79%;
+  --hero-slot-size: 17%;
 }
 
-.hero-card__avatar img {
+.hero-card__avatar {
+  display: block;
   width: 100%;
   height: 100%;
+  border-radius: 0;
   object-fit: contain;
 }
 
-.hero-card strong {
-  display: none;
+.hero-card__anchor {
+  position: absolute;
+  z-index: 2;
+}
+
+.hero-card__anchor--attack,
+.hero-card__anchor--hp {
+  width: var(--hero-slot-size);
+  aspect-ratio: 1 / 1;
+  display: grid;
+  place-items: center;
+}
+
+.hero-card__anchor--attack {
+  left: calc(var(--hero-attack-x) - (var(--hero-slot-size) / 2));
+  top: calc(var(--hero-attack-y) - (var(--hero-slot-size) / 2));
+}
+
+.hero-card__anchor--hp {
+  left: calc(var(--hero-hp-x) - (var(--hero-slot-size) / 2));
+  top: calc(var(--hero-hp-y) - (var(--hero-slot-size) / 2));
+}
+
+.hero-card__anchor--name {
+  left: var(--hero-name-left);
+  right: var(--hero-name-right);
+  top: var(--hero-name-top);
+}
+
+.hero-card__stat,
+.hero-card__name {
+  color: #fff1cc;
+  text-align: center;
+  text-shadow:
+    -1px -1px 0 #000,
+    1px -1px 0 #000,
+    -1px 1px 0 #000,
+    1px 1px 0 #000,
+    0 3px 8px rgba(0, 0, 0, 0.92);
+}
+
+.hero-card__stat {
+  font-size: clamp(1.35rem, 3.2vw, 2rem);
+  line-height: 1;
+}
+
+.hero-card__name {
+  display: block;
+  width: 100%;
+  font-size: clamp(0.46rem, 1.2vw, 0.62rem);
+  line-height: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 
