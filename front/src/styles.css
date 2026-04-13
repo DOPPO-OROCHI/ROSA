@@ -993,11 +993,13 @@ button {
   aspect-ratio: 0.72 / 1;
   margin: 0 auto;
   overflow: hidden;
-  --hero-corner-offset: 3.5%;
+  --hero-attack-left: 4.5%;
+  --hero-attack-bottom: 1.8%;
+  --hero-hp-right: 4.5%;
+  --hero-hp-bottom: 1.8%;
   --hero-name-left: 16%;
   --hero-name-right: 16%;
   --hero-name-top: 48%;
-  --hero-slot-size: 18%;
 }
 
 .hero-card__avatar {
@@ -1015,20 +1017,17 @@ button {
 
 .hero-card__anchor--attack,
 .hero-card__anchor--hp {
-  width: var(--hero-slot-size);
-  aspect-ratio: 1 / 1;
-  display: grid;
-  place-items: center;
+  z-index: 3;
 }
 
 .hero-card__anchor--attack {
-  left: var(--hero-corner-offset);
-  bottom: var(--hero-corner-offset);
+  left: var(--hero-attack-left);
+  bottom: var(--hero-attack-bottom);
 }
 
 .hero-card__anchor--hp {
-  right: var(--hero-corner-offset);
-  bottom: var(--hero-corner-offset);
+  right: var(--hero-hp-right);
+  bottom: var(--hero-hp-bottom);
 }
 
 .hero-card__anchor--name {
@@ -1051,7 +1050,8 @@ button {
 }
 
 .hero-card__stat {
-  font-size: clamp(1.35rem, 3.2vw, 2rem);
+  display: block;
+  font-size: clamp(1.5rem, 3.6vw, 2.1rem);
   line-height: 1;
 }
 
