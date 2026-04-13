@@ -993,14 +993,11 @@ button {
   aspect-ratio: 0.72 / 1;
   margin: 0 auto;
   overflow: hidden;
-  --hero-attack-x: 12%;
-  --hero-attack-y: 88%;
-  --hero-hp-x: 88%;
-  --hero-hp-y: 88%;
-  --hero-name-left: 18%;
-  --hero-name-right: 18%;
-  --hero-name-top: 81%;
-  --hero-slot-size: 17%;
+  --hero-corner-offset: 3.5%;
+  --hero-name-left: 16%;
+  --hero-name-right: 16%;
+  --hero-name-top: 48%;
+  --hero-slot-size: 18%;
 }
 
 .hero-card__avatar {
@@ -1025,19 +1022,20 @@ button {
 }
 
 .hero-card__anchor--attack {
-  left: calc(var(--hero-attack-x) - (var(--hero-slot-size) / 2));
-  top: calc(var(--hero-attack-y) - (var(--hero-slot-size) / 2));
+  left: var(--hero-corner-offset);
+  bottom: var(--hero-corner-offset);
 }
 
 .hero-card__anchor--hp {
-  left: calc(var(--hero-hp-x) - (var(--hero-slot-size) / 2));
-  top: calc(var(--hero-hp-y) - (var(--hero-slot-size) / 2));
+  right: var(--hero-corner-offset);
+  bottom: var(--hero-corner-offset);
 }
 
 .hero-card__anchor--name {
   left: var(--hero-name-left);
   right: var(--hero-name-right);
   top: var(--hero-name-top);
+  transform: translateY(-50%);
 }
 
 .hero-card__stat,
@@ -1060,6 +1058,7 @@ button {
 .hero-card__name {
   display: block;
   width: 100%;
+  text-align: center;
   font-size: clamp(0.62rem, 1.7vw, 0.82rem);
   line-height: 1.05;
   white-space: nowrap;
