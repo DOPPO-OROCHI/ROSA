@@ -880,11 +880,12 @@ button {
 .secondary-button,
 .picker-close,
 .hero-card {
+  padding: 4px 2px 8px;
+  border-radius: 0;
+  background: transparent;
   border: none;
-  transition:
-    transform 140ms ease,
-    opacity 140ms ease,
-    background 140ms ease;
+  color: #f1f4ff;
+  text-align: center;
 }
 
 .chip {
@@ -940,6 +941,8 @@ button {
 .picker {
   width: min(100%, 430px);
   padding: 18px;
+  max-height: calc(100dvh - 36px - env(safe-area-inset-bottom));
+  overflow-y: auto;
 }
 
 .picker-close {
@@ -952,21 +955,21 @@ button {
 .hero-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 12px;
+  gap: 10px;
 }
 
 .hero-card {
-  padding: 12px;
-  border-radius: 18px;
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(172, 181, 220, 0.1);
+  padding: 4px 2px 8px;
+  border-radius: 0;
+  background: transparent;
+  border: none;
   color: #f1f4ff;
-  text-align: left;
+  text-align: center;
 }
 
 .hero-card--active {
-  background: rgba(110, 93, 255, 0.18);
-  border-color: rgba(174, 156, 255, 0.34);
+  background: transparent;
+  border: none;
 }
 
 .hero-card__avatar {
@@ -974,11 +977,11 @@ button {
   place-items: center;
   overflow: hidden;
   width: 100%;
-  aspect-ratio: 1 / 1;
-  margin-bottom: 12px;
-  border-radius: 14px;
-  border: 1px solid rgba(180, 165, 255, 0.32);
-  background: rgba(13, 18, 29, 0.56);
+  aspect-ratio: 0.74 / 1;
+  margin-bottom: 8px;
+  border-radius: 0;
+  border: none;
+  background: transparent;
   font-size: 0.8rem;
   text-transform: uppercase;
   letter-spacing: 0.08em;
@@ -987,6 +990,7 @@ button {
 .hero-card__avatar img {
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain;
 }
+
 
