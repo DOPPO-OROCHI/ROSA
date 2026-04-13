@@ -992,14 +992,14 @@ button {
   max-width: 188px;
   aspect-ratio: 0.72 / 1;
   margin: 0 auto;
-  overflow: hidden;
-  --hero-attack-left: 6%;
-  --hero-attack-bottom: 6%;
-  --hero-hp-right: 6%;
-  --hero-hp-bottom: 6%;
-  --hero-name-left: 16%;
-  --hero-name-right: 16%;
-  --hero-name-top: 52%;
+  overflow: visible;
+  --hero-attack-left: 4%;
+  --hero-attack-bottom: 2%;
+  --hero-hp-right: 4%;
+  --hero-hp-bottom: 2%;
+  --hero-name-left: 13%;
+  --hero-name-right: 13%;
+  --hero-name-top: 53%;
 }
 
 .hero-card__avatar {
@@ -1019,7 +1019,7 @@ button {
 .hero-card__anchor--attack,
 .hero-card__anchor--hp {
   z-index: 3;
-  width: 30%;
+  width: 34%;
   display: flex;
   align-items: center;
 }
@@ -1059,7 +1059,7 @@ button {
 
 .hero-card__stat {
   display: block;
-  font-size: clamp(1.2rem, 3vw, 1.7rem);
+  font-size: clamp(1.3rem, 3.1vw, 1.82rem);
   line-height: 1;
 }
 
@@ -1067,7 +1067,11 @@ button {
   display: block;
   width: 100%;
   text-align: center;
-  font-size: clamp(0.64rem, 1.55vw, 0.82rem);
+  padding: 4px 8px;
+  border-radius: 999px;
+  background: rgba(7, 11, 19, 0.74);
+  border: 1px solid rgba(210, 223, 255, 0.24);
+  font-size: clamp(0.66rem, 1.6vw, 0.84rem);
   line-height: 1.05;
   white-space: nowrap;
   overflow: hidden;
