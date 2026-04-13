@@ -1097,13 +1097,15 @@ button {
   background: rgba(5, 9, 16, 0.72);
   border: 1px solid rgba(208, 222, 255, 0.18);
   max-width: 100%;
+  width: 100%;
   white-space: nowrap;
   overflow: hidden;
-  text-overflow: ellipsis;
 }
 
-.hero-select-card__name {
-  font-size: 0.7rem;
+.auto-fit-text__content {
+  display: block;
+  white-space: nowrap;
+  line-height: 1;
 }
 
 .hero-select-card__stat {
@@ -1220,4 +1222,3 @@ button {
     transform: translateY(0);
   }
 }
-

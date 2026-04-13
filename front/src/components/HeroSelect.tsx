@@ -1,6 +1,7 @@
 import { useEffect, useState, type SyntheticEvent } from "react";
 import { resolveHeroAssetVariantSrc, resolveImageSrc } from "../lib/api";
 import type { Hero } from "../types";
+import { AutoFitText } from "./AutoFitText";
 
 type Props = {
   open: boolean;
@@ -84,7 +85,12 @@ export function HeroSelect({ open, heroes, onClose, onChooseHero }: Props) {
                     onError={(event) => handleHeroImageError(event, hero)}
                   />
                   <span className="hero-select-card__anchor hero-select-card__anchor--name">
-                    <span className="hero-select-card__name">{hero.name}</span>
+                    <AutoFitText
+                      text={hero.name}
+                      className="hero-select-card__name"
+                      maxFontSize={11.2}
+                      minFontSize={6}
+                    />
                   </span>
                   <span className="hero-select-card__anchor hero-select-card__anchor--attack">
                     <span className="hero-select-card__stat">{hero.attack_power}</span>
@@ -117,7 +123,12 @@ export function HeroSelect({ open, heroes, onClose, onChooseHero }: Props) {
                 <div className="hero-viewer__future hero-viewer__future--right" aria-hidden="true" />
 
                 <span className="hero-viewer__anchor hero-viewer__anchor--name">
-                  <span className="hero-viewer__name">{previewHero.name}</span>
+                  <AutoFitText
+                    text={previewHero.name}
+                    className="hero-viewer__name"
+                    maxFontSize={14}
+                    minFontSize={8}
+                  />
                 </span>
                 <span className="hero-viewer__anchor hero-viewer__anchor--attack">
                   <span className="hero-viewer__stat">{previewHero.attack_power}</span>
