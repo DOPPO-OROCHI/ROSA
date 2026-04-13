@@ -44,7 +44,7 @@ export function MainMenu(props: Props) {
           <button type="button" className="hero-avatar" onClick={() => props.setHeroPickerOpen(true)}>
             {props.selectedHero ? (
               <img
-                src={resolveHeroAssetVariantSrc(props.selectedHero.hero_code, "view")}
+                src={resolveHeroAssetVariantSrc(props.selectedHero.hero_code, "battle_icon")}
                 alt={props.selectedHero.name}
                 onError={(event) => handleHeroImageError(event, props.selectedHero!)}
               />
