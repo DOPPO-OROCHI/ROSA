@@ -1061,14 +1061,14 @@ button {
 .hero-select-card__anchor--attack,
 .hero-viewer__anchor--attack {
   left: 6%;
-  bottom: 8%;
+  bottom: 10%;
   justify-content: flex-start;
 }
 
 .hero-select-card__anchor--hp,
 .hero-viewer__anchor--hp {
-  right: 6%;
-  bottom: 8%;
+  right: 3%;
+  bottom: 10%;
   justify-content: flex-end;
 }
 
