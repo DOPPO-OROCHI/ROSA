@@ -975,7 +975,7 @@ button {
 .hero-card {
   position: relative;
   width: 100%;
-  max-width: 188px;
+  max-width: 190px;
   padding: 0;
   border-radius: 0;
   background: transparent;
@@ -993,7 +993,7 @@ button {
 .hero-card__frame {
   position: relative;
   width: 100%;
-  aspect-ratio: 0.72 / 1;
+  aspect-ratio: 520 / 780;
   margin: 0;
   overflow: hidden;
   --hero-attack-left: 5%;
