@@ -7,9 +7,9 @@ var DefaultHeroTemplate = []CharacterTemplate{
 	{
 		Name:           "Imperial Commander", //<-имя, которое отображается в UI
 		CharacterCode:  "imperial_commander", //<-уникальный код, который нужен для операционки
-		AttackPower:    7,                    //<-сила атаки
-		HealthPoints:   450,                  //<-хп
-		AttackCooldown: 2,                    //<-кд атаки (не спел)
+		AttackPower:    5,                    //<-сила атаки
+		HealthPoints:   60,                  //<-хп
+		AttackCooldown: 1,                    //<-кд атаки (не спел)
 		Ability: AbilitySpec{ //<-а это спел
 			Code:     BUFF_ATK, //<-с его кодом, который отражает смысл абилки
 			Target:   OWN_UNIT, //<-цель спела
@@ -25,9 +25,9 @@ var DefaultHeroTemplate = []CharacterTemplate{
 		//далее по образу и подобию
 		Name:           "Karn",
 		CharacterCode:  "karn",
-		AttackPower:    10,
-		HealthPoints:   850,
-		AttackCooldown: 3,
+		AttackPower:    6,
+		HealthPoints:   70,
+		AttackCooldown: 2,
 		Ability: AbilitySpec{
 			Code:     MAKE_TANK,
 			Target:   OWN_UNIT,
@@ -41,8 +41,8 @@ var DefaultHeroTemplate = []CharacterTemplate{
 	{
 		Name:           "The System",
 		CharacterCode:  "the_system",
-		AttackPower:    3,
-		HealthPoints:   650,
+		AttackPower:    1,
+		HealthPoints:   80,
 		AttackCooldown: 1,
 		Ability: AbilitySpec{
 			Code:     ATTACK_SPLASH,
@@ -57,8 +57,8 @@ var DefaultHeroTemplate = []CharacterTemplate{
 	{
 		Name:           "Black Cell",
 		CharacterCode:  "black_cell",
-		AttackPower:    6,
-		HealthPoints:   370,
+		AttackPower:    5,
+		HealthPoints:   50,
 		AttackCooldown: 1,
 		Ability: AbilitySpec{
 			Code:     BUFF_ATK_PERM,
@@ -71,11 +71,11 @@ var DefaultHeroTemplate = []CharacterTemplate{
 		Description: "Каждые 2 хода повышает атаку карты на 10 едениц навсегда, но здороввье такой карты всегда равно 1",
 	},
 	{
-		Name:           "Slavic Priest",
+		Name:           "Жрец",
 		CharacterCode:  "slavic_priest",
 		AttackPower:    5,
-		HealthPoints:   470,
-		AttackCooldown: 3,
+		HealthPoints:   40,
+		AttackCooldown: 1,
 		Ability: AbilitySpec{
 			Code:     HEAL_UNIT,
 			Target:   OWN_UNIT,
@@ -89,9 +89,9 @@ var DefaultHeroTemplate = []CharacterTemplate{
 	{
 		Name:           "Citadele",
 		CharacterCode:  "suprime_lider",
-		AttackPower:    8,
-		HealthPoints:   690,
-		AttackCooldown: 3,
+		AttackPower:    2,
+		HealthPoints:   50,
+		AttackCooldown: 1,
 		Ability: AbilitySpec{
 			Code:     ATTACK_ANY,
 			Target:   ENEMY_ANY,
