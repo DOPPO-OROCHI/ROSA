@@ -966,7 +966,7 @@ button {
 
 .hero-select-overlay {
   place-items: start center;
-  padding-top: calc(18px + env(safe-area-inset-top));
+  padding-top: calc(80px + env(safe-area-inset-top));
 }
 
 .hero-select {
@@ -1003,6 +1003,7 @@ button {
 .hero-select__grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
+  margin-top: 48px;
   gap: 14px 10px;
 }
 
