@@ -41,3 +41,10 @@ export function resolveCardAssetVariantSrc(
 ): string {
   return `/assets/cards/${kind}/${templateId}/${variant}/image.png`;
 }
+
+export function resolveHeroAssetVariantSrc(
+  heroCode: string,
+  variant: "view" | "full_art" | "battle_icon",
+): string {
+  return `/assets/heroes/${heroCode}/${variant}/image.png`;
+}

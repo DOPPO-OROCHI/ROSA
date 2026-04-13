@@ -1,4 +1,5 @@
-import { resolveImageSrc } from "../lib/api";
+import type { SyntheticEvent } from "react";
+import { resolveHeroAssetVariantSrc, resolveImageSrc } from "../lib/api";
 import type { Hero, MeResponse } from "../types";
 
 type Props = {
@@ -12,6 +13,15 @@ type Props = {
 };
 
 export function MainMenu(props: Props) {
+  function handleHeroImageError(event: SyntheticEvent<HTMLImageElement>, hero: Hero) {
+    const target = event.currentTarget;
+    if (target.dataset.fallbackApplied === "1") {
+      return;
+    }
+    target.dataset.fallbackApplied = "1";
+    target.src = resolveImageSrc(hero.image_key);
+  }
+
   return (
     <>
       <section className="main-menu surface">
@@ -33,7 +43,11 @@ export function MainMenu(props: Props) {
         <section className="hero-focus">
           <button type="button" className="hero-avatar" onClick={() => props.setHeroPickerOpen(true)}>
             {props.selectedHero ? (
-              <img src={resolveImageSrc(props.selectedHero.image_key)} alt={props.selectedHero.name} />
+              <img
+                src={resolveHeroAssetVariantSrc(props.selectedHero.hero_code, "view")}
+                alt={props.selectedHero.name}
+                onError={(event) => handleHeroImageError(event, props.selectedHero!)}
+              />
             ) : (
               <span>Hero</span>
             )}
@@ -78,7 +92,11 @@ export function MainMenu(props: Props) {
                   onClick={() => props.chooseHero(hero)}
                 >
                   <span className="hero-card__avatar">
-                    <img src={resolveImageSrc(hero.image_key)} alt={hero.name} />
+                    <img
+                      src={resolveHeroAssetVariantSrc(hero.hero_code, "view")}
+                      alt={hero.name}
+                      onError={(event) => handleHeroImageError(event, hero)}
+                    />
                   </span>
                   <strong>{hero.name}</strong>
                 </button>
