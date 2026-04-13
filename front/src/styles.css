@@ -1,4 +1,4 @@
-@font-face {
+﻿@font-face {
   font-family: "Zenter SP Demo Black";
   src: url("/fonts/ZenterSPDemo-Black.otf") format("opentype");
   font-style: normal;
@@ -163,7 +163,7 @@ button {
 }
 
 .hero-avatar {
-  width: 172px;
+  width: 214px;
   aspect-ratio: 1 / 1;
   overflow: hidden;
   border-radius: 0;
@@ -989,3 +989,4 @@ button {
   height: 100%;
   object-fit: cover;
 }
+
