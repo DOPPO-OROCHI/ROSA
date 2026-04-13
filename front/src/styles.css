@@ -1051,8 +1051,8 @@ button {
 
 .hero-select-card__anchor--name,
 .hero-viewer__anchor--name {
-  left: 16%;
-  right: 16%;
+  left: 10%;
+  right: 10%;
   top: 50%;
   justify-content: center;
   transform: translateY(-50%);
@@ -1220,5 +1220,4 @@ button {
     transform: translateY(0);
   }
 }
-
 
