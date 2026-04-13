@@ -815,6 +815,12 @@ button {
   margin-bottom: 16px;
 }
 
+.section-head__title--centered {
+  flex: 1;
+  display: grid;
+  justify-items: center;
+}
+
 .section-head h2 {
   margin: 0;
   letter-spacing: 0.02em;

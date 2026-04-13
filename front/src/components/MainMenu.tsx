@@ -1,4 +1,4 @@
-import type { SyntheticEvent } from "react";
+﻿import type { SyntheticEvent } from "react";
 import { resolveHeroAssetVariantSrc, resolveImageSrc } from "../lib/api";
 import type { Hero, MeResponse } from "../types";
 
@@ -75,9 +75,8 @@ export function MainMenu(props: Props) {
         <div className="overlay" onClick={() => props.setHeroPickerOpen(false)}>
           <div className="picker surface" onClick={(event) => event.stopPropagation()}>
             <div className="section-head">
-              <div>
+              <div className="section-head__title section-head__title--centered">
                 <p className="eyebrow">Hero Select</p>
-                <h2>Выбор персонажа</h2>
               </div>
               <button type="button" className="picker-close" onClick={() => props.setHeroPickerOpen(false)}>
                 Close
@@ -108,3 +107,4 @@ export function MainMenu(props: Props) {
     </>
   );
 }
+
