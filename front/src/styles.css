@@ -990,6 +990,10 @@ button {
   margin-bottom: 0;
 }
 
+.hero-select__body {
+  padding-top: 56px;
+}
+
 .hero-select__empty {
   min-height: 360px;
   display: grid;
@@ -1003,7 +1007,6 @@ button {
 .hero-select__grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  margin-top: 48px;
   gap: 14px 10px;
 }
 

@@ -63,46 +63,48 @@ export function HeroSelect({ open, heroes, onClose, onChooseHero }: Props) {
           </button>
         </header>
 
-        {heroes.length === 0 ? (
-          <div className="hero-select__empty">ЗАЙДИТЕ В СВОЙ АККАУНТ ЧТОБЫ УВИДЕТЬ ВАШИХ ПЕРСОНАЖЕЙ</div>
-        ) : (
-          <div className="hero-select__grid">
-            {heroes.map((hero) => (
-              <button
-                key={hero.hero_code}
-                type="button"
-                className="hero-select-card"
-                onClick={() => {
-                  setPreviewHero(hero);
-                  setError("");
-                }}
-              >
-                <span className="hero-select-card__frame">
-                  <img
-                    className="hero-select-card__art"
-                    src={resolveHeroAssetVariantSrc(hero.hero_code, "view")}
-                    alt={hero.name}
-                    onError={(event) => handleHeroImageError(event, hero)}
-                  />
-                  <span className="hero-select-card__anchor hero-select-card__anchor--name">
-                    <AutoFitText
-                      text={hero.name}
-                      className="hero-select-card__name"
-                      maxFontSize={11.2}
-                      minFontSize={6}
+        <div className="hero-select__body">
+          {heroes.length === 0 ? (
+            <div className="hero-select__empty">ЗАЙДИТЕ В СВОЙ АККАУНТ ЧТОБЫ УВИДЕТЬ ВАШИХ ПЕРСОНАЖЕЙ</div>
+          ) : (
+            <div className="hero-select__grid">
+              {heroes.map((hero) => (
+                <button
+                  key={hero.hero_code}
+                  type="button"
+                  className="hero-select-card"
+                  onClick={() => {
+                    setPreviewHero(hero);
+                    setError("");
+                  }}
+                >
+                  <span className="hero-select-card__frame">
+                    <img
+                      className="hero-select-card__art"
+                      src={resolveHeroAssetVariantSrc(hero.hero_code, "view")}
+                      alt={hero.name}
+                      onError={(event) => handleHeroImageError(event, hero)}
                     />
+                    <span className="hero-select-card__anchor hero-select-card__anchor--name">
+                      <AutoFitText
+                        text={hero.name}
+                        className="hero-select-card__name"
+                        maxFontSize={11.2}
+                        minFontSize={6}
+                      />
+                    </span>
+                    <span className="hero-select-card__anchor hero-select-card__anchor--attack">
+                      <span className="hero-select-card__stat">{hero.attack_power}</span>
+                    </span>
+                    <span className="hero-select-card__anchor hero-select-card__anchor--hp">
+                      <span className="hero-select-card__stat">{hero.health_points}</span>
+                    </span>
                   </span>
-                  <span className="hero-select-card__anchor hero-select-card__anchor--attack">
-                    <span className="hero-select-card__stat">{hero.attack_power}</span>
-                  </span>
-                  <span className="hero-select-card__anchor hero-select-card__anchor--hp">
-                    <span className="hero-select-card__stat">{hero.health_points}</span>
-                  </span>
-                </span>
-              </button>
-            ))}
-          </div>
-        )}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
 
         {previewHero ? (
           <div className="hero-viewer-backdrop" onClick={() => setPreviewHero(null)}>
