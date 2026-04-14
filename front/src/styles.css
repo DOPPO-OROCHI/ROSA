@@ -121,9 +121,10 @@ button {
 
 .menu-topbar {
   display: grid;
-  grid-template-columns: 84px 1fr 84px;
+  grid-template-columns: minmax(96px, 1fr) auto minmax(96px, 1fr);
   align-items: center;
   gap: 10px;
+  width: 100%;
 }
 
 .menu-title {
@@ -134,6 +135,8 @@ button {
   letter-spacing: 0.06em;
   color: #f1ebff;
   text-shadow: 0 0 24px rgba(130, 106, 255, 0.18);
+  justify-self: center;
+  max-width: 100%;
 }
 
 .top-slot,
@@ -148,11 +151,24 @@ button {
 }
 
 .top-slot {
+  width: 100%;
   min-height: 54px;
   border-radius: 16px;
   font-size: 0.76rem;
   text-transform: uppercase;
   letter-spacing: 0.08em;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  padding: 0 10px;
+}
+
+.top-slot__label {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  white-space: nowrap;
 }
 
 .hero-focus {
@@ -163,7 +179,7 @@ button {
 }
 
 .hero-avatar {
-  width: 214px;
+  width: min(278px, 82%);
   aspect-ratio: 1 / 1;
   overflow: hidden;
   border-radius: 0;

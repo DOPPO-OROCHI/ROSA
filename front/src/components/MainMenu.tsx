@@ -1,6 +1,7 @@
 import type { SyntheticEvent } from "react";
 import { resolveHeroAssetVariantSrc, resolveImageSrc } from "../lib/api";
 import type { Hero, MeResponse } from "../types";
+import { AutoFitText } from "./AutoFitText";
 import { HeroSelect } from "./HeroSelect";
 
 type Props = {
@@ -33,11 +34,11 @@ export function MainMenu(props: Props) {
 
         <header className="menu-topbar">
           <button type="button" className="top-slot top-slot--left">
-            Friends
+            <AutoFitText text="FRIENDS" className="top-slot__label" maxFontSize={17} minFontSize={9} />
           </button>
           <h1 className="menu-title">PROJECT ROSE</h1>
           <button type="button" className="top-slot top-slot--right">
-            Balance
+            <AutoFitText text="BALANCE" className="top-slot__label" maxFontSize={17} minFontSize={9} />
           </button>
         </header>
 
