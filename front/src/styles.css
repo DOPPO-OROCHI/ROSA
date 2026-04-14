@@ -121,7 +121,7 @@ button {
 
 .menu-topbar {
   display: grid;
-  grid-template-columns: minmax(96px, 1fr) auto minmax(96px, 1fr);
+  grid-template-columns: 84px minmax(0, 1fr) 84px;
   align-items: center;
   gap: 10px;
   width: 100%;
@@ -136,6 +136,7 @@ button {
   color: #f1ebff;
   text-shadow: 0 0 24px rgba(130, 106, 255, 0.18);
   justify-self: center;
+  min-width: 0;
   max-width: 100%;
 }
 
@@ -154,13 +155,13 @@ button {
   width: 100%;
   min-height: 54px;
   border-radius: 16px;
-  font-size: 0.76rem;
+  font-size: 0.68rem;
   text-transform: uppercase;
   letter-spacing: 0.08em;
   display: grid;
   place-items: center;
   overflow: hidden;
-  padding: 0 10px;
+  padding: 0 8px;
 }
 
 .top-slot__label {
@@ -168,6 +169,7 @@ button {
   align-items: center;
   justify-content: center;
   width: 100%;
+  min-width: 0;
   white-space: nowrap;
 }
 
@@ -179,7 +181,7 @@ button {
 }
 
 .hero-avatar {
-  width: min(278px, 82%);
+  width: 214px;
   aspect-ratio: 1 / 1;
   overflow: hidden;
   border-radius: 0;

@@ -34,11 +34,11 @@ export function MainMenu(props: Props) {
 
         <header className="menu-topbar">
           <button type="button" className="top-slot top-slot--left">
-            <AutoFitText text="FRIENDS" className="top-slot__label" maxFontSize={17} minFontSize={9} />
+            <AutoFitText text="FRIENDS" className="top-slot__label" maxFontSize={14} minFontSize={8} />
           </button>
           <h1 className="menu-title">PROJECT ROSE</h1>
           <button type="button" className="top-slot top-slot--right">
-            <AutoFitText text="BALANCE" className="top-slot__label" maxFontSize={17} minFontSize={9} />
+            <AutoFitText text="BALANCE" className="top-slot__label" maxFontSize={14} minFontSize={8} />
           </button>
         </header>
 
