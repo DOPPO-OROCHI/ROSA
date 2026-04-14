@@ -74,3 +74,24 @@ export type DeckEntry = {
 export type DeckResponse = {
   entries: DeckEntry[];
 };
+
+export type QueueState = "idle" | "searching" | "pending_match" | "penalty";
+
+export type JoinQueueResponse = {
+  state: QueueState;
+  opponent_user_id?: number;
+};
+
+export type LeaveQueueResponse = {
+  state: QueueState;
+};
+
+export type QueueStatusResponse = {
+  state: QueueState;
+  opponent_user_id?: number;
+  search_duration_sec?: number;
+  penalty_until?: string;
+  accept_deadline_at?: string;
+  accepted_by_me?: boolean;
+  accepted_by_opponent?: boolean;
+};

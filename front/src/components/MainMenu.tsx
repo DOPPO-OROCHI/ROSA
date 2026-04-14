@@ -11,6 +11,9 @@ type Props = {
   heroPickerOpen: boolean;
   setHeroPickerOpen: (open: boolean) => void;
   chooseHero: (hero: Hero) => Promise<void> | void;
+  onStartMatch: () => void;
+  inventoryHidden?: boolean;
+  startMatchDisabled?: boolean;
   onInventory: () => void;
 };
 
@@ -61,12 +64,19 @@ export function MainMenu(props: Props) {
         </section>
 
         <section className="menu-actions">
-          <button type="button" className="menu-button menu-button--primary">
+          <button
+            type="button"
+            className="menu-button menu-button--primary"
+            onClick={props.onStartMatch}
+            disabled={props.startMatchDisabled}
+          >
             Start Match
           </button>
-          <button type="button" className="menu-button" onClick={props.onInventory}>
-            Inventory
-          </button>
+          {props.inventoryHidden ? null : (
+            <button type="button" className="menu-button" onClick={props.onInventory}>
+              Inventory
+            </button>
+          )}
           <button type="button" className="menu-panel">
             Shop Placeholder
           </button>

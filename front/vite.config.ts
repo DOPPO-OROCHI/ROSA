@@ -7,6 +7,7 @@ const apiPrefixes = [
   "/heroes",
   "/cards",
   "/deck",
+  "/queue",
   "/matches",
   "/auth",
 ];

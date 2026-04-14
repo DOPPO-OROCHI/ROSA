@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { GameModePanel } from "./components/GameModePanel";
 import { InventoryScreen } from "./components/InventoryScreen";
 import { MainMenu } from "./components/MainMenu";
 import { request } from "./lib/api";
@@ -10,7 +11,9 @@ import type {
   DeckResponse,
   Hero,
   HeroesResponse,
+  JoinQueueResponse,
   MeResponse,
+  QueueStatusResponse,
 } from "./types";
 
 const QUICK_USERS = ["dev", "roman", "test", "rosa"];
@@ -31,8 +34,21 @@ export function App() {
   const [error, setError] = useState("");
   const [selectedHeroCode, setSelectedHeroCode] = useState("");
   const [heroPickerOpen, setHeroPickerOpen] = useState(false);
+  const [gameModeOpen, setGameModeOpen] = useState(false);
+  const [queueBusy, setQueueBusy] = useState(false);
+  const [queueError, setQueueError] = useState("");
+  const [queueStatus, setQueueStatus] = useState<QueueStatusResponse>({ state: "idle" });
 
   const selectedHero = heroes.find((hero) => hero.hero_code === selectedHeroCode) ?? heroes[0] ?? null;
+  const deckCardCount = deckEntries.reduce((total, entry) => total + entry.count, 0);
+  const canJoinQueue = Boolean(selectedHeroCode) && deckCardCount === 20;
+  const queueSearching = queueStatus.state === "searching" || queueStatus.state === "pending_match";
+
+  async function loadQueueStatus() {
+    const status = await request<QueueStatusResponse>("/queue/status");
+    setQueueStatus(status);
+    setQueueError("");
+  }
 
   async function loadSession() {
     const [nextMe, nextHeroes] = await Promise.all([
@@ -58,7 +74,10 @@ export function App() {
 
   useEffect(() => {
     loadSession()
-      .then(() => loadInventory())
+      .then(async () => {
+        await loadInventory();
+        await loadQueueStatus();
+      })
       .catch(() => {
         setMe(null);
         setHeroes([]);
@@ -67,9 +86,24 @@ export function App() {
         setDeckEntries([]);
         setDraftDeckEntries([]);
         setSelectedHeroCode("");
+        setQueueStatus({ state: "idle" });
       })
       .finally(() => setBusy(false));
   }, []);
+
+  useEffect(() => {
+    if (!queueSearching) {
+      return;
+    }
+
+    const id = window.setInterval(() => {
+      void loadQueueStatus().catch(() => {
+        setQueueStatus((current) => ({ ...current, state: "idle" }));
+      });
+    }, 1000);
+
+    return () => window.clearInterval(id);
+  }, [queueSearching]);
 
   async function login(nextUsername: string) {
     setBusy(true);
@@ -81,6 +115,7 @@ export function App() {
       });
       await loadSession();
       await loadInventory();
+      await loadQueueStatus();
       setUsername(nextUsername);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Login failed");
@@ -105,6 +140,7 @@ export function App() {
       });
       await loadSession();
       await loadInventory();
+      await loadQueueStatus();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Login failed");
     } finally {
@@ -131,6 +167,56 @@ export function App() {
     }
   }
 
+  async function joinQueue() {
+    if (!selectedHeroCode) {
+      setQueueError("СНАЧАЛА ВЫБЕРИТЕ ПЕРСОНАЖА");
+      return;
+    }
+
+    if (deckCardCount !== 20) {
+      setQueueError("КОЛОДА ДОЛЖНА БЫТЬ ПОЛНОЙ");
+      return;
+    }
+
+    setQueueBusy(true);
+    setQueueError("");
+
+    try {
+      const response = await request<JoinQueueResponse>("/queue/join", {
+        method: "POST",
+      });
+      setQueueStatus((current) => ({
+        ...current,
+        state: response.state,
+        opponent_user_id: response.opponent_user_id,
+        search_duration_sec: 0,
+      }));
+      setGameModeOpen(false);
+      await loadQueueStatus();
+    } catch (err) {
+      setQueueError(err instanceof Error ? err.message : "НЕ УДАЛОСЬ НАЧАТЬ ПОИСК");
+    } finally {
+      setQueueBusy(false);
+    }
+  }
+
+  async function leaveQueue() {
+    setQueueBusy(true);
+
+    try {
+      const response = await request("/queue/leave", {
+        method: "POST",
+      });
+      void response;
+      setQueueStatus({ state: "idle", search_duration_sec: 0 });
+      setQueueError("");
+    } catch (err) {
+      setQueueError(err instanceof Error ? err.message : "НЕ УДАЛОСЬ ОТМЕНИТЬ ПОИСК");
+    } finally {
+      setQueueBusy(false);
+    }
+  }
+
   return (
     <main className="app-shell">
       {screen === "menu" ? (
@@ -141,6 +227,12 @@ export function App() {
           heroPickerOpen={heroPickerOpen}
           setHeroPickerOpen={setHeroPickerOpen}
           chooseHero={chooseHero}
+          onStartMatch={() => {
+            setQueueError("");
+            setGameModeOpen(true);
+          }}
+          inventoryHidden={queueSearching}
+          startMatchDisabled={queueSearching}
           onInventory={() => setScreen("inventory")}
         />
       ) : (
@@ -205,6 +297,22 @@ export function App() {
 
         {error ? <p className="error-text">{error}</p> : null}
       </section>
+
+      <GameModePanel
+        open={gameModeOpen}
+        searching={queueSearching}
+        queueState={queueStatus.state}
+        busy={queueBusy}
+        error={queueError}
+        searchDurationSec={queueStatus.search_duration_sec ?? 0}
+        canQueue={canJoinQueue}
+        onClose={() => {
+          setGameModeOpen(false);
+          setQueueError("");
+        }}
+        onFindMatch={joinQueue}
+        onCancelSearch={leaveQueue}
+      />
     </main>
   );
 }
