@@ -5,6 +5,7 @@ import { MainMenu } from "./components/MainMenu";
 import { MatchFoundPanel } from "./components/MatchFoundPanel";
 import { BattleScreen } from "./components/battle/BattleScreen";
 import { request } from "./lib/api";
+import { authorizeWithTelegram, isTelegramWebApp } from "./lib/telegram";
 import type {
   BattleCard,
   BuffCard,
@@ -24,6 +25,7 @@ const QUICK_USERS = ["dev", "roman", "test", "rosa"];
 type Screen = "menu" | "inventory" | "battle";
 
 export function App() {
+  const telegramWebApp = isTelegramWebApp();
   const [screen, setScreen] = useState<Screen>("menu");
   const [username, setUsername] = useState("dev");
   const [userId, setUserId] = useState("");
@@ -110,25 +112,43 @@ export function App() {
     setDraftDeckEntries(deck.entries);
   }
 
+  async function hydrateAuthorizedApp() {
+    await loadSession();
+    await loadInventory();
+    await loadQueueStatus();
+    await loadActiveMatch();
+  }
+
+  async function bootstrap() {
+    setBusy(true);
+    setError("");
+
+    try {
+      if (telegramWebApp) {
+        await authorizeWithTelegram();
+      }
+
+      await hydrateAuthorizedApp();
+    } catch (err) {
+      setMe(null);
+      setHeroes([]);
+      setBattleCards([]);
+      setBuffCards([]);
+      setDeckEntries([]);
+      setDraftDeckEntries([]);
+      setSelectedHeroCode("");
+      setQueueStatus({ state: "idle" });
+      setActiveMatchId(null);
+      if (telegramWebApp) {
+        setError(err instanceof Error ? `Не удалось авторизоваться через Telegram: ${err.message}` : "Не удалось авторизоваться через Telegram");
+      }
+    } finally {
+      setBusy(false);
+    }
+  }
+
   useEffect(() => {
-    loadSession()
-      .then(async () => {
-        await loadInventory();
-        await loadQueueStatus();
-        await loadActiveMatch();
-      })
-      .catch(() => {
-        setMe(null);
-        setHeroes([]);
-        setBattleCards([]);
-        setBuffCards([]);
-        setDeckEntries([]);
-        setDraftDeckEntries([]);
-        setSelectedHeroCode("");
-        setQueueStatus({ state: "idle" });
-        setActiveMatchId(null);
-      })
-      .finally(() => setBusy(false));
+    void bootstrap();
   }, []);
 
   useEffect(() => {
@@ -205,10 +225,7 @@ export function App() {
         method: "POST",
         body: JSON.stringify({ username: nextUsername }),
       });
-      await loadSession();
-      await loadInventory();
-      await loadQueueStatus();
-      await loadActiveMatch();
+      await hydrateAuthorizedApp();
       setUsername(nextUsername);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Login failed");
@@ -231,10 +248,7 @@ export function App() {
         method: "POST",
         body: JSON.stringify({ user_id: parsed }),
       });
-      await loadSession();
-      await loadInventory();
-      await loadQueueStatus();
-      await loadActiveMatch();
+      await hydrateAuthorizedApp();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Login failed");
     } finally {
@@ -395,7 +409,7 @@ export function App() {
         />
       ) : null}
 
-      <section className="card surface dev-panel">
+      <section className="card surface dev-panel" hidden={telegramWebApp}>
         <div className="section-head">
           <div>
             <p className="eyebrow">Dev Auth</p>
