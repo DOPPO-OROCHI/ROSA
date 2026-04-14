@@ -1057,7 +1057,7 @@ button {
 .hero-viewer__anchor--name {
   left: 17%;
   right: 17%;
-  top: 50%;
+  top: 80%;
   justify-content: center;
   transform: translateY(-50%);
 }
