@@ -43,6 +43,21 @@ export function App() {
   const deckCardCount = deckEntries.reduce((total, entry) => total + entry.count, 0);
   const canJoinQueue = Boolean(selectedHeroCode) && deckCardCount === 20;
   const queueSearching = queueStatus.state === "searching" || queueStatus.state === "pending_match";
+  const queueDeckCards = deckEntries
+    .filter((entry) => entry.kind === "battle" && entry.count > 0)
+    .map((entry) => {
+      const card = battleCards.find((item) => item.template_id === entry.template_id);
+      if (!card) {
+        return null;
+      }
+
+      return {
+        templateId: card.template_id,
+        name: card.name,
+        count: entry.count,
+      };
+    })
+    .filter((entry): entry is { templateId: string; name: string; count: number } => entry !== null);
 
   async function loadQueueStatus() {
     const status = await request<QueueStatusResponse>("/queue/status");
@@ -169,12 +184,12 @@ export function App() {
 
   async function joinQueue() {
     if (!selectedHeroCode) {
-      setQueueError("СНАЧАЛА ВЫБЕРИТЕ ПЕРСОНАЖА");
+      setQueueError("НЕТ ГЕРОЯ");
       return;
     }
 
     if (deckCardCount !== 20) {
-      setQueueError("КОЛОДА ДОЛЖНА БЫТЬ ПОЛНОЙ");
+      setQueueError("НЕПОЛНАЯ ДЕКА");
       return;
     }
 
@@ -204,10 +219,9 @@ export function App() {
     setQueueBusy(true);
 
     try {
-      const response = await request("/queue/leave", {
+      await request("/queue/leave", {
         method: "POST",
       });
-      void response;
       setQueueStatus({ state: "idle", search_duration_sec: 0 });
       setQueueError("");
     } catch (err) {
@@ -306,6 +320,8 @@ export function App() {
         error={queueError}
         searchDurationSec={queueStatus.search_duration_sec ?? 0}
         canQueue={canJoinQueue}
+        selectedHero={selectedHero}
+        deckCards={queueDeckCards}
         onClose={() => {
           setGameModeOpen(false);
           setQueueError("");

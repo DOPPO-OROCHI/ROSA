@@ -1,6 +1,13 @@
 import { useEffect, useMemo, useState } from "react";
+import { resolveCardAssetVariantSrc, resolveHeroAssetVariantSrc } from "../lib/api";
+import type { Hero } from "../types";
 
 type QueueState = "idle" | "searching" | "pending_match" | "penalty";
+type QueueDeckCard = {
+  templateId: string;
+  name: string;
+  count: number;
+};
 
 type Props = {
   open: boolean;
@@ -10,6 +17,8 @@ type Props = {
   error: string;
   searchDurationSec: number;
   canQueue: boolean;
+  selectedHero: Hero | null;
+  deckCards: QueueDeckCard[];
   onClose: () => void;
   onFindMatch: () => void;
   onCancelSearch: () => void;
@@ -23,6 +32,8 @@ export function GameModePanel({
   error,
   searchDurationSec,
   canQueue,
+  selectedHero,
+  deckCards,
   onClose,
   onFindMatch,
   onCancelSearch,
@@ -97,18 +108,44 @@ export function GameModePanel({
 
       {searching ? (
         <div className="overlay queue-search-overlay" onClick={onCancelSearch}>
-          <section className="queue-search-panel surface" onClick={(event) => event.stopPropagation()}>
-            <div className="queue-search-panel__top">
-              <p className="eyebrow">ПОИСК МАТЧА</p>
-              <span className="queue-search-panel__timer">{searchTimer}</span>
-            </div>
+          <div className="queue-search-stack" onClick={(event) => event.stopPropagation()}>
+            <section className="queue-search-panel surface">
+              <div className="queue-search-panel__top">
+                <p className="eyebrow">ПОИСК МАТЧА</p>
+                <span className="queue-search-panel__timer">{searchTimer}</span>
+              </div>
 
-            <div className="queue-search-panel__status">{searchLabel}</div>
+              <div className="queue-search-panel__status">{searchLabel}</div>
 
-            <button type="button" className="queue-search-panel__cancel" onClick={onCancelSearch}>
-              ОТМЕНА
-            </button>
-          </section>
+              <button type="button" className="queue-search-panel__cancel" onClick={onCancelSearch}>
+                ОТМЕНА
+              </button>
+            </section>
+
+            <section className="queue-loadout surface">
+              <div className="queue-loadout__hero">
+                {selectedHero ? (
+                  <img
+                    src={resolveHeroAssetVariantSrc(selectedHero.hero_code, "battle_icon")}
+                    alt={selectedHero.name}
+                  />
+                ) : null}
+              </div>
+
+              <div className="queue-loadout__deck">
+                {deckCards.map((card) => (
+                  <article key={card.templateId} className="queue-loadout-card">
+                    <img
+                      className="queue-loadout-card__art"
+                      src={resolveCardAssetVariantSrc("battle", card.templateId, "view")}
+                      alt={card.name}
+                    />
+                    {card.count > 1 ? <span className="queue-loadout-card__badge">x{card.count}</span> : null}
+                  </article>
+                ))}
+              </div>
+            </section>
+          </div>
         </div>
       ) : null}
     </>
