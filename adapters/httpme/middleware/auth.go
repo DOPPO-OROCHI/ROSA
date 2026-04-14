@@ -22,6 +22,7 @@ import (
 	"gorm.io/gorm"
 )
 
+// ФУЛЛ СПИЗЖЕННАЯ У ИИ СХЕМА АВТОРИЗАЦИИ
 var (
 	ErrInitDataMissing      = errors.New("missing init data")
 	ErrInitDataBadFormat    = errors.New("bad init data")
@@ -39,7 +40,11 @@ type TokenStore struct {
 	ttl time.Duration
 }
 type tgInitUser struct {
-	ID int `json:"id"`
+	ID           int    `json:"id"`
+	Username     string `json:"username"`
+	FirstName    string `json:"first_name"`
+	LastName     string `json:"last_name"`
+	LanguageCode string `json:"language_code"`
 }
 type session struct {
 	UserID    uint
@@ -79,17 +84,17 @@ func AuthMiddleware(store *TokenStore) func(http.Handler) http.Handler {
 	}
 }
 
-func ValidateTelegramInitData(initDataRaw, botToken string, maxAge time.Duration) (int, error) {
+func ValidateTelegramInitData(initDataRaw, botToken string, maxAge time.Duration) (tgInitUser, error) {
 	if initDataRaw == "" {
-		return 0, ErrInitDataMissing
+		return tgInitUser{}, ErrInitDataMissing
 	}
 	values, err := url.ParseQuery(initDataRaw)
 	if err != nil {
-		return 0, ErrInitDataBadFormat
+		return tgInitUser{}, ErrInitDataBadFormat
 	}
 	hashHex := values.Get("hash")
 	if hashHex == "" {
-		return 0, ErrInitDataBadSignature
+		return tgInitUser{}, ErrInitDataBadSignature
 	}
 	values.Del("hash")
 	keys := make([]string, 0, len(values))
@@ -110,31 +115,31 @@ func ValidateTelegramInitData(initDataRaw, botToken string, maxAge time.Duration
 	expected := m.Sum(nil)
 	got, err := hex.DecodeString(hashHex)
 	if err != nil {
-		return 0, ErrInitDataBadSignature
+		return tgInitUser{}, ErrInitDataBadSignature
 	}
 	if !hmac.Equal(expected, got) {
-		return 0, ErrInitDataBadSignature
+		return tgInitUser{}, ErrInitDataBadSignature
 	}
 	authDataStr := values.Get("auth_date")
 	if authDataStr == "" {
-		return 0, ErrInitDataBadFormat
+		return tgInitUser{}, ErrInitDataBadFormat
 	}
 	authDate, err := strconv.ParseInt(authDataStr, 10, 64)
 	if err != nil || authDate <= 0 {
-		return 0, ErrInitDataBadFormat
+		return tgInitUser{}, ErrInitDataBadFormat
 	}
 	if time.Since(time.Unix(authDate, 0)) > maxAge {
-		return 0, ErrInitDataExpired
+		return tgInitUser{}, ErrInitDataExpired
 	}
 	userJSON := values.Get("user")
 	if userJSON == "" {
-		return 0, ErrInitDataBadUser
+		return tgInitUser{}, ErrInitDataBadUser
 	}
 	var u tgInitUser
 	if err := json.Unmarshal([]byte(userJSON), &u); err != nil {
-		return 0, ErrInitDataBadUser
+		return tgInitUser{}, ErrInitDataBadUser
 	}
-	return u.ID, nil
+	return u, nil
 }
 
 func (s *TokenStore) Validate(token string) (session, bool) {
