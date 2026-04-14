@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"TheWar/adapters/httpme/middleware"
-	"TheWar/adapters/telegram"
 	"TheWar/internal/domain/player"
 	"encoding/json"
 	"net/http"
@@ -46,27 +45,17 @@ func NewAuthTelegramHandler(d AuthTelegramDeps) http.HandlerFunc {
 			middleware.WriteErr(w, http.StatusBadRequest, "bad json")
 			return
 		}
-		tgUser, err := middleware.ValidateTelegramInitData(req.InitData, botToken, initDataMaxAge)
+		tgID, err := middleware.ValidateTelegramInitData(req.InitData, botToken, initDataMaxAge)
 		if err != nil {
 			middleware.WriteErr(w, http.StatusUnauthorized, "unauthorized")
 			return
 		}
-		if err := telegram.EnsureUser(d.DB, telegram.Profile{
-			TGID:      int64(tgUser.ID),
-			Username:  tgUser.Username,
-			FirstName: tgUser.FirstName,
-			LastName:  tgUser.LastName,
-			Language:  tgUser.LanguageCode,
-		}); err != nil {
-			middleware.WriteErr(w, http.StatusInternalServerError, "something went wrong")
-			return
-		}
 		var dbUser player.TelegramUser
-		if err := d.DB.Where("tg_id = ?", tgUser.ID).First(&dbUser).Error; err != nil {
+		if err := d.DB.Where("tg_id = ?", tgID).First(&dbUser).Error; err != nil {
 			middleware.WriteErr(w, http.StatusUnauthorized, "unauthorized")
 			return
 		}
-		token, exp, err := d.Store.Issue(dbUser.ID, tgUser.ID)
+		token, exp, err := d.Store.Issue(dbUser.ID, tgID)
 		if err != nil {
 			middleware.WriteErr(w, http.StatusInternalServerError, "something went wrong")
 			return
@@ -87,7 +76,7 @@ func NewAuthTelegramHandler(d AuthTelegramDeps) http.HandlerFunc {
 		})
 		middleware.WriteJSON(w, http.StatusOK, map[string]any{
 			"user_id": dbUser.ID,
-			"tg_id":   tgUser.ID,
+			"tg_id":   tgID,
 		})
 	}
 }

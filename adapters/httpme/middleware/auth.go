@@ -40,11 +40,7 @@ type TokenStore struct {
 	ttl time.Duration
 }
 type tgInitUser struct {
-	ID           int    `json:"id"`
-	Username     string `json:"username"`
-	FirstName    string `json:"first_name"`
-	LastName     string `json:"last_name"`
-	LanguageCode string `json:"language_code"`
+	ID int `json:"id"`
 }
 type session struct {
 	UserID    uint
@@ -84,17 +80,17 @@ func AuthMiddleware(store *TokenStore) func(http.Handler) http.Handler {
 	}
 }
 
-func ValidateTelegramInitData(initDataRaw, botToken string, maxAge time.Duration) (tgInitUser, error) {
+func ValidateTelegramInitData(initDataRaw, botToken string, maxAge time.Duration) (int, error) {
 	if initDataRaw == "" {
-		return tgInitUser{}, ErrInitDataMissing
+		return 0, ErrInitDataMissing
 	}
 	values, err := url.ParseQuery(initDataRaw)
 	if err != nil {
-		return tgInitUser{}, ErrInitDataBadFormat
+		return 0, ErrInitDataBadFormat
 	}
 	hashHex := values.Get("hash")
 	if hashHex == "" {
-		return tgInitUser{}, ErrInitDataBadSignature
+		return 0, ErrInitDataBadSignature
 	}
 	values.Del("hash")
 	keys := make([]string, 0, len(values))
@@ -115,31 +111,31 @@ func ValidateTelegramInitData(initDataRaw, botToken string, maxAge time.Duration
 	expected := m.Sum(nil)
 	got, err := hex.DecodeString(hashHex)
 	if err != nil {
-		return tgInitUser{}, ErrInitDataBadSignature
+		return 0, ErrInitDataBadSignature
 	}
 	if !hmac.Equal(expected, got) {
-		return tgInitUser{}, ErrInitDataBadSignature
+		return 0, ErrInitDataBadSignature
 	}
 	authDataStr := values.Get("auth_date")
 	if authDataStr == "" {
-		return tgInitUser{}, ErrInitDataBadFormat
+		return 0, ErrInitDataBadFormat
 	}
 	authDate, err := strconv.ParseInt(authDataStr, 10, 64)
 	if err != nil || authDate <= 0 {
-		return tgInitUser{}, ErrInitDataBadFormat
+		return 0, ErrInitDataBadFormat
 	}
 	if time.Since(time.Unix(authDate, 0)) > maxAge {
-		return tgInitUser{}, ErrInitDataExpired
+		return 0, ErrInitDataExpired
 	}
 	userJSON := values.Get("user")
 	if userJSON == "" {
-		return tgInitUser{}, ErrInitDataBadUser
+		return 0, ErrInitDataBadUser
 	}
 	var u tgInitUser
 	if err := json.Unmarshal([]byte(userJSON), &u); err != nil {
-		return tgInitUser{}, ErrInitDataBadUser
+		return 0, ErrInitDataBadUser
 	}
-	return u, nil
+	return u.ID, nil
 }
 
 func (s *TokenStore) Validate(token string) (session, bool) {
