@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import { GameModePanel } from "./components/GameModePanel";
 import { InventoryScreen } from "./components/InventoryScreen";
 import { MainMenu } from "./components/MainMenu";
+import { MatchFoundPanel } from "./components/MatchFoundPanel";
+import { BattleScreen } from "./components/battle/BattleScreen";
 import { request } from "./lib/api";
 import type {
   BattleCard,
@@ -15,10 +17,11 @@ import type {
   MeResponse,
   QueueStatusResponse,
 } from "./types";
+import type { MaskedBattleMatchState } from "./components/battle/types";
 
 const QUICK_USERS = ["dev", "roman", "test", "rosa"];
 
-type Screen = "menu" | "inventory";
+type Screen = "menu" | "inventory" | "battle";
 
 export function App() {
   const [screen, setScreen] = useState<Screen>("menu");
@@ -38,6 +41,10 @@ export function App() {
   const [queueBusy, setQueueBusy] = useState(false);
   const [queueError, setQueueError] = useState("");
   const [queueStatus, setQueueStatus] = useState<QueueStatusResponse>({ state: "idle" });
+  const [activeMatchId, setActiveMatchId] = useState<number | null>(null);
+  const [matchFoundVerdict, setMatchFoundVerdict] = useState<"idle" | "accepted" | "declined_self" | "declined_opponent" | "countdown">("idle");
+  const [matchFoundCountdown, setMatchFoundCountdown] = useState(3);
+  const [acceptedByMeLatch, setAcceptedByMeLatch] = useState(false);
 
   const selectedHero = heroes.find((hero) => hero.hero_code === selectedHeroCode) ?? heroes[0] ?? null;
   const deckCardCount = deckEntries.reduce((total, entry) => total + entry.count, 0);
@@ -63,6 +70,22 @@ export function App() {
     const status = await request<QueueStatusResponse>("/queue/status");
     setQueueStatus(status);
     setQueueError("");
+  }
+
+  async function loadActiveMatch() {
+    const matches = await request<MaskedBattleMatchState[]>("/matches");
+    const active = matches.find((match) => !match.finished);
+    if (active) {
+      setActiveMatchId(active.match_id);
+      if (queueStatus.state === "pending_match" || matchFoundVerdict === "countdown") {
+        setMatchFoundVerdict("countdown");
+        return active.match_id;
+      }
+      setScreen("battle");
+      return active.match_id;
+    }
+    setActiveMatchId(null);
+    return null;
   }
 
   async function loadSession() {
@@ -92,6 +115,7 @@ export function App() {
       .then(async () => {
         await loadInventory();
         await loadQueueStatus();
+        await loadActiveMatch();
       })
       .catch(() => {
         setMe(null);
@@ -102,6 +126,7 @@ export function App() {
         setDraftDeckEntries([]);
         setSelectedHeroCode("");
         setQueueStatus({ state: "idle" });
+        setActiveMatchId(null);
       })
       .finally(() => setBusy(false));
   }, []);
@@ -115,10 +140,62 @@ export function App() {
       void loadQueueStatus().catch(() => {
         setQueueStatus((current) => ({ ...current, state: "idle" }));
       });
+      void loadActiveMatch().catch(() => undefined);
     }, 1000);
 
     return () => window.clearInterval(id);
   }, [queueSearching]);
+
+  useEffect(() => {
+    if (queueStatus.state === "pending_match") {
+      if (queueStatus.accepted_by_me) {
+        setAcceptedByMeLatch(true);
+        setMatchFoundVerdict("accepted");
+      } else {
+        setMatchFoundVerdict("idle");
+      }
+      return;
+    }
+
+    if (queueStatus.state === "searching" && acceptedByMeLatch) {
+      setMatchFoundVerdict("declined_opponent");
+      const id = window.setTimeout(() => {
+        setMatchFoundVerdict("idle");
+        setAcceptedByMeLatch(false);
+      }, 3000);
+      return () => window.clearTimeout(id);
+    }
+
+    if (queueStatus.state === "penalty") {
+      const id = window.setTimeout(() => {
+        setMatchFoundVerdict("idle");
+        setAcceptedByMeLatch(false);
+      }, 3000);
+      return () => window.clearTimeout(id);
+    }
+  }, [acceptedByMeLatch, queueStatus.state, queueStatus.accepted_by_me]);
+
+  useEffect(() => {
+    if (matchFoundVerdict !== "countdown" || !activeMatchId) {
+      setMatchFoundCountdown(3);
+      return;
+    }
+
+    const id = window.setInterval(() => {
+      setMatchFoundCountdown((current) => {
+        if (current <= 1) {
+          window.clearInterval(id);
+          setScreen("battle");
+          setMatchFoundVerdict("idle");
+          setAcceptedByMeLatch(false);
+          return 0;
+        }
+        return current - 1;
+      });
+    }, 1000);
+
+    return () => window.clearInterval(id);
+  }, [activeMatchId, matchFoundVerdict]);
 
   async function login(nextUsername: string) {
     setBusy(true);
@@ -131,6 +208,7 @@ export function App() {
       await loadSession();
       await loadInventory();
       await loadQueueStatus();
+      await loadActiveMatch();
       setUsername(nextUsername);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Login failed");
@@ -156,6 +234,7 @@ export function App() {
       await loadSession();
       await loadInventory();
       await loadQueueStatus();
+      await loadActiveMatch();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Login failed");
     } finally {
@@ -231,6 +310,52 @@ export function App() {
     }
   }
 
+  async function acceptFoundMatch() {
+    setQueueBusy(true);
+    setQueueError("");
+    try {
+      const response = await request<QueueStatusResponse | MaskedBattleMatchState>("/queue/accept", {
+        method: "POST",
+      });
+      if ("match_id" in response) {
+        setActiveMatchId(response.match_id);
+        setMatchFoundVerdict("countdown");
+        return;
+      }
+      setQueueStatus((current) => ({
+        ...current,
+        state: response.state,
+      }));
+      setAcceptedByMeLatch(true);
+      setMatchFoundVerdict("accepted");
+      await loadQueueStatus();
+    } catch (err) {
+      setQueueError(err instanceof Error ? err.message : "НЕ УДАЛОСЬ ПРИНЯТЬ МАТЧ");
+    } finally {
+      setQueueBusy(false);
+    }
+  }
+
+  async function declineFoundMatch() {
+    setQueueBusy(true);
+    setQueueError("");
+    try {
+      await request("/queue/decline", {
+        method: "POST",
+      });
+      setMatchFoundVerdict("declined_self");
+      setQueueStatus((current) => ({ ...current, state: "penalty" }));
+      window.setTimeout(() => {
+        setScreen("menu");
+        setAcceptedByMeLatch(false);
+      }, 3000);
+    } catch (err) {
+      setQueueError(err instanceof Error ? err.message : "НЕ УДАЛОСЬ ОТКАЗАТЬСЯ");
+    } finally {
+      setQueueBusy(false);
+    }
+  }
+
   return (
     <main className="app-shell">
       {screen === "menu" ? (
@@ -249,7 +374,7 @@ export function App() {
           startMatchDisabled={queueSearching}
           onInventory={() => setScreen("inventory")}
         />
-      ) : (
+      ) : screen === "inventory" ? (
         <InventoryScreen
           draftDeckEntries={draftDeckEntries}
           savedDeckEntries={deckEntries}
@@ -259,7 +384,16 @@ export function App() {
           onDraftDeckChange={setDraftDeckEntries}
           onDeckSaved={setDeckEntries}
         />
-      )}
+      ) : activeMatchId && me ? (
+        <BattleScreen
+          currentUserId={me.user_id}
+          matchId={activeMatchId}
+          onLeaveToMenu={() => {
+            setActiveMatchId(null);
+            setScreen("menu");
+          }}
+        />
+      ) : null}
 
       <section className="card surface dev-panel">
         <div className="section-head">
@@ -328,6 +462,21 @@ export function App() {
         }}
         onFindMatch={joinQueue}
         onCancelSearch={leaveQueue}
+      />
+
+      <MatchFoundPanel
+        open={queueStatus.state === "pending_match" || matchFoundVerdict === "declined_self" || matchFoundVerdict === "declined_opponent" || matchFoundVerdict === "countdown"}
+        busy={queueBusy}
+        error={queueError}
+        acceptedByMe={Boolean(queueStatus.accepted_by_me) || acceptedByMeLatch}
+        acceptedByOpponent={Boolean(queueStatus.accepted_by_opponent)}
+        deadlineSec={Math.max(0, Math.ceil(((queueStatus.accept_deadline_at ? Date.parse(queueStatus.accept_deadline_at) : 0) - Date.now()) / 1000))}
+        verdict={matchFoundVerdict}
+        countdownSec={matchFoundCountdown}
+        playerRating={me?.rating}
+        opponentRating={queueStatus.opponent_user_id ?? 0}
+        onAccept={acceptFoundMatch}
+        onDecline={declineFoundMatch}
       />
     </main>
   );
