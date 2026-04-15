@@ -3,6 +3,7 @@ package cache
 import (
 	"TheWar/internal/domain/cards"
 	"TheWar/internal/domain/game"
+	"TheWar/internal/domain/heroes"
 	"sync"
 
 	"gorm.io/gorm"
@@ -91,29 +92,20 @@ func (c *ResolverCache) Reload(db *gorm.DB) error {
 		}
 	}
 	//а здесь мы заполняем структуру резолверов, наполняя ее нужными данными о всех сущностях, необходимых движку
+	var heroTemplates []heroes.CharacterTemplate
+	if err := db.Find(&heroTemplates).Error; err != nil {
+		return err
+	}
+	heroMap := make(map[string]heroes.CharacterTemplate, len(heroTemplates))
+	for _, t := range heroTemplates {
+		heroMap[t.CharacterCode] = t
+	}
 	res := game.Resolvers{
 		//заполняем героев
-		HeroAbility: func(herocode string) (game.HeroAbility, bool) {
-			switch herocode {
-			case "suprime_lider":
-				return game.SupremeLiderAbilitySpec{}, true
-			case "karn":
-				return game.KarnAbilitySpec{}, true
-			case "the_system":
-				return game.TheSystemAbilitySpec{}, true
-			case "imperial_commander":
-				return game.ImperialCommanderAbilitySpec{}, true
-			case "black_cell":
-				return game.BlackCellAbilitySpec{}, true
-			case "slavic_priest":
-				return game.SlavicPriestAbilitySpec{}, true
-			default:
-				return nil, false
-			}
-		},
 		//и передаем карты по ключу.
-		Battle: game.BattleMapResolver{M: battleMap},
-		Buff:   game.BuffMapResolver{M: buffMap},
+		HeroTemplate: &game.HeroTemplateMapResolver{M: heroMap},
+		Battle:       game.BattleMapResolver{M: battleMap},
+		Buff:         game.BuffMapResolver{M: buffMap},
 	}
 	/*И тут подробнее. Мы ставим лок здесь, чтобы никто не смог читать или писать с/в c.res и c.init
 	пока операция не завершилась. НО! Ниже у нас есть еще один мьютекс в GET, но там прикол в другом.

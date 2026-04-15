@@ -1,5 +1,7 @@
 package game
 
+import "TheWar/internal/domain/heroes"
+
 /*Важнейшый файл касающится взаимодействия доменной зоны и БД. Резолвер как таковой для меня в новинку,
 честно сказать, я вообще ничего не знал о том, что это, где применяется, как с этим работать и все такое.
 Так что да, идея частично спизженная у ГПТ. Но что такое резовлер ? В моем случае резолвер служит тем, что
@@ -43,10 +45,25 @@ func (r BuffMapResolver) GetBuffTemplate(id string) (BuffTemplate, bool) {
 /*А это нужно потому, что сюда мы будем записывать все то, что доставли из БД
 Сам по себе домен ничего не должен знать о том, что происходит в БД и особенно то,
 откуда берутся данные. Он работает чисто на контрактах*/
+
+type HeroTemplateResolver interface {
+	GetHeroTemplate(heroCode string) (heroes.CharacterTemplate, bool)
+}
+
+type HeroTemplateMapResolver struct {
+	M map[string]heroes.CharacterTemplate
+}
+
+func (h *HeroTemplateMapResolver) GetHeroTemplate(heroCode string) (heroes.CharacterTemplate, bool) {
+	t, ok := h.M[heroCode]
+	return t, ok
+}
+
 type Resolvers struct {
-	HeroAbility func(herocode string) (HeroAbility, bool) //<-геройские абилки
-	Battle      BattleTemplateResolver                    //<-сюда будем класть всю инфу о батл картах
-	Buff        BuffTemplateResolver                      //<-для бафов соответственно
+	// HeroAbility  func(herocode string) (HeroAbility, bool) //<-геройские абилки ---ВРЕМЕННО УБРАЛ ВООБЩЕ СКИЛЫ ГЕРОЕВ
+	HeroTemplate HeroTemplateResolver   //<-ищем все что связано со скиллом
+	Battle       BattleTemplateResolver //<-сюда будем класть всю инфу о батл картах
+	Buff         BuffTemplateResolver   //<-для бафов соответственно
 }
 
 /*Таким образом реализованы механизмы доставания данных из (пока что) БД. Домен ничего не знает об этом,

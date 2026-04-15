@@ -2,7 +2,6 @@ package game
 
 import (
 	"TheWar/internal/domain/cards"
-	"TheWar/internal/domain/heroes"
 	"errors"
 	"fmt"
 	"time"
@@ -644,84 +643,25 @@ func HeroAttack(m *MatchState,
 	return nil
 }
 
-func PlayHeroSpell(m *MatchState, a Action, r Resolvers) error {
-	if m.Finished {
-		return ErrMatchFinished
-	}
-	if a.PlayerIndex != m.ActivePlayer {
-		return ErrNotYourTurn
-	}
-	if m.Phase != PhaseMain {
-		return ErrWrongPhase
-	}
-	p := m.Players[a.PlayerIndex]
-	if p == nil {
-		return errors.New("nil player state")
-	}
-	if r.HeroAbility == nil {
-		return errors.New("hero ability resolver is nil")
-	}
-	ability, ok := r.HeroAbility(p.HeroCode)
-	if !ok || ability == nil {
-		return ErrHeroAbilityUnknown
-	}
-	spec := ability.Spec()
-	if p.HeroAbilityCooldown > 0 {
-		return ErrHeroAbilityOnCooldown
-	}
-	if p.Mana < spec.ManaCost {
-		return ErrNotEnoughMana
-	}
-	switch spec.Target {
-	case heroes.ENEMY_ANY:
-		if !a.AttackHero && a.TargetInstanceID == "" {
-			return ErrHeroAbilityBadTarget
-		}
-	case heroes.OWN_UNIT:
-		if a.AttackHero || a.TargetInstanceID == "" {
-			return ErrHeroAbilityBadTarget
-		}
-		if _, u := p.FindSlot(a.TargetInstanceID); u == nil {
-			return ErrHeroAbilityBadTarget
-		}
-	case heroes.ENEMY_UNIT:
-		if a.AttackHero || a.TargetInstanceID == "" {
-			return ErrHeroAbilityBadTarget
-		}
-		ep := m.Players[1-a.PlayerIndex]
-		if ep == nil {
-			return errors.New("nil enemy player state")
-		}
-		if _, u := ep.FindSlot(a.TargetInstanceID); u == nil {
-			return ErrHeroAbilityBadTarget
-		}
-	default:
-		return ErrHeroAbilityBadTarget
-	}
-	targetSlot := findTargetSlotForHeroSpell(m, a, spec)
-	snaps, err := buildHeroSpellShanpsBefore(m, a, spec)
-	if err != nil {
-		return err
-	}
-	if err := ability.Apply(m, a); err != nil {
-		return err
-	}
-	p.Mana -= spec.ManaCost
-	p.HeroAbilityCooldown = spec.CoolDown
-	targets := buildHeroSpellTargetsAfter(m, spec, snaps)
-	heroBase := HeroBaseKey(p.HeroCode)
-	m.Events = append(m.Events, Event{
-		Type:           string(EventHeroSpell),
-		PlayerIndex:    a.PlayerIndex,
-		SourceKind:     string(SourceHero),
-		SourceHeroCode: p.HeroCode,
-		VFXKey:         BuildVFXKey(heroBase, "spell"),
-		SFXKey:         BuildSFXKey(heroBase, "spell"),
-		TargetSlot:     targetSlot,
-		Targets:        targets,
-	})
-	return nil
-}
+//ВРЕМЕННО УБРАЛ ГЕРОЙСКИЕ СПОСОБНОСТИ ВООБЩЕ
+// func PlayHeroSpell(m *MatchState, a Action, r Resolvers) error {
+// 	if m.Finished {
+// 		return ErrMatchFinished
+// 	}
+// 	if a.PlayerIndex != m.ActivePlayer {
+// 		return ErrNotYourTurn
+// 	}
+// 	if m.Phase != PhaseMain {
+// 		return ErrWrongPhase
+// 	}
+// 	p := m.Players[a.PlayerIndex]
+// 	if p == nil {
+// 		return errors.New("nil player state")
+// 	}
+// 	if r.HeroAbility == nil {
+// 		return errors.New("hero ability resolver is nil")
+// 	}
+// }
 
 func PlayCardSkill(m *MatchState, a Action) error {
 	if m == nil {

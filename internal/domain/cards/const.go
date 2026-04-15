@@ -14,13 +14,3 @@ const (
 	Demonical  = "ВЕСПИД"
 	Healer     = "ХИЛЕР"
 )
-
-const (
-	CoolDownUpdate        = "cooldown_update"
-	HealthPointsUpdate    = "health_points_update"
-	MaxHealthPointsUpdate = "max_health_points_update"
-	DamageUpdate          = "damage_update"
-	MakeTankUpdate        = "make_tank"
-	SkillDamageUpdate     = "skill_damage_update"
-	SkillCooldownUpdate   = "skill_cooldown_update"
-)

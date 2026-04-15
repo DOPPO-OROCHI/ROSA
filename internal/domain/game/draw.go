@@ -118,8 +118,8 @@ func ApplyAction(m *MatchState, a Action, r Resolvers) error {
 		err = CardAttack(m, a.PlayerIndex, a.CardInstanceID, a.TargetInstanceID, a.AttackHero, r.Battle)
 	case ActionHeroAttack:
 		err = HeroAttack(m, a.PlayerIndex, a.TargetInstanceID, a.AttackHero)
-	case ActionPlayHeroSpell:
-		err = PlayHeroSpell(m, a, r)
+	// case ActionPlayHeroSpell: ВРЕМЕННО УБРАЛ ГЕРОЙСКИЕ СКИЛЛЫ ВООБЩЕ
+	// 	err = PlayHeroSpell(m, a, r)
 	case ActionEndTurn:
 		EndTurn(m)
 	case ActionPlayCardSkill:
