@@ -49,6 +49,13 @@ export function App() {
   const selectedHero = heroes.find((hero) => hero.hero_code === selectedHeroCode) ?? heroes[0] ?? null;
   const deckCardCount = deckEntries.reduce((total, entry) => total + entry.count, 0);
   const canJoinQueue = Boolean(selectedHeroCode) && deckCardCount === 20;
+  const queueHint = !selectedHeroCode && deckCardCount !== 20
+    ? "НЕТ ГЕРОЯ | НЕПОЛНАЯ ДЕКА"
+    : !selectedHeroCode
+      ? "НЕТ ГЕРОЯ"
+      : deckCardCount !== 20
+        ? "НЕПОЛНАЯ ДЕКА"
+        : "";
   const queueSearching = queueStatus.state === "searching" || queueStatus.state === "pending_match";
   const queueDeckCards = deckEntries
     .filter((entry) => entry.kind === "battle" && entry.count > 0)
@@ -388,6 +395,7 @@ export function App() {
         <BattleScreen
           currentUserId={me.user_id}
           matchId={activeMatchId}
+          heroes={heroes}
           onLeaveToMenu={() => {
             setActiveMatchId(null);
             setScreen("menu");
@@ -452,6 +460,7 @@ export function App() {
         queueState={queueStatus.state}
         busy={queueBusy}
         error={queueError}
+        queueHint={queueHint}
         searchDurationSec={queueStatus.search_duration_sec ?? 0}
         canQueue={canJoinQueue}
         selectedHero={selectedHero}

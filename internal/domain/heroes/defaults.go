@@ -43,7 +43,7 @@ var DefaultHeroTemplate = []CharacterTemplate{
 	{
 		Name:           "The System",
 		CharacterCode:  "the_system",
-		AttackPower:    1,
+		AttackPower:    3,
 		HealthPoints:   80,
 		AttackCooldown: 1,
 		Ability: AbilitySpec{
@@ -75,7 +75,7 @@ var DefaultHeroTemplate = []CharacterTemplate{
 	{
 		Name:           "Электро-Жрец",
 		CharacterCode:  "slavic_priest",
-		AttackPower:    5,
+		AttackPower:    6,
 		HealthPoints:   40,
 		AttackCooldown: 1,
 		Ability: AbilitySpec{
@@ -91,7 +91,7 @@ var DefaultHeroTemplate = []CharacterTemplate{
 	{
 		Name:           "УберЛиск",
 		CharacterCode:  "suprime_lider",
-		AttackPower:    2,
+		AttackPower:    5,
 		HealthPoints:   50,
 		AttackCooldown: 1,
 		Ability: AbilitySpec{

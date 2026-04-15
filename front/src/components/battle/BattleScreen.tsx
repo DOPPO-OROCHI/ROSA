@@ -4,25 +4,31 @@ import { AbilityBlock } from "./AbilityBlock";
 import { AttackBlock } from "./AttackBlock";
 import { BattleField } from "./BattleField";
 import { DeckCounter } from "./DeckCounter";
+import { Defeat } from "./Defeat";
+import { Draw } from "./Draw";
 import { EnemyCharacter } from "./EnemyCharacter";
 import { GamerCharacter } from "./GamerCharacter";
 import { GraveyardBlock } from "./GraveyardBlock";
 import { HandPanel } from "./HandPanel";
 import { LeaveMatchButton } from "./LeaveMatchButton";
+import { Victory } from "./Victory";
 import type { ApplyBattleActionRequest, MaskedBattleMatchState, MaskedBattlePlayerState } from "./types";
+import type { Hero } from "../../types";
 import "./battle.css";
 
 type Props = {
   currentUserId: number;
   matchId: number;
+  heroes: Hero[];
   onLeaveToMenu: () => void;
 };
 
-export function BattleScreen({ currentUserId, matchId, onLeaveToMenu }: Props) {
+export function BattleScreen({ currentUserId, matchId, heroes, onLeaveToMenu }: Props) {
   const [match, setMatch] = useState<MaskedBattleMatchState | null>(null);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+  const [outcome, setOutcome] = useState<"victory" | "defeat" | "draw" | null>(null);
 
   const playerIndex = useMemo(() => {
     if (!match) {
@@ -33,8 +39,50 @@ export function BattleScreen({ currentUserId, matchId, onLeaveToMenu }: Props) {
 
   const player = playerIndex >= 0 ? match?.players[playerIndex] ?? null : null;
   const enemy = playerIndex >= 0 ? match?.players[playerIndex === 0 ? 1 : 0] ?? null : null;
+  const playerHero = player ? heroes.find((hero) => hero.hero_code === player.hero_code) ?? null : null;
+  const enemyHero = enemy ? heroes.find((hero) => hero.hero_code === enemy.hero_code) ?? null : null;
+  const isPlayerTurn = Boolean(match) && playerIndex >= 0 && match?.active_player === playerIndex;
+  const activeTurnLabel = isPlayerTurn ? "ВАШ ХОД" : "ХОД ПРОТИВНИКА";
+  const turnNumber = Math.max(player?.turns ?? 0, enemy?.turns ?? 0, 1);
   const canEndTurn =
     Boolean(match) && playerIndex === match?.active_player && match?.phase === "MAIN" && !match?.finished && !busy;
+
+  useEffect(() => {
+    if (!match?.finished || playerIndex < 0 || outcome) {
+      return;
+    }
+
+    let nextOutcome: "victory" | "defeat" | "draw" | null = null;
+    if (match.result === "DRAW") {
+      nextOutcome = "draw";
+    } else if (
+      (match.result === "P1_WIN" && playerIndex === 0) ||
+      (match.result === "P2_WIN" && playerIndex === 1)
+    ) {
+      nextOutcome = "victory";
+    } else if (match.result === "P1_WIN" || match.result === "P2_WIN") {
+      nextOutcome = "defeat";
+    }
+
+    if (!nextOutcome) {
+      return;
+    }
+
+    setOutcome(nextOutcome);
+  }, [match, outcome, onLeaveToMenu, playerIndex]);
+
+  useEffect(() => {
+    if (!outcome) {
+      return;
+    }
+
+    const id = window.setTimeout(() => {
+      setOutcome(null);
+      onLeaveToMenu();
+    }, 2000);
+
+    return () => window.clearTimeout(id);
+  }, [onLeaveToMenu, outcome]);
 
   useEffect(() => {
     async function loadMatch() {
@@ -104,19 +152,31 @@ export function BattleScreen({ currentUserId, matchId, onLeaveToMenu }: Props) {
     <section className="battle-screen">
       <div className="battle-shell surface">
         <div className="battle-top">
-          <LeaveMatchButton
-            disabled={busy}
-            onLeave={() =>
-              void applyAction(
-                {
-                  type: "leave_match",
-                  expected_version: match.version,
-                },
-                true,
-              )
-            }
+          <div className="battle-top__header">
+            <LeaveMatchButton
+              disabled={busy}
+              onLeave={() =>
+                void applyAction(
+                  {
+                    type: "leave_match",
+                    expected_version: match.version,
+                  },
+                  true,
+                )
+              }
+            />
+            <div className="battle-turn-status" aria-live="polite">
+              <span className={`battle-turn-status__state ${isPlayerTurn ? "battle-turn-status__state--active" : ""}`}>
+                {activeTurnLabel}
+              </span>
+              <span className="battle-turn-status__turn">ХОД {turnNumber}</span>
+            </div>
+          </div>
+          <EnemyCharacter
+            player={enemy as MaskedBattlePlayerState}
+            maxHp={enemyHero?.health_points ?? enemy.hero_hp}
+            isActive={match.active_player !== playerIndex}
           />
-          <EnemyCharacter player={enemy as MaskedBattlePlayerState} />
         </div>
 
         <BattleField
@@ -139,7 +199,11 @@ export function BattleScreen({ currentUserId, matchId, onLeaveToMenu }: Props) {
           </div>
 
           <div className="battle-bottom__center">
-            <GamerCharacter player={player as MaskedBattlePlayerState} />
+            <GamerCharacter
+              player={player as MaskedBattlePlayerState}
+              maxHp={playerHero?.health_points ?? player.hero_hp}
+              isActive={match.active_player === playerIndex}
+            />
             <HandPanel hand={player.hand ?? []} />
           </div>
 
@@ -151,6 +215,9 @@ export function BattleScreen({ currentUserId, matchId, onLeaveToMenu }: Props) {
 
         {error ? <p className="battle-error">{error}</p> : null}
       </div>
+      {outcome === "victory" ? <Victory /> : null}
+      {outcome === "defeat" ? <Defeat /> : null}
+      {outcome === "draw" ? <Draw /> : null}
     </section>
   );
 }

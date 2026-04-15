@@ -20,9 +20,21 @@ type DeckEntry struct {
 
 // структура служащая для описания карт владения, нужна для сборки матча из колоды, структура которой описана выше
 type OwnedCardInfo struct {
-	GamerCardID uint
-	Copies      int
-	Level       int
+	GamerCardID   uint
+	Copies        int
+	Level         int
+	Name          string
+	Description   string
+	ManaCost      int
+	Attack        int
+	HealthPoints  int
+	CardType      string
+	ImageKey      string
+	AssetBaseKey  string
+	SplashRadius  int
+	BaseCooldown  int
+	HasSkill      bool
+	SkillImageKey string
 }
 
 /*
@@ -114,11 +126,23 @@ func BuildDeck(
 		for i := 0; i < e.Count; i++ {
 			deck = append(deck, CardsInMatch{
 				//присваиваем каждой карте уникальный айдишник
-				InstanceID:  NewInstanceID(),
-				Kind:        e.Kind,
-				TemplateID:  e.TemplateID,
-				GamerCardID: inf.GamerCardID,
-				CardLevel:   inf.Level,
+				InstanceID:    NewInstanceID(),
+				Kind:          e.Kind,
+				TemplateID:    e.TemplateID,
+				GamerCardID:   inf.GamerCardID,
+				CardLevel:     inf.Level,
+				Name:          inf.Name,
+				Description:   inf.Description,
+				ManaCost:      inf.ManaCost,
+				Attack:        inf.Attack,
+				HealthPoints:  inf.HealthPoints,
+				CardType:      inf.CardType,
+				ImageKey:      inf.ImageKey,
+				AssetBaseKey:  inf.AssetBaseKey,
+				SplashRadius:  inf.SplashRadius,
+				BaseCooldown:  inf.BaseCooldown,
+				HasSkill:      inf.HasSkill,
+				SkillImageKey: inf.SkillImageKey,
 			})
 		}
 	}

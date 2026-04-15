@@ -1337,6 +1337,14 @@ button {
   line-height: 1.3;
 }
 
+.game-mode-panel__hint {
+  margin: -4px 0 0;
+  color: rgba(255, 214, 154, 0.92);
+  font-size: 0.8rem;
+  line-height: 1.3;
+  text-align: center;
+}
+
 .queue-search-overlay {
   place-items: start center;
   padding: calc(18px + env(safe-area-inset-top)) 14px calc(22px + env(safe-area-inset-bottom));

@@ -17,6 +17,18 @@ export type BattleCardInMatch = {
   template_id: string;
   gamer_card_id: number;
   card_level: number;
+  name: string;
+  description: string;
+  mana_cost: number;
+  attack: number;
+  health_points: number;
+  card_type: string;
+  image_key: string;
+  asset_base_key: string;
+  splash_radius: number;
+  base_cooldown: number;
+  has_skill: boolean;
+  skill_image_key: string;
 };
 
 export type BattleUnitEffect = {

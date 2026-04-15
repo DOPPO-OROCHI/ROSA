@@ -15,6 +15,7 @@ type Props = {
   queueState: QueueState;
   busy: boolean;
   error: string;
+  queueHint: string;
   searchDurationSec: number;
   canQueue: boolean;
   selectedHero: Hero | null;
@@ -30,6 +31,7 @@ export function GameModePanel({
   queueState,
   busy,
   error,
+  queueHint,
   searchDurationSec,
   canQueue,
   selectedHero,
@@ -101,6 +103,7 @@ export function GameModePanel({
               {busy ? "ПОИСК..." : "НАЙТИ МАТЧ"}
             </button>
 
+            {queueHint ? <p className="game-mode-panel__hint">{queueHint}</p> : null}
             {error ? <p className="game-mode-panel__error">{error}</p> : null}
           </aside>
         </div>

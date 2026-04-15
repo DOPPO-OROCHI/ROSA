@@ -54,48 +54,60 @@ type PlayerState struct {
 
 /*Карты внутри матча. Или с какими картами пришел игрок в матч.*/
 type CardsInMatch struct {
-	InstanceID  string //<-уникальный айди карты (каждый матч разный айди)
-	Kind        string //<-тип картыю "battle" или "buff"
-	TemplateID  string //<-CodeString из шаблона карты
-	GamerCardID uint   //<-айдишник владеня карты (потенциально нужна для начисления опыта и тд)
-	CardLevel   int    //<-уровень карты, с которым пришел игрок в момент создания матча
+	InstanceID    string `json:"instance_id"`   //<-уникальный айди карты (каждый матч разный айди)
+	Kind          string `json:"kind"`          //<-тип картыю "battle" или "buff"
+	TemplateID    string `json:"template_id"`   //<-CodeString из шаблона карты
+	GamerCardID   uint   `json:"gamer_card_id"` //<-айдишник владеня карты (потенциально нужна для начисления опыта и тд)
+	CardLevel     int    `json:"card_level"`    //<-уровень карты, с которым пришел игрок в момент создания матча
+	Name          string `json:"name"`
+	Description   string `json:"description"`
+	ManaCost      int    `json:"mana_cost"`
+	Attack        int    `json:"attack"`
+	HealthPoints  int    `json:"health_points"`
+	CardType      string `json:"card_type"`
+	ImageKey      string `json:"image_key"`
+	AssetBaseKey  string `json:"asset_base_key"`
+	SplashRadius  int    `json:"splash_radius"`
+	BaseCooldown  int    `json:"base_cooldown"`
+	HasSkill      bool   `json:"has_skill"`
+	SkillImageKey string `json:"skill_image_key"`
 }
 
 /*Состояние отдельно взятой карты внутри матча*/
 type UnitState struct {
-	InstanceID      string //<-рандомносгенерированный айди
-	TemplateID      string //<-чертеж карты
-	GamerCardID     uint   //<-айдишник карты с владения
-	CardLevel       int    //<-уровень карты владения
-	HP              int    //<-это копия статки карты, на момент выхода на стол
-	MaxHP           int
-	Attack          int
-	SplashRadius    int
-	IsTank          bool
-	CardType        string
-	BaseCooldown    int
-	Cooldown        int
-	SummonedInTurn  int
-	ImageKey        string
-	AssetBaseKey    string
-	HasSkill        bool
-	SkillImageKey   string
-	Skill           cards.UnitSkillState
-	Effects         []UnitEffect
-	ResurrectedUsed bool
+	InstanceID      string               `json:"instance_id"`   //<-рандомносгенерированный айди
+	TemplateID      string               `json:"template_id"`   //<-чертеж карты
+	GamerCardID     uint                 `json:"gamer_card_id"` //<-айдишник карты с владения
+	CardLevel       int                  `json:"card_level"`    //<-уровень карты владения
+	HP              int                  `json:"hp"`            //<-это копия статки карты, на момент выхода на стол
+	MaxHP           int                  `json:"max_hp"`
+	Attack          int                  `json:"attack"`
+	SplashRadius    int                  `json:"splash_radius"`
+	IsTank          bool                 `json:"is_tank"`
+	CardType        string               `json:"card_type"`
+	BaseCooldown    int                  `json:"base_cooldown"`
+	Cooldown        int                  `json:"cooldown"`
+	SummonedInTurn  int                  `json:"summoned_in_turn"`
+	ImageKey        string               `json:"image_key"`
+	AssetBaseKey    string               `json:"asset_base_key"`
+	HasSkill        bool                 `json:"has_skill"`
+	SkillImageKey   string               `json:"skill_image_key"`
+	Skill           cards.UnitSkillState `json:"skill"`
+	Effects         []UnitEffect         `json:"effects"`
+	ResurrectedUsed bool                 `json:"resurrected_used"`
 }
 
 // эффект, или баф, который можно наложить на карту
 type UnitEffect struct {
-	EffectType       string //<-тип эффекта, бафа
-	TurnsLeft        int    //<-то, сколько ходов длится баф (важно, если 0-то баф перманентный)
-	Value            int    //<-величина бафа
-	ExtraValue       int    //<-специальное число под отражения (щиты)
-	SourceType       string //<-от кого пришел эффект
-	Polarity         string // <-типа бафф, дебаф
-	SourceInstanceID string //<-от кого пришел эффект ?
-	Dispellable      bool   //<-можно ли снять эффект ?
-	Targeting        string //<-это короче для эффектов после смерти (к примеру, взрыв после)
+	EffectType       string `json:"effect_type"`        //<-тип эффекта, бафа
+	TurnsLeft        int    `json:"turns_left"`         //<-то, сколько ходов длится баф (важно, если 0-то баф перманентный)
+	Value            int    `json:"value"`              //<-величина бафа
+	ExtraValue       int    `json:"extra_value"`        //<-специальное число под отражения (щиты)
+	SourceType       string `json:"source_type"`        //<-от кого пришел эффект
+	Polarity         string `json:"polarity"`           // <-типа бафф, дебаф
+	SourceInstanceID string `json:"source_instance_id"` //<-от кого пришел эффект ?
+	Dispellable      bool   `json:"dispellable"`        //<-можно ли снять эффект ?
+	Targeting        string `json:"targeting"`          //<-это короче для эффектов после смерти (к примеру, взрыв после)
 }
 
 //Ну вот и пошли косяки по разграничению доменов и DTO. Как уже говорил, я знаю об этом косяке, не надо тут это...

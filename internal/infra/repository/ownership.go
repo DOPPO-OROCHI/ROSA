@@ -59,7 +59,22 @@ func LoadOwnedBattleCards(tx *gorm.DB, userID uint) (map[string]game.OwnedCardIn
 	for _, r := range rows {
 		code := r.CardTemplate.CodeString
 		//заполняем всю инфу, превращая все гавно в полноценный рантайм компонент
-		info[code] = game.OwnedCardInfo{GamerCardID: r.ID, Copies: r.Copies, Level: r.CardLevel}
+		info[code] = game.OwnedCardInfo{GamerCardID: r.ID,
+			Copies:        r.Copies,
+			Level:         r.CardLevel,
+			Name:          r.CardTemplate.Name,
+			Description:   r.CardTemplate.Description,
+			ManaCost:      r.CardTemplate.ManaCost,
+			Attack:        r.CardTemplate.Attack,
+			HealthPoints:  r.CardTemplate.HealthPoints,
+			CardType:      r.CardTemplate.CardType,
+			ImageKey:      r.CardTemplate.ImageKey,
+			AssetBaseKey:  r.CardTemplate.AssetBaseKey,
+			SplashRadius:  r.CardTemplate.SplashRadius,
+			BaseCooldown:  r.CardTemplate.BaseCooldown,
+			HasSkill:      r.CardTemplate.HasSkill,
+			SkillImageKey: r.CardTemplate.SkillImageKey,
+		}
 		/*Вы можете спросить, а зачем отдельно брать мапу из копий? Вопрос резонный и честно я тупанул, но уже поздно
 		что то менять. Вторая мапа служит для быстрого входа в ValidateDeckList, где проверяются конкретно копии. Да,
 		окей, это тупо, потому что можно было просто передать r.Copies, но делать уже нехер.*/
@@ -78,7 +93,16 @@ func LoadOwnedBuff(tx *gorm.DB, userID uint) (map[string]game.OwnedCardInfo, map
 	copies := make(map[string]int, len(rows))
 	for _, r := range rows {
 		code := r.CardTemplate.CodeString
-		info[code] = game.OwnedCardInfo{GamerCardID: r.ID, Copies: r.Copies, Level: r.CardLevel}
+		info[code] = game.OwnedCardInfo{
+			GamerCardID:  r.ID,
+			Copies:       r.Copies,
+			Level:        r.CardLevel,
+			Name:         r.CardTemplate.Name,
+			Description:  r.CardTemplate.Description,
+			ManaCost:     r.CardTemplate.ManaCost,
+			ImageKey:     r.CardTemplate.ImageKey,
+			AssetBaseKey: r.CardTemplate.AssetBaseKey,
+		}
 		copies[code] = r.Copies
 	}
 	return info, copies, nil
