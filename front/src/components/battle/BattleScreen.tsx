@@ -1,7 +1,8 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { request } from "../../lib/api";
 import { AbilityBlock } from "./AbilityBlock";
 import { AttackBlock } from "./AttackBlock";
+import { BattleCardViewer, type BattleCardViewerOrigin } from "./BattleCardViewer";
 import { BattleField } from "./BattleField";
 import { DeckCounter } from "./DeckCounter";
 import { Defeat } from "./Defeat";
@@ -11,8 +12,9 @@ import { GamerCharacter } from "./GamerCharacter";
 import { GraveyardBlock } from "./GraveyardBlock";
 import { HandPanel } from "./HandPanel";
 import { LeaveMatchButton } from "./LeaveMatchButton";
+import { useCardAttack } from "./card_attack";
 import { Victory } from "./Victory";
-import type { ApplyBattleActionRequest, MaskedBattleMatchState, MaskedBattlePlayerState } from "./types";
+import type { ApplyBattleActionRequest, BattleCardInMatch, MaskedBattleMatchState, MaskedBattlePlayerState } from "./types";
 import type { Hero } from "../../types";
 import "./battle.css";
 
@@ -29,6 +31,10 @@ export function BattleScreen({ currentUserId, matchId, heroes, onLeaveToMenu }: 
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [outcome, setOutcome] = useState<"victory" | "defeat" | "draw" | null>(null);
+  const [previewCard, setPreviewCard] = useState<BattleCardInMatch | null>(null);
+  const [previewOrigin, setPreviewOrigin] = useState<BattleCardViewerOrigin | null>(null);
+  const [previewClosing, setPreviewClosing] = useState(false);
+  const shellRef = useRef<HTMLDivElement | null>(null);
 
   const playerIndex = useMemo(() => {
     if (!match) {
@@ -46,6 +52,61 @@ export function BattleScreen({ currentUserId, matchId, heroes, onLeaveToMenu }: 
   const turnNumber = Math.max(player?.turns ?? 0, enemy?.turns ?? 0, 1);
   const canEndTurn =
     Boolean(match) && playerIndex === match?.active_player && match?.phase === "MAIN" && !match?.finished && !busy;
+  const canPlaySelectedBattleCard =
+    Boolean(match) &&
+    playerIndex === match?.active_player &&
+    match?.phase === "MAIN" &&
+    !match?.finished &&
+    !busy &&
+    previewCard?.kind === "battle" &&
+    (player?.mana ?? 0) >= (previewCard?.mana_cost ?? 0);
+  const shellHeight = shellRef.current?.clientHeight ?? 0;
+
+  const cardAttack = useCardAttack({
+    player,
+    enemy,
+    isPlayerTurn,
+    busy,
+    finished: Boolean(match?.finished),
+    onAttack: async (attacker, target) => {
+      if (!match) {
+        return;
+      }
+      await applyAction({
+        type: "card_attack",
+        expected_version: match.version,
+        card_instance_id: attacker.instance_id,
+        target_instance_id: target.instance_id,
+      });
+    },
+  });
+
+  function mapOriginRect(rect?: DOMRect | null): BattleCardViewerOrigin | null {
+    const shellRect = shellRef.current?.getBoundingClientRect();
+    if (!rect || !shellRect) {
+      return null;
+    }
+
+    return {
+      left: rect.left - shellRect.left,
+      top: rect.top - shellRect.top,
+      width: rect.width,
+      height: rect.height,
+    };
+  }
+
+  function handlePreview(card: BattleCardInMatch | null, originRect?: DOMRect) {
+    if (!card) {
+      setPreviewClosing(true);
+      cardAttack.clearSelection();
+      return;
+    }
+
+    cardAttack.clearSelection();
+    setPreviewOrigin(mapOriginRect(originRect));
+    setPreviewCard(card);
+    setPreviewClosing(false);
+  }
 
   useEffect(() => {
     if (!match?.finished || playerIndex < 0 || outcome) {
@@ -150,7 +211,7 @@ export function BattleScreen({ currentUserId, matchId, heroes, onLeaveToMenu }: 
 
   return (
     <section className="battle-screen">
-      <div className="battle-shell surface">
+      <div ref={shellRef} className="battle-shell surface">
         <div className="battle-top">
           <div className="battle-top__header">
             <LeaveMatchButton
@@ -179,18 +240,52 @@ export function BattleScreen({ currentUserId, matchId, heroes, onLeaveToMenu }: 
           />
         </div>
 
-        <BattleField
-          match={match}
-          enemy={enemy as MaskedBattlePlayerState}
-          player={player as MaskedBattlePlayerState}
-          canEndTurn={canEndTurn}
-          onEndTurn={() =>
-            void applyAction({
-              type: "end_turn",
-              expected_version: match.version,
-            })
-          }
-        />
+          <BattleField
+            match={match}
+            enemy={enemy as MaskedBattlePlayerState}
+            player={player as MaskedBattlePlayerState}
+            canEndTurn={canEndTurn}
+            canPlaySelectedBattleCard={Boolean(canPlaySelectedBattleCard)}
+            selectedAttackerId={cardAttack.selectedAttackerId}
+            attackTargetIds={cardAttack.attackTargets}
+            attackHint={cardAttack.infoMessage}
+            onEndTurn={() =>
+              void applyAction({
+                type: "end_turn",
+                expected_version: match.version,
+              })
+            }
+            onPlayerUnitSelect={(unit) => {
+              setPreviewClosing(true);
+              cardAttack.selectAttacker(unit);
+            }}
+            onEnemyUnitSelect={(unit) => {
+              setPreviewClosing(true);
+              void cardAttack.tryAttack(unit);
+            }}
+            onBoardClearSelection={() => {
+              setPreviewClosing(true);
+              cardAttack.clearSelection();
+            }}
+            onPlayBattleCard={(slotIndex) => {
+              if (!previewCard || previewCard.kind !== "battle") {
+                cardAttack.clearSelection();
+                return;
+              }
+
+              void applyAction({
+                type: "play_battle_card",
+                expected_version: match.version,
+                card_instance_id: previewCard.instance_id,
+                target_slot: slotIndex,
+              }).then(() => {
+                cardAttack.clearSelection();
+                setPreviewClosing(false);
+                setPreviewCard(null);
+                setPreviewOrigin(null);
+              });
+            }}
+          />
 
         <div className="battle-bottom">
           <div className="battle-bottom__hero-row">
@@ -222,10 +317,24 @@ export function BattleScreen({ currentUserId, matchId, heroes, onLeaveToMenu }: 
           </div>
 
           <div className="battle-bottom__hand">
-            <HandPanel hand={player.hand ?? []} />
+            <HandPanel hand={player.hand ?? []} selectedCardId={previewCard?.instance_id ?? ""} onPreview={handlePreview} />
           </div>
         </div>
 
+        {previewCard ? (
+          <BattleCardViewer
+            card={previewCard}
+            origin={previewOrigin}
+            shellHeight={shellHeight}
+            closing={previewClosing}
+            onClose={() => setPreviewClosing(true)}
+            onExited={() => {
+              setPreviewClosing(false);
+              setPreviewCard(null);
+              setPreviewOrigin(null);
+            }}
+          />
+        ) : null}
         {error ? <p className="battle-error">{error}</p> : null}
       </div>
       {outcome === "victory" ? <Victory /> : null}

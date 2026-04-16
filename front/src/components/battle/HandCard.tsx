@@ -1,16 +1,45 @@
 import { resolveCardImageSrc } from "../../lib/api";
 import type { BattleCardInMatch } from "./types";
+import type { CSSProperties, MouseEvent } from "react";
 
 type Props = {
   card: BattleCardInMatch;
   selected?: boolean;
+  count?: number;
+  stackIndex?: number;
+  stacked?: boolean;
+  fanAngle?: number;
+  fanDrop?: number;
+  offsetX?: number;
+  onOpen?: (cardRect: DOMRect) => void;
 };
 
-export function HandCard({ card, selected = false }: Props) {
+export function HandCard({
+  card,
+  selected = false,
+  count = 1,
+  stackIndex = 0,
+  stacked = false,
+  fanAngle = 0,
+  fanDrop = 0,
+  offsetX = 0,
+  onOpen,
+}: Props) {
   const isBattleCard = card.kind === "battle";
+  const lift = selected ? -14 : -4 + fanDrop;
+  const style: CSSProperties = {
+    zIndex: stackIndex + 1,
+    left: `calc(50% + ${offsetX}px)`,
+    transform: `translateX(-50%) translateY(${lift}px) rotate(${fanAngle}deg)`,
+  };
 
   return (
-    <button type="button" className={`battle-hand-card ${selected ? "battle-hand-card--selected" : ""}`}>
+    <button
+      type="button"
+      className={`battle-hand-card ${selected ? "battle-hand-card--selected" : ""} ${stacked ? "battle-hand-card--stacked" : ""}`}
+      style={style}
+      onClick={(event: MouseEvent<HTMLButtonElement>) => onOpen?.(event.currentTarget.getBoundingClientRect())}
+    >
       <div className="inventory-card__frame">
         <img
           className="inventory-card__art"
@@ -41,6 +70,7 @@ export function HandCard({ card, selected = false }: Props) {
             </div>
           </>
         ) : null}
+        {count > 1 ? <span className="battle-hand-card__count">x{count}</span> : null}
       </div>
     </button>
   );
