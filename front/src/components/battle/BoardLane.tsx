@@ -7,6 +7,8 @@ type Props = {
   canPlayIntoEmpty?: boolean;
   selectedUnitId?: string;
   targetUnitIds?: string[];
+  animatingUnitId?: string;
+  hitUnitIds?: string[];
   onFilledSlotClick?: (unit: BattleUnitState, slotIndex: number) => void;
   onEmptySlotClick?: (slotIndex: number) => void;
 };
@@ -17,6 +19,8 @@ export function BoardLane({
   canPlayIntoEmpty = false,
   selectedUnitId = "",
   targetUnitIds = [],
+  animatingUnitId = "",
+  hitUnitIds = [],
   onFilledSlotClick,
   onEmptySlotClick,
 }: Props) {
@@ -30,6 +34,8 @@ export function BoardLane({
           playable={unit == null && canPlayIntoEmpty}
           selected={Boolean(unit && unit.instance_id === selectedUnitId)}
           attackTarget={Boolean(unit && targetUnitIds.includes(unit.instance_id))}
+          animating={Boolean(unit && unit.instance_id === animatingUnitId)}
+          hit={Boolean(unit && hitUnitIds.includes(unit.instance_id))}
           onClick={
             unit
               ? () => onFilledSlotClick?.(unit, index)

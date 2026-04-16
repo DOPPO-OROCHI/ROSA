@@ -2,8 +2,11 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { request } from "../../lib/api";
 import { AbilityBlock } from "./AbilityBlock";
 import { AttackBlock } from "./AttackBlock";
+import { CardAttackAnimation, type CardAttackAnimationState } from "./CardAttackAnimation";
 import { BattleCardViewer, type BattleCardViewerOrigin } from "./BattleCardViewer";
 import { BattleField } from "./BattleField";
+import { BattleFloatingNumbers, type FloatingNumber } from "./BattleFloatingNumbers";
+import { BattleInfoToast } from "./BattleInfoToast";
 import { DeckCounter } from "./DeckCounter";
 import { Defeat } from "./Defeat";
 import { Draw } from "./Draw";
@@ -13,6 +16,8 @@ import { GraveyardBlock } from "./GraveyardBlock";
 import { HandPanel } from "./HandPanel";
 import { LeaveMatchButton } from "./LeaveMatchButton";
 import { useCardAttack } from "./card_attack";
+import { useOnHitEffects } from "./on_hit_effects";
+import { BattlePlayAnimations, useOnPlayEffects } from "./on_play_effects";
 import { Victory } from "./Victory";
 import type { ApplyBattleActionRequest, BattleCardInMatch, MaskedBattleMatchState, MaskedBattlePlayerState } from "./types";
 import type { Hero } from "../../types";
@@ -34,7 +39,10 @@ export function BattleScreen({ currentUserId, matchId, heroes, onLeaveToMenu }: 
   const [previewCard, setPreviewCard] = useState<BattleCardInMatch | null>(null);
   const [previewOrigin, setPreviewOrigin] = useState<BattleCardViewerOrigin | null>(null);
   const [previewClosing, setPreviewClosing] = useState(false);
+  const [attackAnimation, setAttackAnimation] = useState<CardAttackAnimationState | null>(null);
+  const [floatingNumbers, setFloatingNumbers] = useState<FloatingNumber[]>([]);
   const shellRef = useRef<HTMLDivElement | null>(null);
+  const lastProcessedVersionRef = useRef(0);
 
   const playerIndex = useMemo(() => {
     if (!match) {
@@ -60,7 +68,105 @@ export function BattleScreen({ currentUserId, matchId, heroes, onLeaveToMenu }: 
     !busy &&
     previewCard?.kind === "battle" &&
     (player?.mana ?? 0) >= (previewCard?.mana_cost ?? 0);
+  const shellWidth = shellRef.current?.clientWidth ?? 0;
   const shellHeight = shellRef.current?.clientHeight ?? 0;
+
+  function getUnitRect(instanceId: string) {
+    const shell = shellRef.current;
+    if (!shell || !instanceId) {
+      return null;
+    }
+
+    const shellRect = shell.getBoundingClientRect();
+    const node = shell.querySelector<HTMLElement>(`[data-unit-instance-id="${instanceId}"]`);
+    if (!node) {
+      return null;
+    }
+
+    const rect = node.getBoundingClientRect();
+    return {
+      left: rect.left - shellRect.left,
+      top: rect.top - shellRect.top,
+      width: rect.width,
+      height: rect.height,
+      centerX: rect.left - shellRect.left + rect.width / 2,
+      centerY: rect.top - shellRect.top + rect.height / 2,
+    };
+  }
+
+  function spawnFloatingNumbers(nextMatch: MaskedBattleMatchState) {
+    const shell = shellRef.current;
+    if (!shell || !nextMatch.events?.length) {
+      return;
+    }
+
+    const shellRect = shell.getBoundingClientRect();
+    const entries: FloatingNumber[] = [];
+
+    nextMatch.events.forEach((event, eventIndex) => {
+      const isHealEvent = event.type.toLowerCase().includes("heal");
+
+      event.targets?.forEach((target, targetIndex) => {
+        if (!target.instance_id || !target.amount || target.amount <= 0) {
+          return;
+        }
+        if (target.instance_id.startsWith("hero:")) {
+          return;
+        }
+
+        const node = shell.querySelector<HTMLElement>(`[data-unit-instance-id="${target.instance_id}"]`);
+        if (!node) {
+          return;
+        }
+
+        const rect = node.getBoundingClientRect();
+        entries.push({
+          id: `${nextMatch.version}-${eventIndex}-${targetIndex}-${target.instance_id}`,
+          left: rect.left - shellRect.left + rect.width / 2,
+          top: rect.top - shellRect.top + rect.height * 0.18,
+          amount: target.amount,
+          kind: isHealEvent ? "heal" : "damage",
+        });
+      });
+    });
+
+    if (entries.length === 0) {
+      return;
+    }
+
+    setFloatingNumbers((current) => [...current, ...entries]);
+    window.setTimeout(() => {
+      setFloatingNumbers((current) => current.filter((entry) => !entries.some((added) => added.id === entry.id)));
+    }, 2000);
+  }
+
+  async function playCardAttackAnimation(attacker: MaskedBattlePlayerState["table"][number], target: MaskedBattlePlayerState["table"][number]) {
+    if (!attacker || !target) {
+      return;
+    }
+
+    const from = getUnitRect(attacker.instance_id);
+    const to = getUnitRect(target.instance_id);
+    if (!from || !to) {
+      return;
+    }
+
+    await new Promise<void>((resolve) => {
+      setAttackAnimation({
+        attacker,
+        from: {
+          left: from.left,
+          top: from.top,
+          width: from.width,
+          height: from.height,
+        },
+        dx: to.centerX - from.centerX,
+        dy: to.centerY - from.centerY,
+      });
+
+      window.setTimeout(resolve, 460);
+    });
+  }
 
   const cardAttack = useCardAttack({
     player,
@@ -72,13 +178,28 @@ export function BattleScreen({ currentUserId, matchId, heroes, onLeaveToMenu }: 
       if (!match) {
         return;
       }
-      await applyAction({
-        type: "card_attack",
-        expected_version: match.version,
-        card_instance_id: attacker.instance_id,
-        target_instance_id: target.instance_id,
-      });
+      await Promise.all([
+        playCardAttackAnimation(attacker, target),
+        (async () => {
+          await new Promise((resolve) => window.setTimeout(resolve, 190));
+          await applyAction({
+            type: "card_attack",
+            expected_version: match.version,
+            card_instance_id: attacker.instance_id,
+            target_instance_id: target.instance_id,
+          });
+        })(),
+      ]);
     },
+  });
+  const onHitEffects = useOnHitEffects(match);
+  const onPlayEffects = useOnPlayEffects({
+    version: match?.version ?? 0,
+    playerTable: player?.table ?? [],
+    enemyTable: enemy?.table ?? [],
+    shellWidth,
+    shellHeight,
+    getUnitRect,
   });
 
   function mapOriginRect(rect?: DOMRect | null): BattleCardViewerOrigin | null {
@@ -144,6 +265,15 @@ export function BattleScreen({ currentUserId, matchId, heroes, onLeaveToMenu }: 
 
     return () => window.clearTimeout(id);
   }, [onLeaveToMenu, outcome]);
+
+  useEffect(() => {
+    if (!match || match.version <= lastProcessedVersionRef.current) {
+      return;
+    }
+
+    lastProcessedVersionRef.current = match.version;
+    spawnFloatingNumbers(match);
+  }, [match]);
 
   useEffect(() => {
     async function loadMatch() {
@@ -249,6 +379,8 @@ export function BattleScreen({ currentUserId, matchId, heroes, onLeaveToMenu }: 
             selectedAttackerId={cardAttack.selectedAttackerId}
             attackTargetIds={cardAttack.attackTargets}
             attackHint={cardAttack.infoMessage}
+            animatingUnitId={attackAnimation?.attacker.instance_id ?? ""}
+            hitUnitIds={onHitEffects.hitUnitIds}
             onEndTurn={() =>
               void applyAction({
                 type: "end_turn",
@@ -335,7 +467,10 @@ export function BattleScreen({ currentUserId, matchId, heroes, onLeaveToMenu }: 
             }}
           />
         ) : null}
-        {error ? <p className="battle-error">{error}</p> : null}
+        <BattlePlayAnimations animations={onPlayEffects.animations} onDone={onPlayEffects.removeAnimation} />
+        {attackAnimation ? <CardAttackAnimation state={attackAnimation} onDone={() => setAttackAnimation(null)} /> : null}
+        <BattleFloatingNumbers numbers={floatingNumbers} />
+        {error ? <BattleInfoToast message={error} /> : null}
       </div>
       {outcome === "victory" ? <Victory /> : null}
       {outcome === "defeat" ? <Defeat /> : null}

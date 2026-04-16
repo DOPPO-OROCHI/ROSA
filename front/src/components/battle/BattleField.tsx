@@ -12,6 +12,8 @@ type Props = {
   selectedAttackerId?: string;
   attackTargetIds?: string[];
   attackHint?: string;
+  animatingUnitId?: string;
+  hitUnitIds?: string[];
   onEndTurn: () => void;
   onPlayerUnitSelect: (unit: BattleUnitState) => void;
   onEnemyUnitSelect: (unit: BattleUnitState) => void;
@@ -28,6 +30,8 @@ export function BattleField({
   selectedAttackerId = "",
   attackTargetIds = [],
   attackHint = "",
+  animatingUnitId = "",
+  hitUnitIds = [],
   onEndTurn,
   onPlayerUnitSelect,
   onEnemyUnitSelect,
@@ -41,6 +45,8 @@ export function BattleField({
           units={enemy.table}
           side="enemy"
           targetUnitIds={attackTargetIds}
+          animatingUnitId={animatingUnitId}
+          hitUnitIds={hitUnitIds}
           onFilledSlotClick={onEnemyUnitSelect}
           onEmptySlotClick={onBoardClearSelection}
         />
@@ -57,6 +63,8 @@ export function BattleField({
           side="player"
           selectedUnitId={selectedAttackerId}
           canPlayIntoEmpty={Boolean(canPlaySelectedBattleCard)}
+          animatingUnitId={animatingUnitId}
+          hitUnitIds={hitUnitIds}
           onFilledSlotClick={onPlayerUnitSelect}
           onEmptySlotClick={(slotIndex) => {
             if (canPlaySelectedBattleCard) {

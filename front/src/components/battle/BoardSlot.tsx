@@ -8,10 +8,12 @@ type Props = {
   playable?: boolean;
   selected?: boolean;
   attackTarget?: boolean;
+  animating?: boolean;
+  hit?: boolean;
   onClick?: () => void;
 };
 
-export function BoardSlot({ unit, side, playable = false, selected = false, attackTarget = false, onClick }: Props) {
+export function BoardSlot({ unit, side, playable = false, selected = false, attackTarget = false, animating = false, hit = false, onClick }: Props) {
   const skillLabel = unit ? (unit.cooldown > 0 ? `CD ${unit.cooldown}` : "SKILL") : "";
   const primaryValue = unit ? getBoardAttackDisplayValue(unit) : 0;
   const primaryKind = unit ? getBoardAttackDisplayKind(unit) : "attack";
@@ -19,7 +21,8 @@ export function BoardSlot({ unit, side, playable = false, selected = false, atta
   return (
     <button
       type="button"
-      className={`battle-board-slot battle-board-slot--${side} ${unit ? "battle-board-slot--filled" : ""} ${playable ? "battle-board-slot--playable" : ""} ${selected ? "battle-board-slot--selected" : ""} ${attackTarget ? "battle-board-slot--attack-target" : ""}`}
+      className={`battle-board-slot battle-board-slot--${side} ${unit ? "battle-board-slot--filled" : ""} ${playable ? "battle-board-slot--playable" : ""} ${selected ? "battle-board-slot--selected" : ""} ${attackTarget ? "battle-board-slot--attack-target" : ""} ${animating ? "battle-board-slot--animating" : ""} ${hit ? "battle-board-slot--hit" : ""}`}
+      data-unit-instance-id={unit?.instance_id ?? ""}
       onClick={onClick}
       disabled={!onClick}
     >
