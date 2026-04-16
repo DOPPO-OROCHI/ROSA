@@ -193,23 +193,36 @@ export function BattleScreen({ currentUserId, matchId, heroes, onLeaveToMenu }: 
         />
 
         <div className="battle-bottom">
-          <div className="battle-bottom__side battle-bottom__side--left">
-            <GraveyardBlock count={player.discard_count ?? player.discard?.length ?? 0} />
-            <AttackBlock attack={player.hero_attack_power} cooldown={player.hero_attack_cooldown} />
+          <div className="battle-bottom__hero-row">
+            <div className="battle-bottom__cluster battle-bottom__cluster--left">
+              <div className="battle-bottom__mini">
+                <GraveyardBlock count={player.discard_count ?? player.discard?.length ?? 0} />
+              </div>
+              <div className="battle-bottom__main-block">
+                <AttackBlock attack={player.hero_attack_power} cooldown={player.hero_attack_cooldown} />
+              </div>
+            </div>
+
+            <div className="battle-bottom__hero">
+              <GamerCharacter
+                player={player as MaskedBattlePlayerState}
+                maxHp={playerHero?.health_points ?? player.hero_hp}
+                isActive={match.active_player === playerIndex}
+              />
+            </div>
+
+            <div className="battle-bottom__cluster battle-bottom__cluster--right">
+              <div className="battle-bottom__main-block">
+                <AbilityBlock cooldown={player.hero_ability_cooldown} manaCost={player.hero_ability_mana_cost ?? 0} />
+              </div>
+              <div className="battle-bottom__mini">
+                <DeckCounter count={player.deck_count ?? player.deck?.length ?? 0} />
+              </div>
+            </div>
           </div>
 
-          <div className="battle-bottom__center">
-            <GamerCharacter
-              player={player as MaskedBattlePlayerState}
-              maxHp={playerHero?.health_points ?? player.hero_hp}
-              isActive={match.active_player === playerIndex}
-            />
+          <div className="battle-bottom__hand">
             <HandPanel hand={player.hand ?? []} />
-          </div>
-
-          <div className="battle-bottom__side battle-bottom__side--right">
-            <AbilityBlock cooldown={player.hero_ability_cooldown} manaCost={player.hero_ability_mana_cost ?? 0} />
-            <DeckCounter count={player.deck_count ?? player.deck?.length ?? 0} />
           </div>
         </div>
 

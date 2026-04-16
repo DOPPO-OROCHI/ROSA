@@ -244,27 +244,43 @@
 
 .battle-bottom {
   display: grid;
-  grid-template-columns: 64px minmax(0, 1fr) 64px;
   gap: 10px;
-  align-items: end;
 }
 
-.battle-bottom__side {
+.battle-bottom__hero-row {
   display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  align-items: center;
+  gap: 10px;
+}
+
+.battle-bottom__cluster {
+  display: grid;
+  grid-template-columns: 54px minmax(0, 84px);
+  align-items: center;
   gap: 8px;
 }
 
-.battle-bottom__center {
+.battle-bottom__cluster--right {
+  grid-template-columns: minmax(0, 84px) 54px;
+}
+
+.battle-bottom__hero {
   display: grid;
-  gap: 10px;
   justify-items: center;
+}
+
+.battle-bottom__mini,
+.battle-bottom__main-block,
+.battle-bottom__hand {
+  min-width: 0;
 }
 
 .battle-attack,
 .battle-ability,
 .battle-deck-counter,
 .battle-graveyard {
-  min-height: 84px;
+  min-height: 74px;
   border-radius: 18px;
   border: 1px solid var(--battle-line);
   background: rgba(10, 14, 24, 0.72);
@@ -310,6 +326,16 @@
   gap: 6px;
   overflow-x: auto;
   position: relative;
+}
+
+.battle-bottom__mini .battle-graveyard,
+.battle-bottom__mini .battle-deck-counter {
+  min-height: 72px;
+}
+
+.battle-bottom__main-block .battle-attack,
+.battle-bottom__main-block .battle-ability {
+  min-height: 78px;
 }
 
 .battle-hand-card {
