@@ -1,3 +1,4 @@
+import { useEffect, useRef } from "react";
 import { resolveHeroAssetVariantSrc } from "../../lib/api";
 import type { MaskedBattlePlayerState } from "./types";
 
@@ -6,6 +7,14 @@ type Props = {
   maxHp: number;
   side: "player" | "enemy";
   isActive?: boolean;
+  attackTarget?: boolean;
+  heroInstanceId?: string;
+  hitToken?: number;
+  attackAnimation?: {
+    dx: number;
+    dy: number;
+  } | null;
+  onClick?: () => void;
 };
 
 const HERO_MANA_CAP = 10;
@@ -53,7 +62,17 @@ function buildManaSegments(startAngle: number, endAngle: number, segments: numbe
   });
 }
 
-export function CharacterBlock({ player, maxHp, side, isActive = false }: Props) {
+export function CharacterBlock({
+  player,
+  maxHp,
+  side,
+  isActive = false,
+  attackTarget = false,
+  heroInstanceId = "",
+  hitToken = 0,
+  attackAnimation = null,
+  onClick,
+}: Props) {
   const hpRatio = clamp01(player.hero_hp / Math.max(1, maxHp));
   const hpOnTop = side === "player";
   const manaMax = Math.max(player.mana, Math.min(Math.max(player.turns, 1), HERO_MANA_CAP));
@@ -67,10 +86,37 @@ export function CharacterBlock({ player, maxHp, side, isActive = false }: Props)
     ? buildManaSegments(bottomStart, bottomEnd, manaMax)
     : buildManaSegments(topStart, topEnd, manaMax);
   const activeManaCount = Math.max(0, Math.min(player.mana, manaMax));
+  const avatarRef = useRef<HTMLButtonElement | null>(null);
+
+  useEffect(() => {
+    if (!hitToken || !avatarRef.current) {
+      return;
+    }
+
+    const node = avatarRef.current;
+    node.classList.remove("battle-character__avatar--hit");
+    void node.offsetWidth;
+    node.classList.add("battle-character__avatar--hit");
+
+    const timeoutId = window.setTimeout(() => {
+      node.classList.remove("battle-character__avatar--hit");
+    }, 320);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [hitToken]);
 
   return (
     <section className={`battle-character battle-character--${side}`}>
-      <div className={`battle-character__avatar ${isActive ? "battle-character__avatar--active" : ""}`}>
+      <button
+        ref={avatarRef}
+        type="button"
+        className={`battle-character__avatar ${isActive ? "battle-character__avatar--active" : ""} ${attackTarget ? "battle-character__avatar--attack-target" : ""} ${attackAnimation ? "battle-character__avatar--attacking" : ""}`}
+        data-unit-instance-id={heroInstanceId}
+        data-hero-side={side}
+        data-hero-code={player.hero_code}
+        onClick={onClick}
+        disabled={!onClick}
+      >
         <svg className="battle-character__ring" viewBox={`0 0 ${ARC_SIZE} ${ARC_SIZE}`} aria-hidden="true">
           <path className="battle-character__arc-track" d={hpPath} pathLength={ARC_LENGTH} />
           <path className="battle-character__arc battle-character__arc--hp" d={hpPath} pathLength={ARC_LENGTH} style={hpRatioStyle} />
@@ -104,7 +150,7 @@ export function CharacterBlock({ player, maxHp, side, isActive = false }: Props)
           />
         </svg>
         <img src={resolveHeroAssetVariantSrc(player.hero_code, "battle_icon")} alt={player.hero_code} />
-      </div>
+      </button>
     </section>
   );
 }

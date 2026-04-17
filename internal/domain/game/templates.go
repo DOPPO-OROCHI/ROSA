@@ -25,7 +25,9 @@ type BattleTemplate struct {
 	Skill         BattleSkillTemplate
 }
 
+//ПОТОМ ЖЕСТКО ПОДУМАТЬ ОБ УДАЛЕНИИ, ТАК КАК ДУБЛИРУЕТ UnitSkillState
 type BattleSkillTemplate struct {
+	Name         string
 	Code         string
 	Kind         string
 	Target       string
@@ -33,6 +35,9 @@ type BattleSkillTemplate struct {
 	BaseCooldown int
 	Duration     int
 	ExtraValue   int
+	BuffEffect   string
+	DeBuffEffect string
+	CleanseMode  string
 	IgnoreTank   bool
 	HitCount     int
 }

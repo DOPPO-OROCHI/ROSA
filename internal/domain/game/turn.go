@@ -163,6 +163,7 @@ func PlayBattleCard(m *MatchState,
 	}
 	if tpl.HasSkill {
 		u.Skill = cards.UnitSkillState{
+			Name:         tpl.Skill.Name,
 			Code:         tpl.Skill.Code,
 			Kind:         tpl.Skill.Kind,
 			Target:       tpl.Skill.Target,
@@ -171,6 +172,9 @@ func PlayBattleCard(m *MatchState,
 			CooldownLeft: 0,
 			Duration:     tpl.Skill.Duration,
 			ExtraValue:   tpl.Skill.ExtraValue,
+			BuffEffect:   tpl.Skill.BuffEffect,
+			DebuffEffect: tpl.Skill.DeBuffEffect,
+			CleanseMode:  tpl.Skill.CleanseMode,
 			IgnoreTank:   tpl.Skill.IgnoreTank,
 			ApplyCount:   tpl.Skill.HitCount,
 		}

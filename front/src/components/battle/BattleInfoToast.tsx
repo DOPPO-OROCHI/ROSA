@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 
 type Props = {
   message: string;
+  nonce?: number;
 };
 
 function normalizeBattleMessage(message: string): string {
@@ -18,7 +19,7 @@ function normalizeBattleMessage(message: string): string {
   }
 }
 
-export function BattleInfoToast({ message }: Props) {
+export function BattleInfoToast({ message, nonce = 0 }: Props) {
   const [visible, setVisible] = useState(false);
   const [renderedMessage, setRenderedMessage] = useState("");
 
@@ -36,7 +37,7 @@ export function BattleInfoToast({ message }: Props) {
     }, 1900);
 
     return () => window.clearTimeout(hideId);
-  }, [message]);
+  }, [message, nonce]);
 
   if (!renderedMessage) {
     return null;

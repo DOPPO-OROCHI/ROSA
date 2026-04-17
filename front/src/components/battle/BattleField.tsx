@@ -1,5 +1,6 @@
 import type { BattleUnitState, MaskedBattleMatchState, MaskedBattlePlayerState } from "./types";
 import { BoardLane } from "./BoardLane";
+import type { SkillTargetTone } from "./CARD_SKILLS";
 import { EndTurnButton } from "./EndTurnButton";
 import { TurnTimer } from "./TurnTimer";
 
@@ -10,15 +11,21 @@ type Props = {
   canEndTurn: boolean;
   canPlaySelectedBattleCard: boolean;
   selectedAttackerId?: string;
+  selectedSkillCasterId?: string;
   attackTargetIds?: string[];
+  skillTargetIds?: string[];
+  skillTargetTone?: SkillTargetTone | null;
   attackHint?: string;
   animatingUnitId?: string;
-  hitUnitIds?: string[];
+  hitTokens?: Record<string, number>;
+  disabledPlayerUnitIds?: string[];
+  skillDisabledPlayerUnitIds?: string[];
   onEndTurn: () => void;
   onPlayerUnitSelect: (unit: BattleUnitState) => void;
   onEnemyUnitSelect: (unit: BattleUnitState) => void;
   onBoardClearSelection: () => void;
   onPlayBattleCard: (slotIndex: number) => void;
+  onPlayerUnitSkill: (unit: BattleUnitState) => void;
 };
 
 export function BattleField({
@@ -28,15 +35,21 @@ export function BattleField({
   canEndTurn,
   canPlaySelectedBattleCard,
   selectedAttackerId = "",
+  selectedSkillCasterId = "",
   attackTargetIds = [],
+  skillTargetIds = [],
+  skillTargetTone = null,
   attackHint = "",
   animatingUnitId = "",
-  hitUnitIds = [],
+  hitTokens = {},
+  disabledPlayerUnitIds = [],
+  skillDisabledPlayerUnitIds = [],
   onEndTurn,
   onPlayerUnitSelect,
   onEnemyUnitSelect,
   onBoardClearSelection,
   onPlayBattleCard,
+  onPlayerUnitSkill,
 }: Props) {
   return (
     <section className="battle-field">
@@ -45,8 +58,10 @@ export function BattleField({
           units={enemy.table}
           side="enemy"
           targetUnitIds={attackTargetIds}
+          skillTargetIds={skillTargetIds}
+          skillTargetTone={skillTargetTone}
           animatingUnitId={animatingUnitId}
-          hitUnitIds={hitUnitIds}
+          hitTokens={hitTokens}
           onFilledSlotClick={onEnemyUnitSelect}
           onEmptySlotClick={onBoardClearSelection}
         />
@@ -62,10 +77,16 @@ export function BattleField({
           units={player.table}
           side="player"
           selectedUnitId={selectedAttackerId}
+          selectedSkillCasterId={selectedSkillCasterId}
           canPlayIntoEmpty={Boolean(canPlaySelectedBattleCard)}
           animatingUnitId={animatingUnitId}
-          hitUnitIds={hitUnitIds}
+          hitTokens={hitTokens}
+          disabledUnitIds={disabledPlayerUnitIds}
+          skillDisabledUnitIds={skillDisabledPlayerUnitIds}
+          skillTargetIds={skillTargetIds}
+          skillTargetTone={skillTargetTone}
           onFilledSlotClick={onPlayerUnitSelect}
+          onSkillClick={onPlayerUnitSkill}
           onEmptySlotClick={(slotIndex) => {
             if (canPlaySelectedBattleCard) {
               onPlayBattleCard(slotIndex);

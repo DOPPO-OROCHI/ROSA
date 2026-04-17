@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import type { MaskedBattleMatchState } from "./types";
 
 export function useOnHitEffects(match: MaskedBattleMatchState | null) {
-  const [hitUnitIds, setHitUnitIds] = useState<string[]>([]);
+  const [hitTokens, setHitTokens] = useState<Record<string, number>>({});
   const lastProcessedVersionRef = useRef(0);
 
   useEffect(() => {
@@ -12,10 +12,11 @@ export function useOnHitEffects(match: MaskedBattleMatchState | null) {
 
     lastProcessedVersionRef.current = match.version;
 
-    const nextIds = new Set<string>();
+    const nextHits = new Map<string, number>();
     match.events?.forEach((event) => {
+      const isAttackEvent = event.type.toLowerCase().includes("attack");
       const isHealEvent = event.type.toLowerCase().includes("heal");
-      if (isHealEvent) {
+      if (isHealEvent || !isAttackEvent) {
         return;
       }
 
@@ -23,28 +24,36 @@ export function useOnHitEffects(match: MaskedBattleMatchState | null) {
         if (!target.instance_id || !target.amount || target.amount <= 0) {
           return;
         }
-        if (target.instance_id.startsWith("hero:")) {
-          return;
-        }
-        nextIds.add(target.instance_id);
+        nextHits.set(target.instance_id, (nextHits.get(target.instance_id) ?? 0) + 1);
       });
     });
 
-    if (nextIds.size === 0) {
+    if (nextHits.size === 0) {
       return;
     }
 
-    const ids = Array.from(nextIds);
-    setHitUnitIds((current) => Array.from(new Set([...current, ...ids])));
-
-    const timeoutId = window.setTimeout(() => {
-      setHitUnitIds((current) => current.filter((id) => !nextIds.has(id)));
-    }, 320);
-
-    return () => window.clearTimeout(timeoutId);
+    setHitTokens((current) => {
+      const next = { ...current };
+      nextHits.forEach((count, instanceId) => {
+        next[instanceId] = (next[instanceId] ?? 0) + count;
+      });
+      return next;
+    });
   }, [match]);
 
+  function triggerHit(instanceId: string, count = 1) {
+    if (!instanceId || count <= 0) {
+      return;
+    }
+
+    setHitTokens((current) => ({
+      ...current,
+      [instanceId]: (current[instanceId] ?? 0) + count,
+    }));
+  }
+
   return {
-    hitUnitIds,
+    hitTokens,
+    triggerHit,
   };
 }

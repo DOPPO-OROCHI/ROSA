@@ -7,7 +7,7 @@ type Params = {
   isPlayerTurn: boolean;
   busy: boolean;
   finished: boolean;
-  onAttack: (attacker: BattleUnitState, target: BattleUnitState) => Promise<void> | void;
+  onAttack: (attacker: BattleUnitState, target: BattleUnitState | null, attackHero: boolean) => Promise<void> | void;
 };
 
 export function getBoardAttackDisplayValue(unit: BattleUnitState): number {
@@ -56,6 +56,17 @@ export function useCardAttack({ player, enemy, isPlayerTurn, busy, finished, onA
     return (tanks.length > 0 ? tanks : getDefaultTargets(enemy)).map((unit) => unit.instance_id);
   }, [busy, enemy, finished, isPlayerTurn, selectedAttacker]);
 
+  const canAttackHero = useMemo(() => {
+    if (!selectedAttacker || !isPlayerTurn || busy || finished) {
+      return false;
+    }
+    if (selectedAttacker.cooldown > 0) {
+      return false;
+    }
+
+    return getTankTargets(enemy).length === 0;
+  }, [busy, enemy, finished, isPlayerTurn, selectedAttacker]);
+
   const infoMessage = useMemo(() => {
     if (!selectedAttacker) {
       return "";
@@ -84,7 +95,21 @@ export function useCardAttack({ player, enemy, isPlayerTurn, busy, finished, onA
       return;
     }
 
-    await onAttack(selectedAttacker, target);
+    await onAttack(selectedAttacker, target, false);
+    clearSelection();
+  }
+
+  async function tryAttackHero() {
+    if (!selectedAttacker) {
+      clearSelection();
+      return;
+    }
+    if (!canAttackHero) {
+      clearSelection();
+      return;
+    }
+
+    await onAttack(selectedAttacker, null, true);
     clearSelection();
   }
 
@@ -92,9 +117,11 @@ export function useCardAttack({ player, enemy, isPlayerTurn, busy, finished, onA
     selectedAttackerId,
     selectedAttacker,
     attackTargets,
+    canAttackHero,
     infoMessage,
     clearSelection,
     selectAttacker,
     tryAttack,
+    tryAttackHero,
   };
 }

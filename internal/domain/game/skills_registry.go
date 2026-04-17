@@ -3,11 +3,11 @@ package game
 type SkillHandler func(m *MatchState, a Action, caster *UnitState) error
 
 var SkillHandlers = map[string]SkillHandler{
-	"fragmentation_grenades":   CastSplashDamageSkill,
-	"expansive_projectiles":    CastBuffSkill,
-	"burning":                  CastDebuffSkill,
-	"urgent_reload":            CastBuffSkill,
-	"suppression":              CastBuffSkill,
+	"fragmentation_grenades":   CastSplashDamageSkill, //
+	"expansive_projectiles":    CastBuffSkill,         //
+	"burning":                  CastDebuffSkill,       //
+	"urgent_reload":            CastBuffSkill,         //
+	"suppression":              CastBuffSkill,         //
 	"infection_with_pathogens": CastDebuffSkill,
 	"second_wind":              CastSingleDamageSkill,
 	"mathematical_accuracy":    CastDebuffSkill,

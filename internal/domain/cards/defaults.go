@@ -22,7 +22,8 @@ var DefaultBattleCards = []BattleCardTemplate{
 		//обычные чуваки
 		Name:              "Стрелковый взвод",
 		CodeString:        "rifle_platoon",
-		HealthPoints:      5,
+		Description:       "Бросает во врага осколочные гранаты, нанося 6 едениц урона центральной цели",
+		HealthPoints:      6,
 		Attack:            3,
 		SplashRadius:      0,
 		IsTank:            false,
@@ -52,8 +53,8 @@ var DefaultBattleCards = []BattleCardTemplate{
 		//чуваки с драбашами
 		Name:              "Отряд зачистки",
 		CodeString:        "cleanup_squad",
-		Description:       "string",
-		HealthPoints:      6,
+		Description:       "Повышают свою силу атаки на 3 еденицы урона на 3 хода",
+		HealthPoints:      7,
 		Attack:            2,
 		SplashRadius:      0,
 		IsTank:            false,
@@ -83,9 +84,9 @@ var DefaultBattleCards = []BattleCardTemplate{
 		//чувак с огнеметом
 		Name:              "Огнеметчик",
 		CodeString:        "flamethrowers",
-		Description:       "",
-		HealthPoints:      2,
-		Attack:            4,
+		Description:       "Выжигает одиночную цель, накладывая на нее дебаф на 2 хода. Каждый ход цель получает 2 еденицы урона",
+		HealthPoints:      4,
+		Attack:            3,
 		SplashRadius:      0,
 		IsTank:            false,
 		CardType:          Human,
@@ -114,8 +115,8 @@ var DefaultBattleCards = []BattleCardTemplate{
 		//челы с гранатометами
 		Name:              "Гранатометчики",
 		CodeString:        "grenade_launchers",
-		Description:       "",
-		HealthPoints:      4,
+		Description:       "Немедленно заряжает снаряды, уменьшая текущий КД атаки на 1 ход",
+		HealthPoints:      5,
 		Attack:            6,
 		SplashRadius:      1,
 		IsTank:            false,
@@ -145,7 +146,7 @@ var DefaultBattleCards = []BattleCardTemplate{
 		//пулеметчики
 		Name:              "Пулеметное отделение",
 		CodeString:        "machine_gun_section",
-		Description:       "Раз в 3 хода может ударить противника дважды",
+		Description:       "Смена пулеметной ленты позволяет атаковать после атаки",
 		HealthPoints:      5,
 		Attack:            3,
 		SplashRadius:      0,
@@ -176,7 +177,7 @@ var DefaultBattleCards = []BattleCardTemplate{
 		//челы с ядами
 		Name:              "Хим отделение",
 		CodeString:        "chemical_group",
-		Description:       "Раз в 2 хода заражает смертельными ядами вражескую группу",
+		Description:       "Заражает смертельными ядами вражескую группу",
 		HealthPoints:      3,
 		Attack:            3,
 		SplashRadius:      1,

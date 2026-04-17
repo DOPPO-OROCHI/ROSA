@@ -126,7 +126,7 @@ func ApplyAction(m *MatchState, a Action, r Resolvers) error {
 		if r.Battle == nil {
 			return errors.New("battle resolver is nil")
 		}
-		// err = PlayCardSkill(m, a, r.Battle)
+		err = PlayCardSkill(m, a)
 	default:
 		return errors.New("unknown action type: " + string(a.Type))
 	}

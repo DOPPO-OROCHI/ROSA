@@ -2,11 +2,13 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { request } from "../../lib/api";
 import { AbilityBlock } from "./AbilityBlock";
 import { AttackBlock } from "./AttackBlock";
+import { SkillProjectiles, getStunTurns, useCardSkill, useSkillProjectiles, type SkillProjectileKind } from "./CARD_SKILLS";
 import { CardAttackAnimation, type CardAttackAnimationState } from "./CardAttackAnimation";
 import { BattleCardViewer, type BattleCardViewerOrigin } from "./BattleCardViewer";
 import { BattleField } from "./BattleField";
 import { BattleFloatingNumbers, type FloatingNumber } from "./BattleFloatingNumbers";
 import { BattleInfoToast } from "./BattleInfoToast";
+import { BattleLoadingScreen } from "./BattleLoadingScreen";
 import { DeckCounter } from "./DeckCounter";
 import { Defeat } from "./Defeat";
 import { Draw } from "./Draw";
@@ -15,7 +17,9 @@ import { GamerCharacter } from "./GamerCharacter";
 import { GraveyardBlock } from "./GraveyardBlock";
 import { HandPanel } from "./HandPanel";
 import { LeaveMatchButton } from "./LeaveMatchButton";
+import { useBattlePreload } from "./battle_preload";
 import { useCardAttack } from "./card_attack";
+import { BattleDeathAnimations, collectDeathAnimations, type DeathAnimationState } from "./on_death_effects";
 import { useOnHitEffects } from "./on_hit_effects";
 import { BattlePlayAnimations, useOnPlayEffects } from "./on_play_effects";
 import { Victory } from "./Victory";
@@ -40,9 +44,14 @@ export function BattleScreen({ currentUserId, matchId, heroes, onLeaveToMenu }: 
   const [previewOrigin, setPreviewOrigin] = useState<BattleCardViewerOrigin | null>(null);
   const [previewClosing, setPreviewClosing] = useState(false);
   const [attackAnimation, setAttackAnimation] = useState<CardAttackAnimationState | null>(null);
+  const [deathAnimations, setDeathAnimations] = useState<DeathAnimationState[]>([]);
   const [floatingNumbers, setFloatingNumbers] = useState<FloatingNumber[]>([]);
+  const [heroAttackSelected, setHeroAttackSelected] = useState(false);
+  const [toastMessage, setToastMessage] = useState("");
+  const [toastNonce, setToastNonce] = useState(0);
   const shellRef = useRef<HTMLDivElement | null>(null);
   const lastProcessedVersionRef = useRef(0);
+  const currentMatchRef = useRef<MaskedBattleMatchState | null>(null);
 
   const playerIndex = useMemo(() => {
     if (!match) {
@@ -53,6 +62,9 @@ export function BattleScreen({ currentUserId, matchId, heroes, onLeaveToMenu }: 
 
   const player = playerIndex >= 0 ? match?.players[playerIndex] ?? null : null;
   const enemy = playerIndex >= 0 ? match?.players[playerIndex === 0 ? 1 : 0] ?? null : null;
+  const preload = useBattlePreload(match);
+  const playerHeroInstanceId = playerIndex >= 0 ? `hero:p${playerIndex}` : "";
+  const enemyHeroInstanceId = playerIndex >= 0 ? `hero:p${playerIndex === 0 ? 1 : 0}` : "";
   const playerHero = player ? heroes.find((hero) => hero.hero_code === player.hero_code) ?? null : null;
   const enemyHero = enemy ? heroes.find((hero) => hero.hero_code === enemy.hero_code) ?? null : null;
   const isPlayerTurn = Boolean(match) && playerIndex >= 0 && match?.active_player === playerIndex;
@@ -68,8 +80,19 @@ export function BattleScreen({ currentUserId, matchId, heroes, onLeaveToMenu }: 
     !busy &&
     previewCard?.kind === "battle" &&
     (player?.mana ?? 0) >= (previewCard?.mana_cost ?? 0);
+  const canHeroAttack =
+    Boolean(match) &&
+    Boolean(player) &&
+    playerIndex === match?.active_player &&
+    match?.phase === "MAIN" &&
+    !match?.finished &&
+    !busy;
   const shellWidth = shellRef.current?.clientWidth ?? 0;
   const shellHeight = shellRef.current?.clientHeight ?? 0;
+  const heroAttackAnimation =
+    attackAnimation?.attacker.card_type === "hero" && attackAnimation.attacker.instance_id === playerHeroInstanceId
+      ? { dx: attackAnimation.dx, dy: attackAnimation.dy }
+      : null;
 
   function getUnitRect(instanceId: string) {
     const shell = shellRef.current;
@@ -110,10 +133,6 @@ export function BattleScreen({ currentUserId, matchId, heroes, onLeaveToMenu }: 
         if (!target.instance_id || !target.amount || target.amount <= 0) {
           return;
         }
-        if (target.instance_id.startsWith("hero:")) {
-          return;
-        }
-
         const node = shell.querySelector<HTMLElement>(`[data-unit-instance-id="${target.instance_id}"]`);
         if (!node) {
           return;
@@ -168,28 +187,170 @@ export function BattleScreen({ currentUserId, matchId, heroes, onLeaveToMenu }: 
     });
   }
 
+  async function playCardAttackHeroAnimation(attacker: MaskedBattlePlayerState["table"][number]) {
+    if (!attacker) {
+      return;
+    }
+
+    const from = getUnitRect(attacker.instance_id);
+    const shell = shellRef.current;
+    const heroNode = shell?.querySelector<HTMLElement>('[data-hero-side="enemy"]');
+    if (!from || !heroNode || !shell) {
+      return;
+    }
+
+    const shellRect = shell.getBoundingClientRect();
+    const rect = heroNode.getBoundingClientRect();
+    const to = {
+      centerX: rect.left - shellRect.left + rect.width / 2,
+      centerY: rect.top - shellRect.top + rect.height / 2,
+    };
+
+    await new Promise<void>((resolve) => {
+      setAttackAnimation({
+        attacker,
+        from: {
+          left: from.left,
+          top: from.top,
+          width: from.width,
+          height: from.height,
+        },
+        dx: to.centerX - from.centerX,
+        dy: to.centerY - from.centerY,
+      });
+
+      window.setTimeout(resolve, 460);
+    });
+  }
+
+  async function playHeroAttackAnimation(target: MaskedBattlePlayerState["table"][number] | null, attackHero: boolean) {
+    const shell = shellRef.current;
+    if (!shell || !player) {
+      return;
+    }
+
+    const heroNode = shell.querySelector<HTMLElement>('[data-hero-side="player"]');
+    if (!heroNode) {
+      return;
+    }
+
+    const shellRect = shell.getBoundingClientRect();
+    const heroRect = heroNode.getBoundingClientRect();
+    const from = {
+      left: heroRect.left - shellRect.left,
+      top: heroRect.top - shellRect.top,
+      width: heroRect.width,
+      height: heroRect.height,
+      centerX: heroRect.left - shellRect.left + heroRect.width / 2,
+      centerY: heroRect.top - shellRect.top + heroRect.height / 2,
+    };
+
+    let targetCenter: { centerX: number; centerY: number } | null = null;
+    if (attackHero) {
+      const enemyHeroNode = shell.querySelector<HTMLElement>('[data-hero-side="enemy"]');
+      if (enemyHeroNode) {
+        const rect = enemyHeroNode.getBoundingClientRect();
+        targetCenter = {
+          centerX: rect.left - shellRect.left + rect.width / 2,
+          centerY: rect.top - shellRect.top + rect.height / 2,
+        };
+      }
+    } else if (target) {
+      const rect = getUnitRect(target.instance_id);
+      if (rect) {
+        targetCenter = {
+          centerX: rect.centerX,
+          centerY: rect.centerY,
+        };
+      }
+    }
+
+    if (!targetCenter) {
+      return;
+    }
+
+    await new Promise<void>((resolve) => {
+      setAttackAnimation({
+        attacker: {
+          instance_id: playerHeroInstanceId,
+          template_id: player.hero_code,
+          gamer_card_id: 0,
+          card_level: player.hero_level,
+          hp: player.hero_hp,
+          max_hp: playerHero?.health_points ?? player.hero_hp,
+          attack: player.hero_attack_power,
+          splash_radius: player.hero_splash_radius,
+          is_tank: false,
+          card_type: "hero",
+          base_cooldown: player.hero_attack_base_cooldown,
+          cooldown: player.hero_attack_cooldown,
+          summoned_in_turn: 0,
+          image_key: "",
+          asset_base_key: "",
+          has_skill: false,
+          skill_image_key: "",
+          skill: null,
+          effects: [],
+          resurrected_used: false,
+        },
+        from: {
+          left: from.left,
+          top: from.top,
+          width: from.width,
+          height: from.height,
+        },
+        dx: targetCenter.centerX - from.centerX,
+        dy: targetCenter.centerY - from.centerY,
+      });
+
+      window.setTimeout(resolve, 460);
+    });
+  }
+
   const cardAttack = useCardAttack({
     player,
     enemy,
     isPlayerTurn,
     busy,
     finished: Boolean(match?.finished),
-    onAttack: async (attacker, target) => {
+    onAttack: async (attacker, target, attackHero) => {
       if (!match) {
         return;
       }
       await Promise.all([
-        playCardAttackAnimation(attacker, target),
+        attackHero ? playCardAttackHeroAnimation(attacker) : playCardAttackAnimation(attacker, target),
         (async () => {
           await new Promise((resolve) => window.setTimeout(resolve, 190));
           await applyAction({
             type: "card_attack",
             expected_version: match.version,
             card_instance_id: attacker.instance_id,
-            target_instance_id: target.instance_id,
+            target_instance_id: target?.instance_id,
+            attack_hero: attackHero,
           });
         })(),
       ]);
+    },
+  });
+  const cardSkill = useCardSkill({
+    player,
+    enemy,
+    isPlayerTurn,
+    busy,
+    finished: Boolean(match?.finished),
+    onInfo: showToast,
+    onCast: async (caster, target, attackHero) => {
+      if (!match) {
+        return;
+      }
+
+      await applyAction({
+        type: "card_skill",
+        expected_version: match.version,
+        card_instance_id: caster.instance_id,
+        target_instance_id: target?.instance_id,
+        attack_hero: attackHero,
+      });
     },
   });
   const onHitEffects = useOnHitEffects(match);
@@ -201,6 +362,18 @@ export function BattleScreen({ currentUserId, matchId, heroes, onLeaveToMenu }: 
     shellHeight,
     getUnitRect,
   });
+  const skillProjectiles = useSkillProjectiles({ match, playerIndex, getUnitRect });
+
+  function showToast(message: string) {
+    setToastMessage(message);
+    setToastNonce((current) => current + 1);
+  }
+
+  function handleSkillProjectileImpact(targetInstanceId: string, kind: SkillProjectileKind) {
+    if (kind === "damage" || kind === "debuff") {
+      onHitEffects.triggerHit(targetInstanceId);
+    }
+  }
 
   function mapOriginRect(rect?: DOMRect | null): BattleCardViewerOrigin | null {
     const shellRect = shellRef.current?.getBoundingClientRect();
@@ -216,18 +389,75 @@ export function BattleScreen({ currentUserId, matchId, heroes, onLeaveToMenu }: 
     };
   }
 
+  function enqueueDeathAnimations(nextMatch: MaskedBattleMatchState) {
+    const entries = collectDeathAnimations({
+      prevMatch: currentMatchRef.current,
+      nextMatch,
+      getUnitRect,
+    });
+
+    if (entries.length === 0) {
+      return;
+    }
+
+    setDeathAnimations((current) => [...current, ...entries]);
+  }
+
+  useEffect(() => {
+    currentMatchRef.current = match;
+  }, [match]);
+
   function handlePreview(card: BattleCardInMatch | null, originRect?: DOMRect) {
     if (!card) {
       setPreviewClosing(true);
       cardAttack.clearSelection();
+      cardSkill.clearSelection();
+      setHeroAttackSelected(false);
       return;
     }
 
     cardAttack.clearSelection();
+    cardSkill.clearSelection();
+    setHeroAttackSelected(false);
     setPreviewOrigin(mapOriginRect(originRect));
     setPreviewCard(card);
     setPreviewClosing(false);
   }
+
+  const heroAttackTargetIds = useMemo(() => {
+    if (!heroAttackSelected || !enemy || !canHeroAttack) {
+      return [];
+    }
+    if ((player?.hero_attack_cooldown ?? 0) > 0) {
+      return [];
+    }
+
+    const tanks = enemy.table.filter((unit): unit is NonNullable<typeof unit> => Boolean(unit?.is_tank));
+    return (tanks.length > 0 ? tanks : enemy.table.filter((unit): unit is NonNullable<typeof unit> => Boolean(unit))).map(
+      (unit) => unit.instance_id,
+    );
+  }, [canHeroAttack, enemy, heroAttackSelected, player?.hero_attack_cooldown]);
+
+  const canHeroAttackEnemyHero = useMemo(() => {
+    if (!heroAttackSelected || !enemy || !canHeroAttack) {
+      return false;
+    }
+    if ((player?.hero_attack_cooldown ?? 0) > 0) {
+      return false;
+    }
+
+    return enemy.table.every((unit) => !unit?.is_tank);
+  }, [canHeroAttack, enemy, heroAttackSelected, player?.hero_attack_cooldown]);
+
+  const heroAttackHint = useMemo(() => {
+    if (!heroAttackSelected) {
+      return "";
+    }
+    if ((player?.hero_attack_cooldown ?? 0) > 0) {
+      return `КД АТАКИ ГЕРОЯ - ${player?.hero_attack_cooldown ?? 0}`;
+    }
+    return "";
+  }, [heroAttackSelected, player?.hero_attack_cooldown]);
 
   useEffect(() => {
     if (!match?.finished || playerIndex < 0 || outcome) {
@@ -276,6 +506,14 @@ export function BattleScreen({ currentUserId, matchId, heroes, onLeaveToMenu }: 
   }, [match]);
 
   useEffect(() => {
+    if (!isPlayerTurn) {
+      setHeroAttackSelected(false);
+      cardAttack.clearSelection();
+      cardSkill.clearSelection();
+    }
+  }, [cardAttack, cardSkill, isPlayerTurn]);
+
+  useEffect(() => {
     async function loadMatch() {
       setLoading(true);
       try {
@@ -297,6 +535,7 @@ export function BattleScreen({ currentUserId, matchId, heroes, onLeaveToMenu }: 
 
     stream.addEventListener("state", (event) => {
       const payload = JSON.parse((event as MessageEvent<string>).data) as MaskedBattleMatchState;
+      enqueueDeathAnimations(payload);
       setMatch(payload);
       setError("");
     });
@@ -319,6 +558,7 @@ export function BattleScreen({ currentUserId, matchId, heroes, onLeaveToMenu }: 
         method: "POST",
         body: JSON.stringify(payload),
       });
+      enqueueDeathAnimations(nextMatch);
       setMatch(nextMatch);
       setError("");
       if (leaveAfter) {
@@ -337,6 +577,10 @@ export function BattleScreen({ currentUserId, matchId, heroes, onLeaveToMenu }: 
 
   if (!match || !player || !enemy) {
     return <section className="battle-screen battle-screen--state">{error || "МАТЧ НЕДОСТУПЕН"}</section>;
+  }
+
+  if (preload.visible) {
+    return <BattleLoadingScreen progress={preload.progress} label={preload.label} />;
   }
 
   return (
@@ -367,6 +611,38 @@ export function BattleScreen({ currentUserId, matchId, heroes, onLeaveToMenu }: 
             player={enemy as MaskedBattlePlayerState}
             maxHp={enemyHero?.health_points ?? enemy.hero_hp}
             isActive={match.active_player !== playerIndex}
+            attackTarget={cardAttack.canAttackHero || canHeroAttackEnemyHero || cardSkill.canTargetHero}
+            heroInstanceId={enemyHeroInstanceId}
+            hitToken={onHitEffects.hitTokens[enemyHeroInstanceId] ?? 0}
+            onClick={
+              cardAttack.canAttackHero || canHeroAttackEnemyHero || cardSkill.canTargetHero
+                ? () => {
+                    setPreviewClosing(true);
+                    if (cardSkill.canTargetHero) {
+                      void cardSkill.tryCastOnHero();
+                      return;
+                    }
+                    if (heroAttackSelected) {
+                      void (async () => {
+                        await Promise.all([
+                          playHeroAttackAnimation(null, true),
+                          (async () => {
+                            await new Promise((resolve) => window.setTimeout(resolve, 190));
+                            await applyAction({
+                              type: "hero_attack",
+                              expected_version: match.version,
+                              attack_hero: true,
+                            });
+                          })(),
+                        ]);
+                        setHeroAttackSelected(false);
+                      })();
+                      return;
+                    }
+                    void cardAttack.tryAttackHero();
+                  }
+                : undefined
+            }
           />
         </div>
 
@@ -374,14 +650,27 @@ export function BattleScreen({ currentUserId, matchId, heroes, onLeaveToMenu }: 
             match={match}
             enemy={enemy as MaskedBattlePlayerState}
             player={player as MaskedBattlePlayerState}
-            canEndTurn={canEndTurn}
-            canPlaySelectedBattleCard={Boolean(canPlaySelectedBattleCard)}
-            selectedAttackerId={cardAttack.selectedAttackerId}
-            attackTargetIds={cardAttack.attackTargets}
-            attackHint={cardAttack.infoMessage}
-            animatingUnitId={attackAnimation?.attacker.instance_id ?? ""}
-            hitUnitIds={onHitEffects.hitUnitIds}
-            onEndTurn={() =>
+             canEndTurn={canEndTurn}
+             canPlaySelectedBattleCard={Boolean(canPlaySelectedBattleCard)}
+             selectedAttackerId={cardAttack.selectedAttackerId}
+             selectedSkillCasterId={cardSkill.selectedCasterId}
+             attackTargetIds={heroAttackSelected ? heroAttackTargetIds : cardAttack.attackTargets}
+             skillTargetIds={heroAttackSelected ? [] : cardSkill.skillTargetIds}
+             skillTargetTone={heroAttackSelected ? null : cardSkill.targetTone}
+             attackHint={heroAttackSelected ? heroAttackHint : cardAttack.infoMessage}
+             animatingUnitId={attackAnimation?.attacker.instance_id ?? ""}
+             hitTokens={onHitEffects.hitTokens}
+             disabledPlayerUnitIds={
+               cardSkill.selectedCasterId
+                 ? []
+                 : player.table
+                     .filter((unit): unit is NonNullable<typeof unit> => Boolean(unit && getStunTurns(unit) > 0))
+                     .map((unit) => unit.instance_id)
+             }
+             skillDisabledPlayerUnitIds={player.table
+               .filter((unit): unit is NonNullable<typeof unit> => Boolean(unit && getStunTurns(unit) > 0))
+               .map((unit) => unit.instance_id)}
+             onEndTurn={() =>
               void applyAction({
                 type: "end_turn",
                 expected_version: match.version,
@@ -389,17 +678,55 @@ export function BattleScreen({ currentUserId, matchId, heroes, onLeaveToMenu }: 
             }
             onPlayerUnitSelect={(unit) => {
               setPreviewClosing(true);
+              if (cardSkill.selectedCasterId) {
+                if (cardSkill.skillTargetIds.includes(unit.instance_id)) {
+                  void cardSkill.tryCastOnUnit(unit);
+                  return;
+                }
+                cardSkill.clearSelection();
+              }
+              if (getStunTurns(unit) > 0) {
+                return;
+              }
+              setHeroAttackSelected(false);
               cardAttack.selectAttacker(unit);
             }}
             onEnemyUnitSelect={(unit) => {
               setPreviewClosing(true);
+              if (cardSkill.selectedCasterId) {
+                if (cardSkill.skillTargetIds.includes(unit.instance_id)) {
+                  void cardSkill.tryCastOnUnit(unit);
+                  return;
+                }
+                cardSkill.clearSelection();
+              }
+              if (heroAttackSelected) {
+                void (async () => {
+                  await Promise.all([
+                    playHeroAttackAnimation(unit, false),
+                    (async () => {
+                      await new Promise((resolve) => window.setTimeout(resolve, 190));
+                      await applyAction({
+                        type: "hero_attack",
+                        expected_version: match.version,
+                        target_instance_id: unit.instance_id,
+                      });
+                    })(),
+                  ]);
+                  setHeroAttackSelected(false);
+                })();
+                return;
+              }
               void cardAttack.tryAttack(unit);
             }}
             onBoardClearSelection={() => {
               setPreviewClosing(true);
+              cardSkill.clearSelection();
+              setHeroAttackSelected(false);
               cardAttack.clearSelection();
             }}
             onPlayBattleCard={(slotIndex) => {
+              cardSkill.clearSelection();
               if (!previewCard || previewCard.kind !== "battle") {
                 cardAttack.clearSelection();
                 return;
@@ -417,6 +744,14 @@ export function BattleScreen({ currentUserId, matchId, heroes, onLeaveToMenu }: 
                 setPreviewOrigin(null);
               });
             }}
+            onPlayerUnitSkill={(unit) => {
+              setPreviewClosing(true);
+              setPreviewCard(null);
+              setPreviewOrigin(null);
+              cardAttack.clearSelection();
+              setHeroAttackSelected(false);
+              void cardSkill.selectCaster(unit);
+            }}
           />
 
         <div className="battle-bottom">
@@ -426,7 +761,23 @@ export function BattleScreen({ currentUserId, matchId, heroes, onLeaveToMenu }: 
                 <GraveyardBlock count={player.discard_count ?? player.discard?.length ?? 0} />
               </div>
               <div className="battle-bottom__main-block">
-                <AttackBlock attack={player.hero_attack_power} cooldown={player.hero_attack_cooldown} />
+                <AttackBlock
+                  attack={player.hero_attack_power}
+                  cooldown={player.hero_attack_cooldown}
+                  selected={heroAttackSelected}
+                  disabled={!canHeroAttack}
+                  onClick={() => {
+                    if (!canHeroAttack) {
+                      return;
+                    }
+                    setPreviewClosing(true);
+                    setPreviewCard(null);
+                    setPreviewOrigin(null);
+                    cardAttack.clearSelection();
+                    cardSkill.clearSelection();
+                    setHeroAttackSelected((current) => !current);
+                  }}
+                />
               </div>
             </div>
 
@@ -435,6 +786,9 @@ export function BattleScreen({ currentUserId, matchId, heroes, onLeaveToMenu }: 
                 player={player as MaskedBattlePlayerState}
                 maxHp={playerHero?.health_points ?? player.hero_hp}
                 isActive={match.active_player === playerIndex}
+                heroInstanceId={playerHeroInstanceId}
+                hitToken={onHitEffects.hitTokens[playerHeroInstanceId] ?? 0}
+                attackAnimation={heroAttackAnimation}
               />
             </div>
 
@@ -468,9 +822,22 @@ export function BattleScreen({ currentUserId, matchId, heroes, onLeaveToMenu }: 
           />
         ) : null}
         <BattlePlayAnimations animations={onPlayEffects.animations} onDone={onPlayEffects.removeAnimation} />
-        {attackAnimation ? <CardAttackAnimation state={attackAnimation} onDone={() => setAttackAnimation(null)} /> : null}
+        {attackAnimation ? (
+          <CardAttackAnimation state={attackAnimation} onDone={() => setAttackAnimation(null)} />
+        ) : null}
+        <SkillProjectiles
+          projectiles={skillProjectiles.projectiles}
+          onImpact={handleSkillProjectileImpact}
+          onDone={skillProjectiles.removeProjectile}
+        />
+        <BattleDeathAnimations
+          animations={deathAnimations}
+          onDone={(id) => {
+            setDeathAnimations((current) => current.filter((entry) => entry.id !== id));
+          }}
+        />
         <BattleFloatingNumbers numbers={floatingNumbers} />
-        {error ? <BattleInfoToast message={error} /> : null}
+        {error || toastMessage ? <BattleInfoToast message={error || toastMessage} nonce={toastNonce} /> : null}
       </div>
       {outcome === "victory" ? <Victory /> : null}
       {outcome === "defeat" ? <Defeat /> : null}

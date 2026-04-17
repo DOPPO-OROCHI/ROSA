@@ -60,6 +60,7 @@ func (c *ResolverCache) Reload(db *gorm.DB) error {
 			SkillImageKey: t.SkillImageKey,
 			HasSkill:      t.HasSkill,
 			Skill: game.BattleSkillTemplate{
+				Name:         t.SkillName,
 				Code:         t.SkillCode,
 				Kind:         t.SkillKind,
 				Target:       t.SkillTargeting,
@@ -67,6 +68,9 @@ func (c *ResolverCache) Reload(db *gorm.DB) error {
 				BaseCooldown: t.SkillBaseCooldown,
 				Duration:     t.SkillDuration,
 				ExtraValue:   t.SkillExtraValue,
+				BuffEffect:   t.SkillBuffEffect,
+				DeBuffEffect: t.SkillDebuffEffect,
+				CleanseMode:  t.SkillCleanseMode,
 				IgnoreTank:   t.SkillIgnoreTank,
 				HitCount:     t.SkillApplyCount,
 			},

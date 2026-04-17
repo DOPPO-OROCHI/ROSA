@@ -1,4 +1,5 @@
 import { BoardSlot } from "./BoardSlot";
+import type { SkillTargetTone } from "./CARD_SKILLS";
 import type { BattleUnitState } from "./types";
 
 type Props = {
@@ -6,11 +7,17 @@ type Props = {
   side: "player" | "enemy";
   canPlayIntoEmpty?: boolean;
   selectedUnitId?: string;
+  selectedSkillCasterId?: string;
   targetUnitIds?: string[];
+  skillTargetIds?: string[];
+  skillTargetTone?: SkillTargetTone | null;
   animatingUnitId?: string;
-  hitUnitIds?: string[];
+  hitTokens?: Record<string, number>;
+  disabledUnitIds?: string[];
+  skillDisabledUnitIds?: string[];
   onFilledSlotClick?: (unit: BattleUnitState, slotIndex: number) => void;
   onEmptySlotClick?: (slotIndex: number) => void;
+  onSkillClick?: (unit: BattleUnitState, slotIndex: number) => void;
 };
 
 export function BoardLane({
@@ -18,11 +25,17 @@ export function BoardLane({
   side,
   canPlayIntoEmpty = false,
   selectedUnitId = "",
+  selectedSkillCasterId = "",
   targetUnitIds = [],
+  skillTargetIds = [],
+  skillTargetTone = null,
   animatingUnitId = "",
-  hitUnitIds = [],
+  hitTokens = {},
+  disabledUnitIds = [],
+  skillDisabledUnitIds = [],
   onFilledSlotClick,
   onEmptySlotClick,
+  onSkillClick,
 }: Props) {
   return (
     <div className={`battle-board-lane battle-board-lane--${side}`}>
@@ -33,9 +46,14 @@ export function BoardLane({
           side={side}
           playable={unit == null && canPlayIntoEmpty}
           selected={Boolean(unit && unit.instance_id === selectedUnitId)}
+          skillSelected={Boolean(unit && unit.instance_id === selectedSkillCasterId)}
           attackTarget={Boolean(unit && targetUnitIds.includes(unit.instance_id))}
+          skillTarget={Boolean(unit && skillTargetIds.includes(unit.instance_id))}
+          skillTargetTone={skillTargetTone}
           animating={Boolean(unit && unit.instance_id === animatingUnitId)}
-          hit={Boolean(unit && hitUnitIds.includes(unit.instance_id))}
+          hitToken={unit ? hitTokens[unit.instance_id] ?? 0 : 0}
+          actionDisabled={Boolean(unit && disabledUnitIds.includes(unit.instance_id))}
+          skillDisabled={Boolean(unit && skillDisabledUnitIds.includes(unit.instance_id))}
           onClick={
             unit
               ? () => onFilledSlotClick?.(unit, index)
@@ -43,6 +61,7 @@ export function BoardLane({
                 ? () => onEmptySlotClick(index)
                 : undefined
           }
+          onSkillClick={unit ? () => onSkillClick?.(unit, index) : undefined}
         />
       ))}
     </div>

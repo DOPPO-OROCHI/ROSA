@@ -43,6 +43,23 @@ export type BattleUnitEffect = {
   targeting: string;
 };
 
+export type BattleSkillState = {
+  name: string;
+  code: string;
+  kind: string;
+  target: string;
+  power: number;
+  base_cooldown: number;
+  cooldown_left: number;
+  duration: number;
+  extra_value: number;
+  buff_effect: string;
+  debuff_effect: string;
+  cleanse_mode: string;
+  ignore_tank: boolean;
+  apply_count: number;
+};
+
 export type BattleUnitState = {
   instance_id: string;
   template_id: string;
@@ -61,6 +78,7 @@ export type BattleUnitState = {
   asset_base_key: string;
   has_skill: boolean;
   skill_image_key: string;
+  skill: BattleSkillState | null;
   effects: BattleUnitEffect[];
   resurrected_used: boolean;
 };

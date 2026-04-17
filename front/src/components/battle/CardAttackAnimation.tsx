@@ -1,6 +1,7 @@
-import { resolveCardAssetVariantSrc } from "../../lib/api";
+import { resolveCardAssetVariantSrc, resolveHeroAssetVariantSrc } from "../../lib/api";
 import type { CSSProperties } from "react";
 import { getBoardAttackDisplayKind, getBoardAttackDisplayValue } from "./card_attack";
+import { getBoardSkillLabel } from "./CARD_SKILLS";
 import type { BattleUnitState } from "./types";
 
 export type CardAttackAnimationState = {
@@ -22,7 +23,8 @@ type Props = {
 
 export function CardAttackAnimation({ state, onDone }: Props) {
   const { attacker, from, dx, dy } = state;
-  const skillLabel = attacker.cooldown > 0 ? `CD ${attacker.cooldown}` : "SKILL";
+  const isHero = attacker.card_type === "hero";
+  const skillLabel = getBoardSkillLabel(attacker);
   const primaryValue = getBoardAttackDisplayValue(attacker);
   const primaryKind = getBoardAttackDisplayKind(attacker);
 
@@ -43,8 +45,12 @@ export function CardAttackAnimation({ state, onDone }: Props) {
         onAnimationEnd={onDone}
       >
         <img
-          className="battle-card-attack-animation__art"
-          src={resolveCardAssetVariantSrc("battle", attacker.template_id, "on_table")}
+          className={`battle-card-attack-animation__art ${isHero ? "battle-card-attack-animation__art--hero" : ""}`}
+          src={
+            isHero
+              ? resolveHeroAssetVariantSrc(attacker.template_id, "battle_icon")
+              : resolveCardAssetVariantSrc("battle", attacker.template_id, "on_table")
+          }
           alt={attacker.template_id}
           onError={(event) => {
             const target = event.currentTarget;
@@ -52,13 +58,20 @@ export function CardAttackAnimation({ state, onDone }: Props) {
               return;
             }
             target.dataset.fallbackApplied = "1";
-            target.src = resolveCardAssetVariantSrc("battle", attacker.template_id, "view");
+            target.src =
+              isHero
+                ? resolveHeroAssetVariantSrc(attacker.template_id, "battle_icon")
+                : resolveCardAssetVariantSrc("battle", attacker.template_id, "view");
           }}
         />
-        <span className={`battle-board-slot__attack battle-board-slot__attack--${primaryKind}`}>{primaryValue}</span>
-        <span className="battle-board-slot__cooldown">{attacker.cooldown}</span>
-        <span className="battle-board-slot__skill-label">{skillLabel}</span>
-        <span className="battle-board-slot__hp">{attacker.hp}</span>
+        {isHero ? null : (
+          <>
+            <span className={`battle-board-slot__attack battle-board-slot__attack--${primaryKind}`}>{primaryValue}</span>
+            <span className="battle-board-slot__cooldown">{attacker.cooldown}</span>
+            <span className="battle-board-slot__skill-label">{skillLabel}</span>
+            <span className="battle-board-slot__hp">{attacker.hp}</span>
+          </>
+        )}
       </div>
     </div>
   );

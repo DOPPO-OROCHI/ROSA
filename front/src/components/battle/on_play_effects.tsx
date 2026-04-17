@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, type CSSProperties } from "react";
 import { resolveCardAssetVariantSrc } from "../../lib/api";
 import { getBoardAttackDisplayKind, getBoardAttackDisplayValue } from "./card_attack";
+import { getBoardSkillLabel } from "./CARD_SKILLS";
 import type { BattleUnitState } from "./types";
 
 type UnitRect = {
@@ -153,7 +154,7 @@ export function BattlePlayAnimations({ animations, onDone }: PlayAnimationsProps
   return (
     <div className="battle-play-animation-layer" aria-hidden="true">
       {animations.map((entry) => {
-        const skillLabel = entry.unit.cooldown > 0 ? `CD ${entry.unit.cooldown}` : "SKILL";
+        const skillLabel = getBoardSkillLabel(entry.unit);
         const primaryValue = getBoardAttackDisplayValue(entry.unit);
         const primaryKind = getBoardAttackDisplayKind(entry.unit);
 
