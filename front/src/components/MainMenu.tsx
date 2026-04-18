@@ -15,6 +15,8 @@ type Props = {
   inventoryHidden?: boolean;
   startMatchDisabled?: boolean;
   onInventory: () => void;
+  musicEnabled: boolean;
+  onToggleMusic: () => void;
 };
 
 export function MainMenu(props: Props) {
@@ -31,8 +33,8 @@ export function MainMenu(props: Props) {
     <>
       <section className="main-menu surface">
         <div className="video-stage" aria-hidden="true">
+          <img className="video-stage__image" src="/assets/main_menu/image.png" alt="" />
           <div className="video-stage__glow" />
-          <div className="video-stage__label">shared video zone</div>
         </div>
 
         <header className="menu-topbar">
@@ -40,8 +42,13 @@ export function MainMenu(props: Props) {
             <AutoFitText text="FRIENDS" className="top-slot__label" maxFontSize={14} minFontSize={8} />
           </button>
           <h1 className="menu-title">PROJECT ROSE</h1>
-          <button type="button" className="top-slot top-slot--right">
-            <AutoFitText text="BALANCE" className="top-slot__label" maxFontSize={14} minFontSize={8} />
+          <button type="button" className="top-slot top-slot--right" onClick={props.onToggleMusic}>
+            <AutoFitText
+              text={props.musicEnabled ? "MUSIC ON" : "MUSIC OFF"}
+              className="top-slot__label"
+              maxFontSize={14}
+              minFontSize={8}
+            />
           </button>
         </header>
 

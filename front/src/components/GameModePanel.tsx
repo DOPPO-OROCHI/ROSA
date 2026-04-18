@@ -13,6 +13,7 @@ type Props = {
   open: boolean;
   searching: boolean;
   queueState: QueueState;
+  penaltyUntil?: string;
   busy: boolean;
   error: string;
   queueHint: string;
@@ -29,6 +30,7 @@ export function GameModePanel({
   open,
   searching,
   queueState,
+  penaltyUntil,
   busy,
   error,
   queueHint,
@@ -42,6 +44,7 @@ export function GameModePanel({
 }: Props) {
   const [selectedMode, setSelectedMode] = useState<"ranked">("ranked");
   const [dotCount, setDotCount] = useState(1);
+  const [penaltyNow, setPenaltyNow] = useState(() => Date.now());
 
   useEffect(() => {
     if (!searching) {
@@ -56,6 +59,19 @@ export function GameModePanel({
     return () => window.clearInterval(id);
   }, [searching]);
 
+  useEffect(() => {
+    if (queueState !== "penalty" || !penaltyUntil) {
+      return;
+    }
+
+    setPenaltyNow(Date.now());
+    const id = window.setInterval(() => {
+      setPenaltyNow(Date.now());
+    }, 1000);
+
+    return () => window.clearInterval(id);
+  }, [penaltyUntil, queueState]);
+
   const searchTimer = useMemo(() => {
     const minutes = Math.floor(searchDurationSec / 60)
       .toString()
@@ -66,7 +82,33 @@ export function GameModePanel({
     return `${minutes}:${seconds}`;
   }, [searchDurationSec]);
 
+  const penaltyRemainingSec = useMemo(() => {
+    if (queueState !== "penalty" || !penaltyUntil) {
+      return 0;
+    }
+
+    const deadline = Date.parse(penaltyUntil);
+    if (Number.isNaN(deadline)) {
+      return 0;
+    }
+
+    return Math.max(0, Math.ceil((deadline - penaltyNow) / 1000));
+  }, [penaltyNow, penaltyUntil, queueState]);
+
+  const penaltyTimer = useMemo(() => {
+    const minutes = Math.floor(penaltyRemainingSec / 60)
+      .toString()
+      .padStart(2, "0");
+    const seconds = Math.floor(penaltyRemainingSec % 60)
+      .toString()
+      .padStart(2, "0");
+    return `${minutes}:${seconds}`;
+  }, [penaltyRemainingSec]);
+
   const searchLabel = queueState === "pending_match" ? "МАТЧ НАЙДЕН" : `ПОИСК${".".repeat(dotCount)}`;
+  const penaltyActive = queueState === "penalty" && penaltyRemainingSec > 0;
+  const actionDisabled = penaltyActive || busy || !canQueue;
+  const visibleError = penaltyActive ? "" : error;
 
   return (
     <>
@@ -96,15 +138,22 @@ export function GameModePanel({
 
             <button
               type="button"
-              className="game-mode-panel__action"
+              className={`game-mode-panel__action${penaltyActive ? " game-mode-panel__action--penalty" : ""}`}
               onClick={onFindMatch}
-              disabled={busy || !canQueue}
+              disabled={actionDisabled}
             >
-              {busy ? "ПОИСК..." : "НАЙТИ МАТЧ"}
+              {penaltyActive ? (
+                <>
+                  <span className="game-mode-panel__action-label">НАЙТИ МАТЧ</span>
+                  <span className="game-mode-panel__action-timer">{penaltyTimer}</span>
+                </>
+              ) : (
+                <span className="game-mode-panel__action-label">{busy ? "ПОИСК..." : "НАЙТИ МАТЧ"}</span>
+              )}
             </button>
 
             {queueHint ? <p className="game-mode-panel__hint">{queueHint}</p> : null}
-            {error ? <p className="game-mode-panel__error">{error}</p> : null}
+            {visibleError ? <p className="game-mode-panel__error">{visibleError}</p> : null}
           </aside>
         </div>
       ) : null}

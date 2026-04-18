@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { GameModePanel } from "./components/GameModePanel";
 import { InventoryScreen } from "./components/InventoryScreen";
 import { MainMenu } from "./components/MainMenu";
@@ -24,6 +24,10 @@ const QUICK_USERS = ["dev", "roman", "test", "rosa"];
 type Screen = "menu" | "inventory" | "battle";
 
 export function App() {
+  const clickAudioRef = useRef<HTMLAudioElement | null>(null);
+  const menuMusicRef = useRef<HTMLAudioElement | null>(null);
+  const screenRef = useRef<Screen>("menu");
+  const musicEnabledRef = useRef(true);
   const [screen, setScreen] = useState<Screen>("menu");
   const [username, setUsername] = useState("dev");
   const [userId, setUserId] = useState("");
@@ -45,6 +49,7 @@ export function App() {
   const [matchFoundVerdict, setMatchFoundVerdict] = useState<"idle" | "accepted" | "declined_self" | "declined_opponent" | "countdown">("idle");
   const [matchFoundCountdown, setMatchFoundCountdown] = useState(3);
   const [acceptedByMeLatch, setAcceptedByMeLatch] = useState(false);
+  const [musicEnabled, setMusicEnabled] = useState(true);
 
   const selectedHero = heroes.find((hero) => hero.hero_code === selectedHeroCode) ?? heroes[0] ?? null;
   const deckCardCount = deckEntries.reduce((total, entry) => total + entry.count, 0);
@@ -57,6 +62,7 @@ export function App() {
         ? "НЕПОЛНАЯ ДЕКА"
         : "";
   const queueSearching = queueStatus.state === "searching" || queueStatus.state === "pending_match";
+  const queuePenalty = queueStatus.state === "penalty";
   const queueDeckCards = deckEntries
     .filter((entry) => entry.kind === "battle" && entry.count > 0)
     .map((entry) => {
@@ -139,7 +145,99 @@ export function App() {
   }, []);
 
   useEffect(() => {
-    if (!queueSearching) {
+    screenRef.current = screen;
+  }, [screen]);
+
+  useEffect(() => {
+    musicEnabledRef.current = musicEnabled;
+  }, [musicEnabled]);
+
+  useEffect(() => {
+    const audio = new Audio("/assets/ui/click.mp3");
+    audio.preload = "auto";
+    clickAudioRef.current = audio;
+
+    function handleUiClick(event: PointerEvent) {
+      const target = event.target;
+      if (!(target instanceof Element)) {
+        return;
+      }
+
+      const interactive = target.closest(
+        'button, a, input, select, textarea, summary, [role="button"], [data-ui-click]',
+      );
+
+      if (!(interactive instanceof HTMLElement)) {
+        return;
+      }
+
+      if (
+        interactive.matches(":disabled") ||
+        interactive.getAttribute("aria-disabled") === "true"
+      ) {
+        return;
+      }
+
+      const baseAudio = clickAudioRef.current;
+      if (!baseAudio) {
+        return;
+      }
+
+      const clickAudio = baseAudio.cloneNode() as HTMLAudioElement;
+      clickAudio.volume = 0.1;
+      void clickAudio.play().catch(() => undefined);
+
+      const musicAudio = menuMusicRef.current;
+      if (
+        musicAudio &&
+        musicEnabledRef.current &&
+        (screenRef.current === "menu" || screenRef.current === "inventory") &&
+        musicAudio.paused
+      ) {
+        void musicAudio.play().catch(() => undefined);
+      }
+    }
+
+    window.addEventListener("pointerdown", handleUiClick, { passive: true });
+    return () => window.removeEventListener("pointerdown", handleUiClick);
+  }, []);
+
+  useEffect(() => {
+    const audio = new Audio("/assets/ui/menu_music.mp3");
+    audio.preload = "auto";
+    audio.loop = true;
+    audio.volume = 0.35;
+    menuMusicRef.current = audio;
+
+    return () => {
+      audio.pause();
+      audio.currentTime = 0;
+      if (menuMusicRef.current === audio) {
+        menuMusicRef.current = null;
+      }
+    };
+  }, []);
+
+  useEffect(() => {
+    const audio = menuMusicRef.current;
+    if (!audio) {
+      return;
+    }
+
+    if (!musicEnabled) {
+      audio.pause();
+      return;
+    }
+
+    if (screen === "menu" || screen === "inventory") {
+      return;
+    }
+
+    audio.pause();
+  }, [musicEnabled, screen]);
+
+  useEffect(() => {
+    if (!queueSearching && !queuePenalty) {
       return;
     }
 
@@ -147,11 +245,13 @@ export function App() {
       void loadQueueStatus().catch(() => {
         setQueueStatus((current) => ({ ...current, state: "idle" }));
       });
-      void loadActiveMatch().catch(() => undefined);
+      if (queueSearching) {
+        void loadActiveMatch().catch(() => undefined);
+      }
     }, 1000);
 
     return () => window.clearInterval(id);
-  }, [queueSearching]);
+  }, [queuePenalty, queueSearching]);
 
   useEffect(() => {
     if (queueStatus.state === "pending_match") {
@@ -380,6 +480,25 @@ export function App() {
           inventoryHidden={queueSearching}
           startMatchDisabled={queueSearching}
           onInventory={() => setScreen("inventory")}
+          musicEnabled={musicEnabled}
+          onToggleMusic={() => {
+            const nextEnabled = !musicEnabled;
+            setMusicEnabled(nextEnabled);
+
+            const audio = menuMusicRef.current;
+            if (!audio) {
+              return;
+            }
+
+            if (!nextEnabled) {
+              audio.pause();
+              return;
+            }
+
+            if (screen === "menu" || screen === "inventory") {
+              void audio.play().catch(() => undefined);
+            }
+          }}
         />
       ) : screen === "inventory" ? (
         <InventoryScreen
@@ -398,7 +517,13 @@ export function App() {
           heroes={heroes}
           onLeaveToMenu={() => {
             setActiveMatchId(null);
+            setQueueStatus({ state: "idle", search_duration_sec: 0 });
+            setQueueError("");
+            setMatchFoundVerdict("idle");
+            setMatchFoundCountdown(3);
+            setAcceptedByMeLatch(false);
             setScreen("menu");
+            void loadQueueStatus().catch(() => undefined);
           }}
         />
       ) : null}
@@ -458,6 +583,7 @@ export function App() {
         open={gameModeOpen}
         searching={queueSearching}
         queueState={queueStatus.state}
+        penaltyUntil={queueStatus.penalty_until}
         busy={queueBusy}
         error={queueError}
         queueHint={queueHint}

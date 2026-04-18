@@ -91,24 +91,24 @@ button {
   overflow: hidden;
 }
 
+.video-stage__image {
+  position: absolute;
+  inset: -8%;
+  width: 110%;
+  height: 120%;
+  object-fit: cover;
+  filter: blur(1px);
+  opacity: 0.6;
+  transform: scale(1.06);
+}
+
 .video-stage__glow {
   position: absolute;
   inset: 0;
   background:
     radial-gradient(circle at 50% 24%, rgba(132, 112, 255, 0.24), transparent 18%),
     radial-gradient(circle at 50% 60%, rgba(77, 166, 255, 0.12), transparent 28%),
-    linear-gradient(180deg, rgba(255, 255, 255, 0.02), rgba(4, 8, 16, 0.2));
-}
-
-.video-stage__label {
-  position: absolute;
-  inset: 0;
-  display: grid;
-  place-items: center;
-  color: rgba(226, 230, 255, 0.14);
-  text-transform: uppercase;
-  letter-spacing: 0.22em;
-  font-size: 0.72rem;
+    linear-gradient(180deg, rgba(7, 10, 17, 0.18), rgba(4, 8, 16, 0.58));
 }
 
 .menu-topbar,
@@ -711,6 +711,33 @@ button {
   font-size: 1.1rem;
 }
 
+.card-viewer__nav {
+  position: absolute;
+  top: 50%;
+  z-index: 5;
+  width: 46px;
+  height: 46px;
+  border-radius: 999px;
+  border: 1px solid rgba(214, 224, 255, 0.34);
+  background: rgba(8, 12, 19, 0.84);
+  color: #eff4ff;
+  font-size: 1.3rem;
+  transform: translateY(-50%);
+}
+
+.card-viewer__nav:disabled {
+  opacity: 0.34;
+  cursor: not-allowed;
+}
+
+.card-viewer__nav--back {
+  left: 2px;
+}
+
+.card-viewer__nav--forward {
+  right: 2px;
+}
+
 .card-viewer__frame {
   position: relative;
   width: min(100%, 404px);
@@ -718,6 +745,10 @@ button {
   border-radius: 22px;
   overflow: hidden;
   filter: drop-shadow(0 18px 28px rgba(0, 0, 0, 0.32));
+  transform-origin: 50% 55%;
+  transform-style: preserve-3d;
+  will-change: transform;
+  animation: card-viewer-tilt 17.4s ease-in-out infinite;
   --viewer-mana-x: 13%;
   --viewer-mana-y: 14%;
   --viewer-attack-x: 14%;
@@ -761,7 +792,7 @@ button {
 
 .card-viewer__stat {
   font-family: "Zenter SP Demo Black", Georgia, "Times New Roman", serif;
-  font-size: clamp(4.2rem, 11.4vw, 6.8rem);
+  font-size: clamp(3.2rem, 9.4vw, 4.8rem);
   font-weight: 900;
   line-height: 1;
   color: #fff1cc;
@@ -824,6 +855,21 @@ button {
   top: 89.2%;
   font-size: clamp(0.76rem, 2vw, 0.96rem);
   letter-spacing: 0.04em;
+}
+
+@media (max-width: 380px) {
+  .card-viewer__nav {
+    width: 40px;
+    height: 40px;
+  }
+
+  .card-viewer__nav--back {
+    left: -2px;
+  }
+
+  .card-viewer__nav--forward {
+    right: -2px;
+  }
 }
 
 .dev-panel {
@@ -1318,11 +1364,42 @@ button {
 .game-mode-panel__action {
   width: 100%;
   min-height: 52px;
+  padding: 0 16px;
   border-radius: 18px;
   border: 1px solid rgba(151, 227, 255, 0.34);
   background: linear-gradient(135deg, rgba(57, 133, 168, 0.94), rgba(73, 192, 216, 0.92));
   color: #04111a;
   font-weight: 900;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+}
+
+.game-mode-panel__action--penalty {
+  border-color: rgba(255, 140, 140, 0.42);
+  background: linear-gradient(135deg, rgba(127, 26, 37, 0.96), rgba(189, 56, 64, 0.9));
+  color: #ffe2e2;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+.game-mode-panel__action-label {
+  flex: 1 1 auto;
+  min-width: 0;
+  text-align: center;
+}
+
+.game-mode-panel__action-timer {
+  flex: 0 0 auto;
+  min-width: 74px;
+  padding: 7px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 216, 216, 0.28);
+  background: rgba(26, 7, 10, 0.28);
+  color: #fff3f3;
+  font-size: 0.82rem;
+  letter-spacing: 0.08em;
+  text-align: center;
 }
 
 .game-mode-panel__action:disabled {
@@ -1609,5 +1686,27 @@ button {
   to {
     opacity: 1;
     transform: translateY(0);
+  }
+}
+
+@keyframes card-viewer-tilt {
+  0% {
+    transform: perspective(1650px) rotateX(1.7deg) rotateY(-3.2deg) rotateZ(-0.1deg);
+  }
+
+  25% {
+    transform: perspective(1650px) rotateX(0.7deg) rotateY(2.4deg) rotateZ(0.05deg);
+  }
+
+  50% {
+    transform: perspective(1650px) rotateX(-1.3deg) rotateY(3.4deg) rotateZ(0.1deg);
+  }
+
+  75% {
+    transform: perspective(1650px) rotateX(-0.55deg) rotateY(-2.6deg) rotateZ(-0.05deg);
+  }
+
+  100% {
+    transform: perspective(1650px) rotateX(1.7deg) rotateY(-3.2deg) rotateZ(-0.1deg);
   }
 }

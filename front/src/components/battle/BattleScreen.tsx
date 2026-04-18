@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { request } from "../../lib/api";
 import { AbilityBlock } from "./AbilityBlock";
 import { AttackBlock } from "./AttackBlock";
-import { SkillProjectiles, getStunTurns, useCardSkill, useSkillProjectiles, type SkillProjectileKind } from "./CARD_SKILLS";
+import { getStunTurns, useCardSkill } from "./CARD_SKILLS";
 import { CardAttackAnimation, type CardAttackAnimationState } from "./CardAttackAnimation";
 import { BattleCardViewer, type BattleCardViewerOrigin } from "./BattleCardViewer";
 import { BattleField } from "./BattleField";
@@ -362,17 +362,10 @@ export function BattleScreen({ currentUserId, matchId, heroes, onLeaveToMenu }: 
     shellHeight,
     getUnitRect,
   });
-  const skillProjectiles = useSkillProjectiles({ match, playerIndex, getUnitRect });
 
   function showToast(message: string) {
     setToastMessage(message);
     setToastNonce((current) => current + 1);
-  }
-
-  function handleSkillProjectileImpact(targetInstanceId: string, kind: SkillProjectileKind) {
-    if (kind === "damage" || kind === "debuff") {
-      onHitEffects.triggerHit(targetInstanceId);
-    }
   }
 
   function mapOriginRect(rect?: DOMRect | null): BattleCardViewerOrigin | null {
@@ -825,11 +818,6 @@ export function BattleScreen({ currentUserId, matchId, heroes, onLeaveToMenu }: 
         {attackAnimation ? (
           <CardAttackAnimation state={attackAnimation} onDone={() => setAttackAnimation(null)} />
         ) : null}
-        <SkillProjectiles
-          projectiles={skillProjectiles.projectiles}
-          onImpact={handleSkillProjectileImpact}
-          onDone={skillProjectiles.removeProjectile}
-        />
         <BattleDeathAnimations
           animations={deathAnimations}
           onDone={(id) => {

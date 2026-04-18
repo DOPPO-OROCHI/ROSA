@@ -188,6 +188,8 @@ func PlayBattleCard(m *MatchState,
 		SourceTemplateID: u.TemplateID,
 		VFXKey:           BuildVFXKey(tpl.AssetBaseKey, "summon"),
 		SFXKey:           BuildSFXKey(tpl.AssetBaseKey, "summon"),
+		ImpactVFXKey:     BuildVFXKey(tpl.AssetBaseKey, "summon"),
+		ImpactSFXKey:     BuildSFXKey(tpl.AssetBaseKey, "summon"),
 		TargetSlot:       targetSlot,
 	})
 	return nil
@@ -260,6 +262,8 @@ func PlayBuffCard(m *MatchState,
 		SourceCardTemplateID: buffCard.TemplateID,
 		VFXKey:               BuildVFXKey(tpl.AssetBaseKey, "cast"),
 		SFXKey:               BuildSFXKey(tpl.AssetBaseKey, "cast"),
+		ImpactVFXKey:         BuildVFXKey(tpl.AssetBaseKey, "cast"),
+		ImpactSFXKey:         BuildSFXKey(tpl.AssetBaseKey, "cast"),
 		Targets: []EventTarget{
 			{
 				InstanceID: target.InstanceID,
@@ -502,6 +506,8 @@ func CardAttack(m *MatchState,
 		SourceTemplateID: atk.TemplateID,
 		VFXKey:           BuildVFXKey(tpl.AssetBaseKey, "attack"),
 		SFXKey:           BuildSFXKey(tpl.AssetBaseKey, "attack"),
+		ImpactVFXKey:     BuildVFXKey(tpl.AssetBaseKey, "attack"),
+		ImpactSFXKey:     BuildSFXKey(tpl.AssetBaseKey, "attack"),
 		Targets:          targets,
 	})
 	if defPlayer.HeroHP <= 0 {
@@ -624,6 +630,8 @@ func HeroAttack(m *MatchState,
 		SourceHeroCode: atkPlayer.HeroCode,
 		VFXKey:         BuildVFXKey(heroBase, "attack"),
 		SFXKey:         BuildSFXKey(heroBase, "attack"),
+		ImpactVFXKey:   BuildVFXKey(heroBase, "attack"),
+		ImpactSFXKey:   BuildSFXKey(heroBase, "attack"),
 		Targets:        targets,
 	})
 	if atkPlayer.HeroHP <= 0 {
@@ -756,6 +764,7 @@ func killUnitAt(m *MatchState, ownerIdx int, slot int, killerInstanceID string, 
 		SourceKind:       string(SourceUnit),
 		SourceInstanceID: dead.InstanceID,
 		SourceTemplateID: dead.TemplateID,
+		SFXKey:           BuildSFXKey(dead.AssetBaseKey, "death"),
 		TargetSlot:       slot,
 	})
 	return nil

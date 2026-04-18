@@ -126,6 +126,8 @@ type Event struct {
 	TargetSlot            int           `json:"target_slot,omitempty"`             //<-для суммона
 	Targets               []EventTarget `json:"targets,omitempty"`                 //<-для атак, или бафов, или хила
 	VisibleForPlayerIndex *int          `json:"visible_for_player_index,omitempty"`
+	ImpactVFXKey          string        `json:"impact_vfx_key,omitempty"`
+	ImpactSFXKey          string        `json:"impact_sfx_key,omitempty"`
 }
 
 // а это структура, которая обращается уже к тому, на кого было воздействие. Типа, есть анимации у того кто бьет и у того, кого бьют

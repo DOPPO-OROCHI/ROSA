@@ -3,6 +3,10 @@ import type { BattleCard } from "../types";
 
 type Props = {
   card: BattleCard;
+  canGoBack: boolean;
+  canGoForward: boolean;
+  onBack: () => void;
+  onForward: () => void;
   onClose: () => void;
 };
 
@@ -11,12 +15,37 @@ function buildCombatInfo(card: BattleCard): string {
   return `ATK CD ${card.base_cooldown} | SPLASH ${card.splash_radius} | SKILL CD ${skillCooldown}`;
 }
 
-export function CardViewer({ card, onClose }: Props) {
+export function CardViewer({
+  card,
+  canGoBack,
+  canGoForward,
+  onBack,
+  onForward,
+  onClose,
+}: Props) {
   return (
     <div className="overlay">
       <section className="card-viewer surface">
         <button type="button" className="card-viewer__close" onClick={onClose} aria-label={`Close ${card.name} viewer`}>
           x
+        </button>
+        <button
+          type="button"
+          className="card-viewer__nav card-viewer__nav--back"
+          onClick={onBack}
+          disabled={!canGoBack}
+          aria-label="Previous card"
+        >
+          {"<"}
+        </button>
+        <button
+          type="button"
+          className="card-viewer__nav card-viewer__nav--forward"
+          onClick={onForward}
+          disabled={!canGoForward}
+          aria-label="Next card"
+        >
+          {">"}
         </button>
 
         <article className="card-viewer__frame">

@@ -20,6 +20,10 @@ type DeckStack = {
 };
 
 type BattleSortKey = "hp" | "attack" | "mana";
+type ViewerState = {
+  cards: BattleCard[];
+  index: number;
+};
 
 function groupDeck(entries: DeckEntry[], battleCards: BattleCard[]): DeckStack[] {
   const battleMap = new Map(battleCards.map((card) => [card.template_id, card] as const));
@@ -67,7 +71,7 @@ export function InventoryScreen({
   const [buffPage, setBuffPage] = useState(0);
   const [deckSyncState, setDeckSyncState] = useState<"idle" | "syncing" | "saved" | "error">("idle");
   const [deckMessage, setDeckMessage] = useState("");
-  const [viewerCard, setViewerCard] = useState<BattleCard | null>(null);
+  const [viewerState, setViewerState] = useState<ViewerState | null>(null);
   const lastSavedDeckRef = useRef(JSON.stringify(savedDeckEntries));
 
   const groupedDeck = useMemo(() => groupDeck(draftDeckEntries, battleCards), [draftDeckEntries, battleCards]);
@@ -215,11 +219,34 @@ export function InventoryScreen({
     updateDraftDeck(templateId, 1);
   }
 
+  function openViewer(cards: BattleCard[], index: number) {
+    if (!cards.length || index < 0 || index >= cards.length) {
+      return;
+    }
+
+    setViewerState({ cards, index });
+  }
+
+  function shiftViewer(delta: number) {
+    setViewerState((current) => {
+      if (!current) {
+        return current;
+      }
+
+      const nextIndex = current.index + delta;
+      if (nextIndex < 0 || nextIndex >= current.cards.length) {
+        return current;
+      }
+
+      return { ...current, index: nextIndex };
+    });
+  }
+
   return (
     <section className="inventory-screen surface">
       <div className="video-stage" aria-hidden="true">
+        <img className="video-stage__image" src="/assets/inventory/image.png" alt="" />
         <div className="video-stage__glow" />
-        <div className="video-stage__label">shared video zone</div>
       </div>
 
       <div className="inventory-screen__content">
@@ -242,7 +269,7 @@ export function InventoryScreen({
                     card={previewDeck[index].card}
                     size="deck"
                     countBadge={previewDeck[index].count}
-                    onOpen={() => setViewerCard(previewDeck[index].card)}
+                    onOpen={() => openViewer(groupedDeck.map((stack) => stack.card), index)}
                     onRemove={() => removeCard(previewDeck[index].card.template_id)}
                     description={previewDeck[index].card.description}
                   />
@@ -309,7 +336,7 @@ export function InventoryScreen({
                   card={card}
                   description={card.description}
                   countBadge={deckCountMap.get(card.template_id) ?? null}
-                  onOpen={() => setViewerCard(card)}
+                  onOpen={() => openViewer(sortedBattleCards, sortedBattleCards.findIndex((item) => item.template_id === card.template_id))}
                   onAdd={() => addCard(card.template_id)}
                   addDisabled={!canAddCard(card)}
                 />
@@ -351,7 +378,7 @@ export function InventoryScreen({
                     card={stack.card}
                     size="deck"
                     countBadge={stack.count}
-                    onOpen={() => setViewerCard(stack.card)}
+                    onOpen={() => openViewer(groupedDeck.map((item) => item.card), groupedDeck.findIndex((item) => item.card.template_id === stack.card.template_id))}
                     onRemove={() => removeCard(stack.card.template_id)}
                     description={stack.card.description}
                   />
@@ -365,7 +392,16 @@ export function InventoryScreen({
         </div>
       ) : null}
 
-      {viewerCard ? <CardViewer card={viewerCard} onClose={() => setViewerCard(null)} /> : null}
+      {viewerState ? (
+        <CardViewer
+          card={viewerState.cards[viewerState.index]}
+          canGoBack={viewerState.index > 0}
+          canGoForward={viewerState.index < viewerState.cards.length - 1}
+          onBack={() => shiftViewer(-1)}
+          onForward={() => shiftViewer(1)}
+          onClose={() => setViewerState(null)}
+        />
+      ) : null}
     </section>
   );
 }

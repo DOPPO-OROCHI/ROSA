@@ -132,6 +132,8 @@ func CastBuffSkill(m *MatchState, a Action, caster *UnitState) error {
 		SourceTemplateID: caster.TemplateID,
 		VFXKey:           BuildVFXKey(caster.AssetBaseKey, "spell"),
 		SFXKey:           BuildSFXKey(caster.AssetBaseKey, "spell"),
+		ImpactVFXKey:     BuildVFXKey(caster.AssetBaseKey, "impact"),
+		ImpactSFXKey:     BuildSFXKey(caster.AssetBaseKey, "impact"),
 		Targets:          eventTargets,
 	})
 	caster.Skill.CooldownLeft = caster.Skill.BaseCooldown
@@ -371,6 +373,8 @@ func CastDebuffSkill(m *MatchState, a Action, caster *UnitState) error {
 		SourceTemplateID: caster.TemplateID,
 		VFXKey:           BuildVFXKey(caster.AssetBaseKey, "spell"),
 		SFXKey:           BuildSFXKey(caster.AssetBaseKey, "spell"),
+		ImpactVFXKey:     BuildVFXKey(caster.AssetBaseKey, "impact"),
+		ImpactSFXKey:     BuildSFXKey(caster.AssetBaseKey, "impact"),
 		Targets:          eventTargets,
 	})
 	caster.Skill.CooldownLeft = caster.Skill.BaseCooldown
@@ -532,6 +536,8 @@ func CastDispelDebuffsFromAllySkill(m *MatchState, a Action, caster *UnitState) 
 		SourceTemplateID: caster.TemplateID,
 		VFXKey:           BuildVFXKey(caster.AssetBaseKey, "spell"),
 		SFXKey:           BuildSFXKey(caster.AssetBaseKey, "spell"),
+		ImpactVFXKey:     BuildVFXKey(caster.AssetBaseKey, "impact"),
+		ImpactSFXKey:     BuildSFXKey(caster.AssetBaseKey, "impact"),
 		Targets:          eventTargets,
 	})
 	caster.Skill.CooldownLeft = caster.Skill.BaseCooldown
@@ -683,6 +689,8 @@ func CastDispelBuffsFromEnemySkill(m *MatchState, a Action, caster *UnitState) e
 		SourceTemplateID: caster.TemplateID,
 		VFXKey:           BuildVFXKey(caster.AssetBaseKey, "spell"),
 		SFXKey:           BuildSFXKey(caster.AssetBaseKey, "spell"),
+		ImpactVFXKey:     BuildVFXKey(caster.AssetBaseKey, "impact"),
+		ImpactSFXKey:     BuildSFXKey(caster.AssetBaseKey, "impact"),
 		Targets:          eventTargets,
 	})
 	caster.Skill.CooldownLeft = caster.Skill.BaseCooldown

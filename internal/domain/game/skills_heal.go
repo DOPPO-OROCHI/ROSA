@@ -48,6 +48,8 @@ func CastHealSelfSkill(m *MatchState, a Action, caster *UnitState) error {
 		SourceTemplateID: caster.TemplateID,
 		VFXKey:           BuildVFXKey(caster.AssetBaseKey, "spell"),
 		SFXKey:           BuildSFXKey(caster.AssetBaseKey, "spell"),
+		ImpactVFXKey:     BuildVFXKey(caster.AssetBaseKey, "impact"),
+		ImpactSFXKey:     BuildSFXKey(caster.AssetBaseKey, "impact"),
 		Targets: []EventTarget{
 			{
 				InstanceID: caster.InstanceID,
@@ -115,6 +117,8 @@ func CastHealSingleSkill(m *MatchState, a Action, caster *UnitState) error {
 		SourceTemplateID: caster.TemplateID,
 		VFXKey:           BuildVFXKey(caster.AssetBaseKey, "spell"),
 		SFXKey:           BuildSFXKey(caster.AssetBaseKey, "spell"),
+		ImpactVFXKey:     BuildVFXKey(caster.AssetBaseKey, "impact"),
+		ImpactSFXKey:     BuildSFXKey(caster.AssetBaseKey, "impact"),
 		Targets: []EventTarget{
 			{
 				InstanceID: target.InstanceID,
@@ -227,6 +231,8 @@ func CastHealAdjacentSkill(m *MatchState, a Action, caster *UnitState) error {
 		SourceTemplateID: caster.TemplateID,
 		VFXKey:           BuildVFXKey(caster.AssetBaseKey, "spell"),
 		SFXKey:           BuildSFXKey(caster.AssetBaseKey, "spell"),
+		ImpactVFXKey:     BuildVFXKey(caster.AssetBaseKey, "impact"),
+		ImpactSFXKey:     BuildSFXKey(caster.AssetBaseKey, "impact"),
 		Targets:          targets,
 	})
 	caster.Skill.CooldownLeft = caster.Skill.BaseCooldown
@@ -294,6 +300,8 @@ func CastHealAllAlliesSkill(m *MatchState, a Action, caster *UnitState) error {
 		SourceTemplateID: caster.TemplateID,
 		VFXKey:           BuildVFXKey(caster.AssetBaseKey, "spell"),
 		SFXKey:           BuildSFXKey(caster.AssetBaseKey, "spell"),
+		ImpactVFXKey:     BuildVFXKey(caster.AssetBaseKey, "impact"),
+		ImpactSFXKey:     BuildSFXKey(caster.AssetBaseKey, "impact"),
 		Targets:          targets,
 	})
 	caster.Skill.CooldownLeft = caster.Skill.BaseCooldown
@@ -361,6 +369,8 @@ func CastHealLowestHPSkill(m *MatchState, a Action, caster *UnitState) error {
 		SourceTemplateID: caster.TemplateID,
 		VFXKey:           BuildVFXKey(caster.AssetBaseKey, "spell"),
 		SFXKey:           BuildSFXKey(caster.AssetBaseKey, "spell"),
+		ImpactVFXKey:     BuildVFXKey(caster.AssetBaseKey, "impact"),
+		ImpactSFXKey:     BuildSFXKey(caster.AssetBaseKey, "impact"),
 		Targets: []EventTarget{
 			{
 				InstanceID: inst,
@@ -436,6 +446,8 @@ func CastHealHighestAttackSkill(m *MatchState, a Action, caster *UnitState) erro
 		SourceTemplateID: caster.TemplateID,
 		VFXKey:           BuildVFXKey(caster.AssetBaseKey, "spell"),
 		SFXKey:           BuildSFXKey(caster.AssetBaseKey, "spell"),
+		ImpactVFXKey:     BuildVFXKey(caster.AssetBaseKey, "impact"),
+		ImpactSFXKey:     BuildSFXKey(caster.AssetBaseKey, "impact"),
 		Targets: []EventTarget{
 			{
 				InstanceID: inst,

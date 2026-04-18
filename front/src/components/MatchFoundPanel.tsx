@@ -22,7 +22,7 @@ function blockState(side: "me" | "opponent", verdict: Verdict, accepted: boolean
   if (verdict === "declined_opponent" && side === "opponent") {
     return "match-found-player--declined";
   }
-  if ((verdict === "accepted" || verdict === "countdown") && accepted) {
+  if (accepted) {
     return "match-found-player--accepted";
   }
   return "";

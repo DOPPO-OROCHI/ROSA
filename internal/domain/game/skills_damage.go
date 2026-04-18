@@ -110,6 +110,10 @@ func CastSingleDamageSkill(m *MatchState, a Action, caster *UnitState) error {
 			SourceKind:       string(SourceUnit),
 			SourceInstanceID: caster.InstanceID,
 			SourceTemplateID: caster.TemplateID,
+			VFXKey:           BuildVFXKey(caster.AssetBaseKey, "spell"),
+			SFXKey:           BuildSFXKey(caster.AssetBaseKey, "spell"),
+			ImpactVFXKey:     BuildVFXKey(caster.AssetBaseKey, "impact"),
+			ImpactSFXKey:     BuildSFXKey(caster.AssetBaseKey, "impact"),
 			Targets:          eventTargets,
 		})
 	}
@@ -212,6 +216,8 @@ func CastSplashDamageSkill(m *MatchState, a Action, caster *UnitState) error {
 		SourceTemplateID: caster.TemplateID,
 		VFXKey:           BuildVFXKey(caster.AssetBaseKey, "spell"),
 		SFXKey:           BuildSFXKey(caster.AssetBaseKey, "spell"),
+		ImpactVFXKey:     BuildVFXKey(caster.AssetBaseKey, "impact"),
+		ImpactSFXKey:     BuildSFXKey(caster.AssetBaseKey, "impact"),
 		Targets:          targets,
 	})
 	caster.Skill.CooldownLeft = caster.Skill.BaseCooldown
@@ -276,6 +282,8 @@ func CastAllEnemiesDamageSkill(m *MatchState, a Action, caster *UnitState) error
 		SourceTemplateID: caster.TemplateID,
 		VFXKey:           BuildVFXKey(caster.AssetBaseKey, "spell"),
 		SFXKey:           BuildSFXKey(caster.AssetBaseKey, "spell"),
+		ImpactVFXKey:     BuildVFXKey(caster.AssetBaseKey, "impact"),
+		ImpactSFXKey:     BuildSFXKey(caster.AssetBaseKey, "impact"),
 		Targets:          targets,
 	})
 	caster.Skill.CooldownLeft = caster.Skill.BaseCooldown
@@ -331,6 +339,8 @@ func CastRandomSingleEnemyDamageSkill(m *MatchState, a Action, caster *UnitState
 			SourceTemplateID: caster.TemplateID,
 			VFXKey:           BuildVFXKey(caster.AssetBaseKey, "spell"),
 			SFXKey:           BuildSFXKey(caster.AssetBaseKey, "spell"),
+			ImpactVFXKey:     BuildVFXKey(caster.AssetBaseKey, "impact"),
+			ImpactSFXKey:     BuildSFXKey(caster.AssetBaseKey, "impact"),
 			Targets: []EventTarget{
 				{
 					InstanceID: heroID,
@@ -394,6 +404,8 @@ func CastRandomSingleEnemyDamageSkill(m *MatchState, a Action, caster *UnitState
 			SourceTemplateID: caster.TemplateID,
 			VFXKey:           BuildVFXKey(caster.AssetBaseKey, "spell"),
 			SFXKey:           BuildSFXKey(caster.AssetBaseKey, "spell"),
+			ImpactVFXKey:     BuildVFXKey(caster.AssetBaseKey, "impact"),
+			ImpactSFXKey:     BuildSFXKey(caster.AssetBaseKey, "impact"),
 			Targets:          eventTargets,
 		})
 	}
@@ -527,6 +539,8 @@ func CastRandomMultiEnemyDamageSkill(m *MatchState, a Action, caster *UnitState)
 		SourceTemplateID: caster.TemplateID,
 		VFXKey:           BuildVFXKey(caster.AssetBaseKey, "spell"),
 		SFXKey:           BuildSFXKey(caster.AssetBaseKey, "spell"),
+		ImpactVFXKey:     BuildVFXKey(caster.AssetBaseKey, "impact"),
+		ImpactSFXKey:     BuildSFXKey(caster.AssetBaseKey, "impact"),
 		Targets:          targets,
 	})
 	caster.Skill.CooldownLeft = caster.Skill.BaseCooldown
@@ -613,6 +627,8 @@ func CastLowestHPDamageSkill(m *MatchState, a Action, caster *UnitState) error {
 		SourceTemplateID: caster.TemplateID,
 		VFXKey:           BuildVFXKey(caster.AssetBaseKey, "spell"),
 		SFXKey:           BuildSFXKey(caster.AssetBaseKey, "spell"),
+		ImpactVFXKey:     BuildVFXKey(caster.AssetBaseKey, "impact"),
+		ImpactSFXKey:     BuildSFXKey(caster.AssetBaseKey, "impact"),
 		Targets:          eventTargets,
 	})
 	caster.Skill.CooldownLeft = caster.Skill.BaseCooldown
@@ -716,6 +732,8 @@ func CastHighestAttackDamageSkill(m *MatchState, a Action, caster *UnitState) er
 		SourceTemplateID: caster.TemplateID,
 		VFXKey:           BuildVFXKey(caster.AssetBaseKey, "spell"),
 		SFXKey:           BuildSFXKey(caster.AssetBaseKey, "spell"),
+		ImpactVFXKey:     BuildVFXKey(caster.AssetBaseKey, "impact"),
+		ImpactSFXKey:     BuildSFXKey(caster.AssetBaseKey, "impact"),
 		Targets:          eventTargets,
 	})
 	caster.Skill.CooldownLeft = caster.Skill.BaseCooldown
@@ -819,6 +837,8 @@ func CastHighestHPDamageSkill(m *MatchState, a Action, caster *UnitState) error 
 		SourceTemplateID: caster.TemplateID,
 		VFXKey:           BuildVFXKey(caster.AssetBaseKey, "spell"),
 		SFXKey:           BuildSFXKey(caster.AssetBaseKey, "spell"),
+		ImpactVFXKey:     BuildVFXKey(caster.AssetBaseKey, "impact"),
+		ImpactSFXKey:     BuildSFXKey(caster.AssetBaseKey, "impact"),
 		Targets:          eventTargets,
 	})
 	caster.Skill.CooldownLeft = caster.Skill.BaseCooldown
@@ -922,6 +942,8 @@ func CastLowestAttackDamageSkill(m *MatchState, a Action, caster *UnitState) err
 		SourceTemplateID: caster.TemplateID,
 		VFXKey:           BuildVFXKey(caster.AssetBaseKey, "spell"),
 		SFXKey:           BuildSFXKey(caster.AssetBaseKey, "spell"),
+		ImpactVFXKey:     BuildVFXKey(caster.AssetBaseKey, "impact"),
+		ImpactSFXKey:     BuildSFXKey(caster.AssetBaseKey, "impact"),
 		Targets:          eventTargets,
 	})
 	caster.Skill.CooldownLeft = caster.Skill.BaseCooldown
@@ -1056,6 +1078,8 @@ func CastExplodeOnHittingEnemy(m *MatchState, a Action, caster *UnitState) error
 		SourceTemplateID: caster.TemplateID,
 		VFXKey:           BuildVFXKey(caster.AssetBaseKey, "spell"),
 		SFXKey:           BuildSFXKey(caster.AssetBaseKey, "spell"),
+		ImpactVFXKey:     BuildVFXKey(caster.AssetBaseKey, "impact"),
+		ImpactSFXKey:     BuildSFXKey(caster.AssetBaseKey, "impact"),
 		Targets:          eventTargets,
 	})
 	return nil

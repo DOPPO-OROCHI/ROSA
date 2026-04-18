@@ -57,6 +57,8 @@ func CastKillTargetSkill(m *MatchState, a Action, caster *UnitState) error {
 		SourceTemplateID: caster.TemplateID,
 		VFXKey:           BuildVFXKey(caster.AssetBaseKey, "spell"),
 		SFXKey:           BuildSFXKey(caster.AssetBaseKey, "spell"),
+		ImpactVFXKey:     BuildVFXKey(caster.AssetBaseKey, "impact"),
+		ImpactSFXKey:     BuildSFXKey(caster.AssetBaseKey, "impact"),
 		Targets:          targets,
 	})
 	caster.Skill.CooldownLeft = caster.Skill.BaseCooldown
@@ -98,6 +100,8 @@ func CastVisionSkill(m *MatchState, a Action, caster *UnitState) error {
 		SourceTemplateID:      caster.TemplateID,
 		VFXKey:                BuildVFXKey(caster.AssetBaseKey, "spell"),
 		SFXKey:                BuildSFXKey(caster.AssetBaseKey, "spell"),
+		ImpactVFXKey:          BuildVFXKey(caster.AssetBaseKey, "impact"),
+		ImpactSFXKey:          BuildSFXKey(caster.AssetBaseKey, "impact"),
 		Targets:               targets,
 		VisibleForPlayerIndex: &viewer,
 	})
@@ -201,6 +205,8 @@ func CastSetFixedHPToAllySkill(m *MatchState, a Action, caster *UnitState) error
 		SourceTemplateID: caster.TemplateID,
 		VFXKey:           BuildVFXKey(caster.AssetBaseKey, "spell"),
 		SFXKey:           BuildSFXKey(caster.AssetBaseKey, "spell"),
+		ImpactVFXKey:     BuildVFXKey(caster.AssetBaseKey, "impact"),
+		ImpactSFXKey:     BuildSFXKey(caster.AssetBaseKey, "impact"),
 		Targets:          eventTargets,
 	})
 	caster.Skill.CooldownLeft = caster.Skill.BaseCooldown
@@ -301,6 +307,8 @@ func CastSetFixedHPToEnemySkill(m *MatchState, a Action, caster *UnitState) erro
 		SourceTemplateID: caster.TemplateID,
 		VFXKey:           BuildVFXKey(caster.AssetBaseKey, "spell"),
 		SFXKey:           BuildSFXKey(caster.AssetBaseKey, "spell"),
+		ImpactVFXKey:     BuildVFXKey(caster.AssetBaseKey, "impact"),
+		ImpactSFXKey:     BuildSFXKey(caster.AssetBaseKey, "impact"),
 		Targets:          eventTargets,
 	})
 	caster.Skill.CooldownLeft = caster.Skill.BaseCooldown
@@ -407,6 +415,8 @@ func CastEqualizeAllyHPSkill(m *MatchState, a Action, caster *UnitState) error {
 		SourceTemplateID: caster.TemplateID,
 		VFXKey:           BuildVFXKey(caster.AssetBaseKey, "spell"),
 		SFXKey:           BuildSFXKey(caster.AssetBaseKey, "spell"),
+		ImpactVFXKey:     BuildVFXKey(caster.AssetBaseKey, "impact"),
+		ImpactSFXKey:     BuildSFXKey(caster.AssetBaseKey, "impact"),
 		Targets:          eventTargets,
 	})
 	caster.Skill.CooldownLeft = caster.Skill.BaseCooldown
@@ -515,6 +525,8 @@ func CastHybridHealDamageSkill(m *MatchState, a Action, caster *UnitState) error
 		SourceTemplateID: caster.TemplateID,
 		VFXKey:           BuildVFXKey(caster.AssetBaseKey, "spell"),
 		SFXKey:           BuildSFXKey(caster.AssetBaseKey, "spell"),
+		ImpactVFXKey:     BuildVFXKey(caster.AssetBaseKey, "impact"),
+		ImpactSFXKey:     BuildSFXKey(caster.AssetBaseKey, "impact"),
 		Targets:          eventTargets,
 	})
 	caster.Skill.CooldownLeft = caster.Skill.BaseCooldown
@@ -598,6 +610,8 @@ func CastSummonSelfCopySkill(m *MatchState, a Action, caster *UnitState) error {
 		SourceTemplateID: caster.TemplateID,
 		VFXKey:           BuildVFXKey(caster.AssetBaseKey, "spell"),
 		SFXKey:           BuildSFXKey(caster.AssetBaseKey, "spell"),
+		ImpactVFXKey:     BuildVFXKey(caster.AssetBaseKey, "impact"),
+		ImpactSFXKey:     BuildSFXKey(caster.AssetBaseKey, "impact"),
 		Targets:          targets,
 	})
 	caster.Skill.CooldownLeft = caster.Skill.BaseCooldown

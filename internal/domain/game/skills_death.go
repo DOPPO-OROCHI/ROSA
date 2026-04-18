@@ -78,6 +78,8 @@ func triggerEnemyOnDeathExplosion(m *MatchState, ownerIdx int, dead *UnitState, 
 			SourceTemplateID: dead.TemplateID,
 			VFXKey:           BuildVFXKey(dead.AssetBaseKey, "spell"),
 			SFXKey:           BuildSFXKey(dead.AssetBaseKey, "spell"),
+			ImpactVFXKey:     BuildVFXKey(dead.AssetBaseKey, "impact"),
+			ImpactSFXKey:     BuildSFXKey(dead.AssetBaseKey, "impact"),
 			Targets:          eventTargets,
 		})
 	}
@@ -162,6 +164,8 @@ func triggerAllyOnDeathMassHeal(m *MatchState, ownerIdx int, dead *UnitState, de
 			SourceTemplateID: dead.TemplateID,
 			VFXKey:           BuildVFXKey(dead.AssetBaseKey, "spell"),
 			SFXKey:           BuildSFXKey(dead.AssetBaseKey, "spell"),
+			ImpactVFXKey:     BuildVFXKey(dead.AssetBaseKey, "impact"),
+			ImpactSFXKey:     BuildSFXKey(dead.AssetBaseKey, "impact"),
 			Targets:          eventTargets,
 		})
 	}
