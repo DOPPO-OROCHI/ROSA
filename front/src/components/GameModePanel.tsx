@@ -7,6 +7,9 @@ type QueueDeckCard = {
   templateId: string;
   name: string;
   count: number;
+  manaCost: number;
+  attack: number;
+  healthPoints: number;
 };
 
 type Props = {
@@ -192,6 +195,16 @@ export function GameModePanel({
                       src={resolveCardAssetVariantSrc("battle", card.templateId, "view")}
                       alt={card.name}
                     />
+                    <div className="queue-loadout-card__anchor queue-loadout-card__anchor--mana">
+                      <span className="queue-loadout-card__stat">{card.manaCost}</span>
+                    </div>
+                    <div className="queue-loadout-card__anchor queue-loadout-card__anchor--attack">
+                      <span className="queue-loadout-card__stat">{card.attack}</span>
+                    </div>
+                    <div className="queue-loadout-card__anchor queue-loadout-card__anchor--hp">
+                      <span className="queue-loadout-card__stat">{card.healthPoints}</span>
+                    </div>
+                    <div className="queue-loadout-card__name">{card.name}</div>
                     {card.count > 1 ? <span className="queue-loadout-card__badge">x{card.count}</span> : null}
                   </article>
                 ))}

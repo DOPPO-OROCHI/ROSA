@@ -22,10 +22,18 @@ type CharacterTemplate struct {
 
 //а это абилити персонажа, уникальны
 type AbilitySpec struct {
-	Code     string `gorm:"not null"`           //<-код абилки (отражает целеполагание)
-	Target   string `gorm:"not null"`           //<-цель абилки
-	CoolDown int    `gorm:"not null;default:0"` //<-кд абилити
-	ManaCost int    `gorm:"not null;default:0"` //<-стоимость в мане
-	Value    int    `gorm:"not null;default:0"` //<-значение способности (сколько урона,хила,или еще какой хуйни наносит)
-	Duration int    `gorm:"not null;default:0"` //<-длительность
+	Name         string
+	Code         string `gorm:"not null"` //<-код абилки (отражает целеполагание)
+	Description  string
+	Kind         string
+	Target       string //<-цель абилки
+	CoolDown     int    `gorm:"not null;default:1"` //<-кд абилити
+	ManaCost     int    `gorm:"not null;default:0"` //<-стоимость в мане
+	Power        int    `gorm:"not null;default:0"` //<-значение способности (сколько урона,хила,или еще какой хуйни наносит)
+	Duration     int    `gorm:"not null;default:0"` //<-длительность
+	ExtraValue   int    `gorm:"not null;default:0"`
+	ApplyCount   int    `gorm:"not null;default:0"`
+	BuffEffect   string
+	DebuffEffect string
+	IgnoreTank   bool `gorm:"not null;default:false"`
 }

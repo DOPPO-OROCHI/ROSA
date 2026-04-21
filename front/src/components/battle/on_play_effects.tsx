@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, type CSSProperties } from "react";
 import { resolveCardAssetVariantSrc } from "../../lib/api";
 import { getBoardAttackDisplayKind, getBoardAttackDisplayValue } from "./card_attack";
 import { getBoardSkillLabel } from "./CARD_SKILLS";
+import { playBattleCardSfx } from "./sfx";
 import type { BattleUnitState } from "./types";
 
 type UnitRect = {
@@ -127,6 +128,12 @@ export function useOnPlayEffects({
     if (detected.length === 0) {
       return;
     }
+
+    detected.forEach((entry) => {
+      if (entry.unit.card_type !== "hero") {
+        playBattleCardSfx(entry.unit.template_id, "summon", 0.78);
+      }
+    });
 
     setAnimations((current) => [...current, ...detected]);
   }, [enemyTable, getUnitRect, playerTable, shellHeight, shellWidth, version]);

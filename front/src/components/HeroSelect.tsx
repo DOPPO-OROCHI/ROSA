@@ -1,43 +1,92 @@
-import { useEffect, useState, type SyntheticEvent } from "react";
-import { resolveHeroAssetVariantSrc, resolveImageSrc } from "../lib/api";
+import { useEffect, useMemo, useState } from "react";
+import { resolveHeroAssetVariantSrc } from "../lib/api";
 import type { Hero } from "../types";
 import { AutoFitText } from "./AutoFitText";
 
 type Props = {
   open: boolean;
   heroes: Hero[];
+  selectedHero: Hero | null;
   onClose: () => void;
   onChooseHero: (hero: Hero) => Promise<void> | void;
 };
 
-export function HeroSelect({ open, heroes, onClose, onChooseHero }: Props) {
-  const [previewHero, setPreviewHero] = useState<Hero | null>(null);
+function wrapIndex(index: number, length: number) {
+  if (length <= 0) {
+    return 0;
+  }
+
+  return ((index % length) + length) % length;
+}
+
+export function HeroSelect({ open, heroes, selectedHero, onClose, onChooseHero }: Props) {
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [slideDirection, setSlideDirection] = useState<"left" | "right">("right");
+  const [slideNonce, setSlideNonce] = useState(0);
+  const [missingFullArtHeroCodes, setMissingFullArtHeroCodes] = useState<Record<string, boolean>>({});
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
 
   useEffect(() => {
     if (!open) {
-      setPreviewHero(null);
       setSubmitting(false);
       setError("");
     }
   }, [open]);
 
-  if (!open) {
-    return null;
-  }
-
-  function handleHeroImageError(event: SyntheticEvent<HTMLImageElement>, hero: Hero) {
-    const target = event.currentTarget;
-    if (target.dataset.fallbackApplied === "1") {
+  useEffect(() => {
+    if (!open || heroes.length === 0) {
       return;
     }
-    target.dataset.fallbackApplied = "1";
-    target.src = resolveImageSrc(hero.image_key);
+
+    const selectedIndex = selectedHero
+      ? heroes.findIndex((hero) => hero.hero_code === selectedHero.hero_code)
+      : -1;
+
+    setCurrentIndex(selectedIndex >= 0 ? selectedIndex : 0);
+    setSlideDirection("right");
+    setSlideNonce(0);
+    setError("");
+  }, [heroes, open, selectedHero]);
+
+  const currentHero = heroes[wrapIndex(currentIndex, heroes.length)] ?? null;
+  const missingFullArt = currentHero ? missingFullArtHeroCodes[currentHero.hero_code] === true : false;
+  const viewerStageClass = useMemo(
+    () => `hero-viewer__stage hero-viewer__stage--${slideDirection}`,
+    [slideDirection],
+  );
+
+  function handleFullArtError(hero: Hero) {
+    setMissingFullArtHeroCodes((current) => ({
+      ...current,
+      [hero.hero_code]: true,
+    }));
+  }
+
+  function showPreviousHero() {
+    if (heroes.length <= 1) {
+      return;
+    }
+
+    setSlideDirection("left");
+    setSlideNonce((current) => current + 1);
+    setCurrentIndex((current) => wrapIndex(current - 1, heroes.length));
+    setError("");
+  }
+
+  function showNextHero() {
+    if (heroes.length <= 1) {
+      return;
+    }
+
+    setSlideDirection("right");
+    setSlideNonce((current) => current + 1);
+    setCurrentIndex((current) => wrapIndex(current + 1, heroes.length));
+    setError("");
   }
 
   async function handleChooseHero() {
-    if (!previewHero || submitting) {
+    if (!currentHero || submitting) {
       return;
     }
 
@@ -45,114 +94,100 @@ export function HeroSelect({ open, heroes, onClose, onChooseHero }: Props) {
     setError("");
 
     try {
-      await onChooseHero(previewHero);
+      await onChooseHero(currentHero);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Не удалось выбрать персонажа");
+      setError(err instanceof Error ? err.message : "Failed to choose hero");
     } finally {
       setSubmitting(false);
     }
+  }
+
+  if (!open) {
+    return null;
   }
 
   return (
     <div className="overlay hero-select-overlay" onClick={onClose}>
       <section className="hero-select surface" onClick={(event) => event.stopPropagation()}>
         <header className="hero-select__header">
-          <p className="eyebrow">ВЫБОР ПЕРСОНАЖА</p>
+          <p className="eyebrow">HERO SELECT</p>
           <button type="button" className="picker-close" onClick={onClose}>
-            ЗАКРЫТЬ
+            CLOSE
           </button>
         </header>
 
         <div className="hero-select__body">
           {heroes.length === 0 ? (
-            <div className="hero-select__empty">ЗАЙДИТЕ В СВОЙ АККАУНТ ЧТОБЫ УВИДЕТЬ ВАШИХ ПЕРСОНАЖЕЙ</div>
-          ) : (
-            <div className="hero-select__grid">
-              {heroes.map((hero) => (
+            <div className="hero-select__empty">NO HEROES AVAILABLE</div>
+          ) : currentHero ? (
+            <section className="hero-carousel">
+              <div className="hero-carousel__viewer">
                 <button
-                  key={hero.hero_code}
                   type="button"
-                  className="hero-select-card"
-                  onClick={() => {
-                    setPreviewHero(hero);
-                    setError("");
-                  }}
+                  className="hero-carousel__nav hero-carousel__nav--left"
+                  onClick={showPreviousHero}
+                  aria-label="Previous hero"
                 >
-                  <span className="hero-select-card__frame">
-                    <img
-                      className="hero-select-card__art"
-                      src={resolveHeroAssetVariantSrc(hero.hero_code, "view")}
-                      alt={hero.name}
-                      onError={(event) => handleHeroImageError(event, hero)}
-                    />
-                    <span className="hero-select-card__anchor hero-select-card__anchor--name">
-                      <AutoFitText
-                        text={hero.name}
-                        className="hero-select-card__name"
-                        maxFontSize={11.2}
-                        minFontSize={6}
-                      />
-                    </span>
-                    <span className="hero-select-card__anchor hero-select-card__anchor--attack">
-                      <span className="hero-select-card__stat">{hero.attack_power}</span>
-                    </span>
-                    <span className="hero-select-card__anchor hero-select-card__anchor--hp">
-                      <span className="hero-select-card__stat">{hero.health_points}</span>
-                    </span>
-                  </span>
+                  {"<"}
                 </button>
-              ))}
-            </div>
-          )}
-        </div>
 
-        {previewHero ? (
-          <div className="hero-viewer-backdrop" onClick={() => setPreviewHero(null)}>
-            <section className="hero-viewer surface" onClick={(event) => event.stopPropagation()}>
-              <button type="button" className="hero-viewer__close" onClick={() => setPreviewHero(null)}>
-                ЗАКРЫТЬ
-              </button>
+                <article className="hero-viewer hero-viewer--inline surface">
+                  <div key={`${currentHero.hero_code}-${slideNonce}`} className={viewerStageClass}>
+                    <div className="hero-viewer__frame">
+                      {missingFullArt ? (
+                        <div className="hero-viewer__missing-art">
+                          <span>THIS HERO HAS NO ART YEAT</span>
+                        </div>
+                      ) : (
+                        <img
+                          className="hero-viewer__art"
+                          src={resolveHeroAssetVariantSrc(currentHero.hero_code, "full_art")}
+                          alt={currentHero.name}
+                          onError={() => handleFullArtError(currentHero)}
+                        />
+                      )}
 
-              <article className="hero-viewer__frame">
-                <img
-                  className="hero-viewer__art"
-                  src={resolveHeroAssetVariantSrc(previewHero.hero_code, "full_art")}
-                  alt={previewHero.name}
-                  onError={(event) => handleHeroImageError(event, previewHero)}
-                />
+                      <span className="hero-viewer__anchor hero-viewer__anchor--name">
+                        <AutoFitText
+                          text={currentHero.name}
+                          className="hero-viewer__name"
+                          maxFontSize={14}
+                          minFontSize={8}
+                        />
+                      </span>
+                      <span className="hero-viewer__anchor hero-viewer__anchor--attack">
+                        <span className="hero-viewer__stat">{currentHero.attack_power}</span>
+                      </span>
+                      <span className="hero-viewer__anchor hero-viewer__anchor--hp">
+                        <span className="hero-viewer__stat">{currentHero.health_points}</span>
+                      </span>
+                    </div>
+                  </div>
 
-                <div className="hero-viewer__future hero-viewer__future--left" aria-hidden="true" />
-                <div className="hero-viewer__future hero-viewer__future--right" aria-hidden="true" />
-
-                <span className="hero-viewer__anchor hero-viewer__anchor--name">
-                  <AutoFitText
-                    text={previewHero.name}
-                    className="hero-viewer__name"
-                    maxFontSize={14}
-                    minFontSize={8}
-                  />
-                </span>
-                <span className="hero-viewer__anchor hero-viewer__anchor--attack">
-                  <span className="hero-viewer__stat">{previewHero.attack_power}</span>
-                </span>
-                <span className="hero-viewer__anchor hero-viewer__anchor--hp">
-                  <span className="hero-viewer__stat">{previewHero.health_points}</span>
-                </span>
+                  <button
+                    type="button"
+                    className="hero-viewer__choose hero-viewer__choose--static"
+                    onClick={handleChooseHero}
+                    disabled={submitting}
+                  >
+                    {submitting ? "CHOOSING..." : "CHOOSE"}
+                  </button>
+                </article>
 
                 <button
                   type="button"
-                  className="hero-viewer__choose"
-                  onClick={handleChooseHero}
-                  disabled={submitting}
+                  className="hero-carousel__nav hero-carousel__nav--right"
+                  onClick={showNextHero}
+                  aria-label="Next hero"
                 >
-                  {submitting ? "ВЫБИРАЕМ..." : "ВЫБРАТЬ"}
+                  {">"}
                 </button>
-              </article>
+              </div>
 
               {error ? <p className="hero-viewer__error">{error}</p> : null}
             </section>
-          </div>
-        ) : null}
+          ) : null}
+        </div>
       </section>
     </div>
   );

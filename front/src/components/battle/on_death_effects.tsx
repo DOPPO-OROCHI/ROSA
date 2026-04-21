@@ -1,5 +1,6 @@
-import type { CSSProperties } from "react";
+import { useEffect, useRef, type CSSProperties } from "react";
 import { resolveCardAssetVariantSrc } from "../../lib/api";
+import { playBattleCardSfx } from "./sfx";
 import type { BattleUnitState, MaskedBattleMatchState } from "./types";
 
 type UnitRect = {
@@ -149,6 +150,20 @@ type Props = {
 };
 
 export function BattleDeathAnimations({ animations, onDone }: Props) {
+  const playedAnimationIdsRef = useRef(new Set<string>());
+
+  useEffect(() => {
+    animations.forEach((entry) => {
+      if (playedAnimationIdsRef.current.has(entry.id)) {
+        return;
+      }
+      playedAnimationIdsRef.current.add(entry.id);
+      if (entry.unit.card_type !== "hero") {
+        playBattleCardSfx(entry.unit.template_id, "death", 0.82);
+      }
+    });
+  }, [animations]);
+
   if (animations.length === 0) {
     return null;
   }

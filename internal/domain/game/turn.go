@@ -655,25 +655,40 @@ func HeroAttack(m *MatchState,
 	return nil
 }
 
-//ВРЕМЕННО УБРАЛ ГЕРОЙСКИЕ СПОСОБНОСТИ ВООБЩЕ
-// func PlayHeroSpell(m *MatchState, a Action, r Resolvers) error {
-// 	if m.Finished {
-// 		return ErrMatchFinished
-// 	}
-// 	if a.PlayerIndex != m.ActivePlayer {
-// 		return ErrNotYourTurn
-// 	}
-// 	if m.Phase != PhaseMain {
-// 		return ErrWrongPhase
-// 	}
-// 	p := m.Players[a.PlayerIndex]
-// 	if p == nil {
-// 		return errors.New("nil player state")
-// 	}
-// 	if r.HeroAbility == nil {
-// 		return errors.New("hero ability resolver is nil")
-// 	}
-// }
+func PlayHeroSpell(m *MatchState, a Action, r Resolvers) error {
+	if m == nil {
+		return errors.New("nil match state")
+	}
+	if m.Finished {
+		return ErrMatchFinished
+	}
+	if a.PlayerIndex != m.ActivePlayer {
+		return ErrNotYourTurn
+	}
+	if m.Phase != PhaseMain {
+		return ErrWrongPhase
+	}
+	owner := m.Players[a.PlayerIndex]
+	if owner == nil {
+		return errors.New("nil owner state")
+	}
+	if r.HeroTemplate == nil {
+		return errors.New("hero template resolver is nil")
+	}
+	tpl, ok := r.HeroTemplate.GetHeroTemplate(owner.HeroCode)
+	if !ok {
+		return ErrUnknownHeroTemplate
+	}
+	spec := tpl.Ability
+	if spec.Code == "" {
+		return ErrHeroAbilityUnknown
+	}
+	h, ok := HeroAbilityHandlers[spec.Code]
+	if !ok {
+		return ErrHeroAbilityUnknown
+	}
+	return h(m, a, owner, spec)
+}
 
 func PlayCardSkill(m *MatchState, a Action) error {
 	if m == nil {

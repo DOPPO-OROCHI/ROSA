@@ -92,6 +92,8 @@ export type BattleEventTarget = {
 };
 
 export type BattleEvent = {
+  id?: string;
+  event_id?: string;
   type: string;
   player_index?: number;
   source_kind?: string;

@@ -59,6 +59,7 @@ func TickerEffects(m *MatchState, ownerIdx int) error {
 					cards.BuffEffectAttackCooldown,
 					cards.BuffEffectSkillCooldown,
 					cards.BuffEffectMakeTank,
+					cards.BuffEffectAttackAndHP,
 					cards.DebuffEffectAttackDown,
 					cards.DebuffEffectCooldownUp,
 					cards.DebuffEffectSkillCooldownUp:
@@ -156,6 +157,18 @@ func RemoveEffect(u *UnitState, e UnitEffect) error {
 		if u.Skill.CooldownLeft < 0 {
 			u.Skill.CooldownLeft = 0
 		}
+	case cards.BuffEffectAttackAndHP:
+		u.Attack -= e.Value
+		if u.Attack < 0 {
+			u.Attack = 0
+		}
+		u.MaxHP -= e.ExtraValue
+		if u.MaxHP < 1 {
+			u.MaxHP = 1
+		}
+		if u.HP > u.MaxHP {
+			u.HP = u.MaxHP
+		}
 	case cards.BuffEffectHealPerTurn,
 		cards.BuffEffectShield,
 		cards.BuffEffectReflectShield,
@@ -243,6 +256,16 @@ func ApplyEffect(u *UnitState, buff UnitEffect) error {
 		}
 		if u.Skill.CooldownLeft > u.Skill.BaseCooldown {
 			u.Skill.CooldownLeft = u.Skill.BaseCooldown
+		}
+	case cards.BuffEffectAttackAndHP:
+		u.Attack += buff.Value
+		u.MaxHP += buff.ExtraValue
+		if u.MaxHP < 1 {
+			u.MaxHP = 1
+		}
+		u.HP += buff.ExtraValue
+		if u.HP > u.MaxHP {
+			u.HP = u.MaxHP
 		}
 	case cards.BuffEffectHealPerTurn,
 		cards.BuffEffectShield,

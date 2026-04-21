@@ -93,6 +93,7 @@ export function MainMenu(props: Props) {
       <HeroSelect
         open={props.heroPickerOpen}
         heroes={props.heroes}
+        selectedHero={props.selectedHero}
         onClose={() => props.setHeroPickerOpen(false)}
         onChooseHero={props.chooseHero}
       />

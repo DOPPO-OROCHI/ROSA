@@ -19,7 +19,7 @@ package cards
 
 var DefaultBattleCards = []BattleCardTemplate{
 	{
-		//обычные чуваки
+		//обычные чуваки ..
 		Name:              "Стрелковый взвод",
 		CodeString:        "rifle_platoon",
 		Description:       "Бросает во врага осколочные гранаты, нанося 6 едениц урона центральной цели",
@@ -50,7 +50,7 @@ var DefaultBattleCards = []BattleCardTemplate{
 		SkillApplyCount:   0,
 	},
 	{
-		//чуваки с драбашами
+		//чуваки с драбашами ...
 		Name:              "Отряд зачистки",
 		CodeString:        "cleanup_squad",
 		Description:       "Повышают свою силу атаки на 3 еденицы урона на 3 хода",
@@ -81,7 +81,7 @@ var DefaultBattleCards = []BattleCardTemplate{
 		SkillApplyCount:   0,
 	},
 	{
-		//чувак с огнеметом
+		//чувак с огнеметом ...
 		Name:              "Огнеметчик",
 		CodeString:        "flamethrowers",
 		Description:       "Выжигает одиночную цель, накладывая на нее дебаф на 2 хода. Каждый ход цель получает 2 еденицы урона",
@@ -112,7 +112,7 @@ var DefaultBattleCards = []BattleCardTemplate{
 		SkillApplyCount:   0,
 	},
 	{
-		//челы с гранатометами
+		//челы с гранатометами ...
 		Name:              "Гранатометчики",
 		CodeString:        "grenade_launchers",
 		Description:       "Немедленно заряжает снаряды, уменьшая текущий КД атаки на 1 ход",
@@ -143,7 +143,7 @@ var DefaultBattleCards = []BattleCardTemplate{
 		SkillApplyCount:   0,
 	},
 	{
-		//пулеметчики
+		//пулеметчики ...
 		Name:              "Пулеметное отделение",
 		CodeString:        "machine_gun_section",
 		Description:       "Смена пулеметной ленты позволяет атаковать после атаки",
@@ -174,7 +174,7 @@ var DefaultBattleCards = []BattleCardTemplate{
 		SkillApplyCount:   0,
 	},
 	{
-		//челы с ядами
+		//челы с ядами ...
 		Name:              "Хим отделение",
 		CodeString:        "chemical_group",
 		Description:       "Заражает смертельными ядами вражескую группу, понижая их силу атаки на 2 еденицы",
@@ -205,6 +205,7 @@ var DefaultBattleCards = []BattleCardTemplate{
 		SkillApplyCount:   0,
 	},
 	{
+		/// ...
 		Name:              "Тяжелый пулеметчик",
 		CodeString:        "heavy_machine_gunner",
 		Description:       "Концентрирует огонь, нанося 3 единицы урона противнику",
@@ -235,6 +236,7 @@ var DefaultBattleCards = []BattleCardTemplate{
 		SkillApplyCount:   0,
 	},
 	{
+		// ...
 		Name:              "Артиллерия",
 		CodeString:        "artillery",
 		Description:       "Атакует единичную цель, лишая ее возможности атаковать на следующие 2 хода",
@@ -265,7 +267,7 @@ var DefaultBattleCards = []BattleCardTemplate{
 		SkillApplyCount:   0,
 	},
 	{
-		//ПОЛЕВОЙ ОФИЦЕР
+		//ПОЛЕВОЙ ОФИЦЕР ...
 		Name:              "Поелвой офицер",
 		CodeString:        "field_officer",
 		Description:       "Повышает ХП на 5 едениц всему союзному столу на 3 хода",
@@ -512,8 +514,8 @@ var DefaultBattleCards = []BattleCardTemplate{
 		SkillIgnoreTank:   false,
 		SkillApplyCount:   0,
 	},
-	{
-		//КОМАНДРИ ТЯЖЕЛОЙ ПЕХОТЫ. АКТИВНЫЙ СКИЛЛ-ЯРОСТЬ(наносит 3 удара клинком случайным противникам)
+	{ //-----------------------------------------------------------------------------------------------
+		//КОМАНДИР ТЯЖЕЛОЙ ПЕХОТЫ. АКТИВНЫЙ СКИЛЛ-ЯРОСТЬ(наносит 3 удара клинком случайным противникам)
 		Name:              "Имперерский коммандант",
 		CodeString:        "imperial_commandant",
 		Description:       "Наносит 3 удара случайным противникам",

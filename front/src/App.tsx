@@ -26,6 +26,7 @@ type Screen = "menu" | "inventory" | "battle";
 export function App() {
   const clickAudioRef = useRef<HTMLAudioElement | null>(null);
   const menuMusicRef = useRef<HTMLAudioElement | null>(null);
+  const battleMusicRef = useRef<HTMLAudioElement | null>(null);
   const screenRef = useRef<Screen>("menu");
   const musicEnabledRef = useRef(true);
   const [screen, setScreen] = useState<Screen>("menu");
@@ -75,9 +76,46 @@ export function App() {
         templateId: card.template_id,
         name: card.name,
         count: entry.count,
+        manaCost: card.mana_cost,
+        attack: card.attack,
+        healthPoints: card.health_points,
       };
     })
-    .filter((entry): entry is { templateId: string; name: string; count: number } => entry !== null);
+    .filter((entry): entry is {
+      templateId: string;
+      name: string;
+      count: number;
+      manaCost: number;
+      attack: number;
+      healthPoints: number;
+    } => entry !== null);
+
+  function syncMusicPlayback(nextScreen: Screen, nextMusicEnabled: boolean) {
+    const menuAudio = menuMusicRef.current;
+    const battleAudio = battleMusicRef.current;
+    if (!menuAudio || !battleAudio) {
+      return;
+    }
+
+    if (!nextMusicEnabled) {
+      menuAudio.pause();
+      battleAudio.pause();
+      return;
+    }
+
+    if (nextScreen === "menu" || nextScreen === "inventory") {
+      battleAudio.pause();
+      if (menuAudio.paused) {
+        void menuAudio.play().catch(() => undefined);
+      }
+      return;
+    }
+
+    menuAudio.pause();
+    if (nextScreen === "battle" && battleAudio.paused) {
+      void battleAudio.play().catch(() => undefined);
+    }
+  }
 
   async function loadQueueStatus() {
     const status = await request<QueueStatusResponse>("/queue/status");
@@ -187,14 +225,23 @@ export function App() {
       clickAudio.volume = 0.1;
       void clickAudio.play().catch(() => undefined);
 
-      const musicAudio = menuMusicRef.current;
+      const menuAudio = menuMusicRef.current;
+      const battleAudio = battleMusicRef.current;
+
+      if (!musicEnabledRef.current) {
+        return;
+      }
+
       if (
-        musicAudio &&
-        musicEnabledRef.current &&
+        menuAudio &&
         (screenRef.current === "menu" || screenRef.current === "inventory") &&
-        musicAudio.paused
+        menuAudio.paused
       ) {
-        void musicAudio.play().catch(() => undefined);
+        void menuAudio.play().catch(() => undefined);
+      }
+
+      if (battleAudio && screenRef.current === "battle" && battleAudio.paused) {
+        void battleAudio.play().catch(() => undefined);
       }
     }
 
@@ -208,6 +255,7 @@ export function App() {
     audio.loop = true;
     audio.volume = 0.35;
     menuMusicRef.current = audio;
+    syncMusicPlayback(screenRef.current, musicEnabledRef.current);
 
     return () => {
       audio.pause();
@@ -219,21 +267,24 @@ export function App() {
   }, []);
 
   useEffect(() => {
-    const audio = menuMusicRef.current;
-    if (!audio) {
-      return;
-    }
+    const audio = new Audio("/assets/ui/music/battle.mp3");
+    audio.preload = "auto";
+    audio.loop = true;
+    audio.volume = 0.28;
+    battleMusicRef.current = audio;
+    syncMusicPlayback(screenRef.current, musicEnabledRef.current);
 
-    if (!musicEnabled) {
+    return () => {
       audio.pause();
-      return;
-    }
+      audio.currentTime = 0;
+      if (battleMusicRef.current === audio) {
+        battleMusicRef.current = null;
+      }
+    };
+  }, []);
 
-    if (screen === "menu" || screen === "inventory") {
-      return;
-    }
-
-    audio.pause();
+  useEffect(() => {
+    syncMusicPlayback(screen, musicEnabled);
   }, [musicEnabled, screen]);
 
   useEffect(() => {
@@ -485,19 +536,24 @@ export function App() {
             const nextEnabled = !musicEnabled;
             setMusicEnabled(nextEnabled);
 
-            const audio = menuMusicRef.current;
-            if (!audio) {
+            const menuAudio = menuMusicRef.current;
+            const battleAudio = battleMusicRef.current;
+            if (!menuAudio || !battleAudio) {
               return;
             }
 
             if (!nextEnabled) {
-              audio.pause();
+              menuAudio.pause();
+              battleAudio.pause();
               return;
             }
 
             if (screen === "menu" || screen === "inventory") {
-              void audio.play().catch(() => undefined);
+              void menuAudio.play().catch(() => undefined);
+              return;
             }
+
+            void battleAudio.play().catch(() => undefined);
           }}
         />
       ) : screen === "inventory" ? (

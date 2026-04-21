@@ -23,7 +23,7 @@ export function TurnTimer({ startedAt, deadlineAt, totalSec }: Props) {
     const basePercent = Math.max(0, 100 - (elapsed / total) * 100);
     return {
       percent: basePercent,
-      urgent: remaining <= 5000,
+      urgent: remaining <= 10000,
     };
   }, [deadlineAt, now, startedAt, totalSec]);
 

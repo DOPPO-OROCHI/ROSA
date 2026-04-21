@@ -22,6 +22,8 @@ import { useCardAttack } from "./card_attack";
 import { BattleDeathAnimations, collectDeathAnimations, type DeathAnimationState } from "./on_death_effects";
 import { useOnHitEffects } from "./on_hit_effects";
 import { BattlePlayAnimations, useOnPlayEffects } from "./on_play_effects";
+import { ProjectileLayer, useProjectileRuntime } from "./projectiles";
+import { useBattleEventSfx } from "./sfx";
 import { Victory } from "./Victory";
 import type { ApplyBattleActionRequest, BattleCardInMatch, MaskedBattleMatchState, MaskedBattlePlayerState } from "./types";
 import type { Hero } from "../../types";
@@ -49,6 +51,12 @@ export function BattleScreen({ currentUserId, matchId, heroes, onLeaveToMenu }: 
   const [heroAttackSelected, setHeroAttackSelected] = useState(false);
   const [toastMessage, setToastMessage] = useState("");
   const [toastNonce, setToastNonce] = useState(0);
+  const [turnAura, setTurnAura] = useState<{
+    centerX: number;
+    centerY: number;
+    width: number;
+    height: number;
+  } | null>(null);
   const shellRef = useRef<HTMLDivElement | null>(null);
   const lastProcessedVersionRef = useRef(0);
   const currentMatchRef = useRef<MaskedBattleMatchState | null>(null);
@@ -116,6 +124,56 @@ export function BattleScreen({ currentUserId, matchId, heroes, onLeaveToMenu }: 
       centerY: rect.top - shellRect.top + rect.height / 2,
     };
   }
+
+  useEffect(() => {
+    if (!match || playerIndex < 0 || preload.visible) {
+      setTurnAura(null);
+      return;
+    }
+
+    const shell = shellRef.current;
+    if (!shell) {
+      setTurnAura(null);
+      return;
+    }
+
+    const activeHeroInstanceId = match.active_player === playerIndex ? playerHeroInstanceId : enemyHeroInstanceId;
+
+    function measureAura() {
+      const rect = getUnitRect(activeHeroInstanceId);
+      if (!rect) {
+        setTurnAura(null);
+        return;
+      }
+
+      setTurnAura({
+        centerX: rect.centerX,
+        centerY: rect.centerY,
+        width: rect.width * 3.8,
+        height: rect.height * 1.18,
+      });
+    }
+
+    const frameId = window.requestAnimationFrame(measureAura);
+    const handleResize = () => measureAura();
+    window.addEventListener("resize", handleResize);
+
+    let resizeObserver: ResizeObserver | null = null;
+    if ("ResizeObserver" in window) {
+      resizeObserver = new ResizeObserver(() => measureAura());
+      resizeObserver.observe(shell);
+      const activeHeroNode = shell.querySelector<HTMLElement>(`[data-unit-instance-id="${activeHeroInstanceId}"]`);
+      if (activeHeroNode) {
+        resizeObserver.observe(activeHeroNode);
+      }
+    }
+
+    return () => {
+      window.cancelAnimationFrame(frameId);
+      window.removeEventListener("resize", handleResize);
+      resizeObserver?.disconnect();
+    };
+  }, [enemyHeroInstanceId, match, playerHeroInstanceId, playerIndex, preload.visible]);
 
   function spawnFloatingNumbers(nextMatch: MaskedBattleMatchState) {
     const shell = shellRef.current;
@@ -362,6 +420,8 @@ export function BattleScreen({ currentUserId, matchId, heroes, onLeaveToMenu }: 
     shellHeight,
     getUnitRect,
   });
+  const projectileRuntime = useProjectileRuntime({ match, playerIndex, getUnitRect });
+  useBattleEventSfx(match);
 
   function showToast(message: string) {
     setToastMessage(message);
@@ -579,6 +639,19 @@ export function BattleScreen({ currentUserId, matchId, heroes, onLeaveToMenu }: 
   return (
     <section className="battle-screen">
       <div ref={shellRef} className="battle-shell surface">
+        {turnAura ? (
+          <div className="battle-turn-aura-layer" aria-hidden="true">
+            <div
+              className="battle-turn-aura"
+              style={{
+                left: `${turnAura.centerX}px`,
+                top: `${turnAura.centerY}px`,
+                width: `${turnAura.width}px`,
+                height: `${turnAura.height}px`,
+              }}
+            />
+          </div>
+        ) : null}
         <div className="battle-top">
           <div className="battle-top__header">
             <LeaveMatchButton
@@ -818,6 +891,11 @@ export function BattleScreen({ currentUserId, matchId, heroes, onLeaveToMenu }: 
         {attackAnimation ? (
           <CardAttackAnimation state={attackAnimation} onDone={() => setAttackAnimation(null)} />
         ) : null}
+      <ProjectileLayer
+        projectiles={projectileRuntime.projectiles}
+        impacts={projectileRuntime.impacts}
+        spreads={projectileRuntime.spreads}
+      />
         <BattleDeathAnimations
           animations={deathAnimations}
           onDone={(id) => {

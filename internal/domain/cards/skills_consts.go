@@ -34,8 +34,9 @@ const (
 
 const (
 	//свои
-	SkillTargetSelf              = "self"                //на себя
-	SkillTargetAllySingle        = "ally_single"         //соло союзник
+	SkillTargetSelf              = "self"        //на себя
+	SkillTargetAllySingle        = "ally_single" //соло союзник
+	SkillTargetAllySplash        = "ally_splash"
 	SkillTargetAllyAdjacent      = "ally_adjacent"       //соседний союзник (вокруг карты источника)
 	SkillTargetAllyAll           = "ally_all"            //все союзники
 	SkillTargetAllyLowestHP      = "ally_lowest_hp"      //союзник с наименьшим ХП
@@ -57,6 +58,7 @@ const (
 	BuffEffectNone            = ""                 //никакого эффекта. Существует чтобы описывать скилы, смысл которых в том, что это не бафы
 	BuffEffectHP              = "hp"               //апаем ХП (именно максимальное значение)
 	BuffEffectAttack          = "attack"           //апаем основную атаку
+	BuffEffectAttackAndHP     = "attack_and_hp"    //апает и атаку и ХП
 	BuffEffectAttackCooldown  = "attack_cooldown"  //режем кд основной атаки (не базовое значение, а актуальное)
 	BuffEffectSkillCooldown   = "skill_cooldown"   //режем кд скилла (опять же, не базовое)
 	BuffEffectHealPerTurn     = "heal_per_turn"    //накидываем хил на длину ходов
