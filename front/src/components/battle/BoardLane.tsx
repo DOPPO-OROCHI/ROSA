@@ -9,6 +9,7 @@ type Props = {
   selectedUnitId?: string;
   selectedSkillCasterId?: string;
   targetUnitIds?: string[];
+  readyUnitIds?: string[];
   skillTargetIds?: string[];
   skillTargetTone?: SkillTargetTone | null;
   animatingUnitId?: string;
@@ -27,6 +28,7 @@ export function BoardLane({
   selectedUnitId = "",
   selectedSkillCasterId = "",
   targetUnitIds = [],
+  readyUnitIds = [],
   skillTargetIds = [],
   skillTargetTone = null,
   animatingUnitId = "",
@@ -48,6 +50,7 @@ export function BoardLane({
           selected={Boolean(unit && unit.instance_id === selectedUnitId)}
           skillSelected={Boolean(unit && unit.instance_id === selectedSkillCasterId)}
           attackTarget={Boolean(unit && targetUnitIds.includes(unit.instance_id))}
+          attackReady={Boolean(unit && readyUnitIds.includes(unit.instance_id))}
           skillTarget={Boolean(unit && skillTargetIds.includes(unit.instance_id))}
           skillTargetTone={skillTargetTone}
           animating={Boolean(unit && unit.instance_id === animatingUnitId)}

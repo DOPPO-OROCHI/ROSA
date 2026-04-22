@@ -36,6 +36,8 @@ type BattleCardTemplate struct {
 	SkillCleanseMode  string //<-может ли карта снимать положительные-отрицательные эффекты (skills.go)
 	SkillIgnoreTank   bool   `gorm:"not null;default:false"` //<-игнорит ли скилл танк ?
 	SkillApplyCount   int    `gorm:"not null;default:0"`     //<-сколько раз или на сколько целей применяется скилл ?
+	HasPassive        bool
+	Passive           PassiveSpec `gorm:"embedded;embeddedPrefix:passive_"`
 }
 
 type BuffCardsTemplate struct {

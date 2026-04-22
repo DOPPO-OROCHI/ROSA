@@ -147,6 +147,7 @@ export function HeroSelect({ open, heroes, selectedHero, onClose, onChooseHero }
                         />
                       )}
 
+                      <div className="hero-viewer__description">{currentHero.description}</div>
                       <span className="hero-viewer__anchor hero-viewer__anchor--name">
                         <AutoFitText
                           text={currentHero.name}

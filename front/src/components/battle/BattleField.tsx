@@ -13,6 +13,7 @@ type Props = {
   selectedAttackerId?: string;
   selectedSkillCasterId?: string;
   attackTargetIds?: string[];
+  readyUnitIds?: string[];
   skillTargetIds?: string[];
   skillTargetTone?: SkillTargetTone | null;
   attackHint?: string;
@@ -37,6 +38,7 @@ export function BattleField({
   selectedAttackerId = "",
   selectedSkillCasterId = "",
   attackTargetIds = [],
+  readyUnitIds = [],
   skillTargetIds = [],
   skillTargetTone = null,
   attackHint = "",
@@ -58,6 +60,7 @@ export function BattleField({
           units={enemy.table}
           side="enemy"
           targetUnitIds={attackTargetIds}
+          readyUnitIds={[]}
           skillTargetIds={skillTargetIds}
           skillTargetTone={skillTargetTone}
           animatingUnitId={animatingUnitId}
@@ -78,6 +81,7 @@ export function BattleField({
           side="player"
           selectedUnitId={selectedAttackerId}
           selectedSkillCasterId={selectedSkillCasterId}
+          readyUnitIds={readyUnitIds}
           canPlayIntoEmpty={Boolean(canPlaySelectedBattleCard)}
           animatingUnitId={animatingUnitId}
           hitTokens={hitTokens}

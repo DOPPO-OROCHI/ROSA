@@ -16,9 +16,10 @@ import { EnemyCharacter } from "./EnemyCharacter";
 import { GamerCharacter } from "./GamerCharacter";
 import { GraveyardBlock } from "./GraveyardBlock";
 import { HandPanel } from "./HandPanel";
+import { useHeroAbility } from "./hero_ability";
 import { LeaveMatchButton } from "./LeaveMatchButton";
 import { useBattlePreload } from "./battle_preload";
-import { useCardAttack } from "./card_attack";
+import { canUnitAttackNow, useCardAttack } from "./card_attack";
 import { BattleDeathAnimations, collectDeathAnimations, type DeathAnimationState } from "./on_death_effects";
 import { useOnHitEffects } from "./on_hit_effects";
 import { BattlePlayAnimations, useOnPlayEffects } from "./on_play_effects";
@@ -411,6 +412,27 @@ export function BattleScreen({ currentUserId, matchId, heroes, onLeaveToMenu }: 
       });
     },
   });
+  const heroAbility = useHeroAbility({
+    player,
+    enemy,
+    playerHero,
+    isPlayerTurn,
+    busy,
+    finished: Boolean(match?.finished),
+    onInfo: showToast,
+    onCast: async (target, attackHero) => {
+      if (!match) {
+        return;
+      }
+
+      await applyAction({
+        type: "hero_spell",
+        expected_version: match.version,
+        target_instance_id: target?.instance_id,
+        attack_hero: attackHero,
+      });
+    },
+  });
   const onHitEffects = useOnHitEffects(match);
   const onPlayEffects = useOnPlayEffects({
     version: match?.version ?? 0,
@@ -465,12 +487,14 @@ export function BattleScreen({ currentUserId, matchId, heroes, onLeaveToMenu }: 
       setPreviewClosing(true);
       cardAttack.clearSelection();
       cardSkill.clearSelection();
+      heroAbility.clearSelection();
       setHeroAttackSelected(false);
       return;
     }
 
     cardAttack.clearSelection();
     cardSkill.clearSelection();
+    heroAbility.clearSelection();
     setHeroAttackSelected(false);
     setPreviewOrigin(mapOriginRect(originRect));
     setPreviewCard(card);
@@ -511,6 +535,15 @@ export function BattleScreen({ currentUserId, matchId, heroes, onLeaveToMenu }: 
     }
     return "";
   }, [heroAttackSelected, player?.hero_attack_cooldown]);
+
+  const readyUnitIds = useMemo(() => {
+    if (!isPlayerTurn || !player || busy || match?.finished) {
+      return [];
+    }
+    return player.table
+      .filter((unit): unit is NonNullable<typeof unit> => Boolean(unit && canUnitAttackNow(unit, player.turns)))
+      .map((unit) => unit.instance_id);
+  }, [busy, isPlayerTurn, match?.finished, player]);
 
   useEffect(() => {
     if (!match?.finished || playerIndex < 0 || outcome) {
@@ -563,8 +596,9 @@ export function BattleScreen({ currentUserId, matchId, heroes, onLeaveToMenu }: 
       setHeroAttackSelected(false);
       cardAttack.clearSelection();
       cardSkill.clearSelection();
+      heroAbility.clearSelection();
     }
-  }, [cardAttack, cardSkill, isPlayerTurn]);
+  }, [cardAttack, cardSkill, heroAbility, isPlayerTurn]);
 
   useEffect(() => {
     async function loadMatch() {
@@ -677,15 +711,19 @@ export function BattleScreen({ currentUserId, matchId, heroes, onLeaveToMenu }: 
             player={enemy as MaskedBattlePlayerState}
             maxHp={enemyHero?.health_points ?? enemy.hero_hp}
             isActive={match.active_player !== playerIndex}
-            attackTarget={cardAttack.canAttackHero || canHeroAttackEnemyHero || cardSkill.canTargetHero}
+            attackTarget={cardAttack.canAttackHero || canHeroAttackEnemyHero || cardSkill.canTargetHero || heroAbility.canTargetHero}
             heroInstanceId={enemyHeroInstanceId}
             hitToken={onHitEffects.hitTokens[enemyHeroInstanceId] ?? 0}
             onClick={
-              cardAttack.canAttackHero || canHeroAttackEnemyHero || cardSkill.canTargetHero
+              cardAttack.canAttackHero || canHeroAttackEnemyHero || cardSkill.canTargetHero || heroAbility.canTargetHero
                 ? () => {
                     setPreviewClosing(true);
                     if (cardSkill.canTargetHero) {
                       void cardSkill.tryCastOnHero();
+                      return;
+                    }
+                    if (heroAbility.canTargetHero) {
+                      void heroAbility.tryCastOnHero();
                       return;
                     }
                     if (heroAttackSelected) {
@@ -721,13 +759,38 @@ export function BattleScreen({ currentUserId, matchId, heroes, onLeaveToMenu }: 
              selectedAttackerId={cardAttack.selectedAttackerId}
              selectedSkillCasterId={cardSkill.selectedCasterId}
              attackTargetIds={heroAttackSelected ? heroAttackTargetIds : cardAttack.attackTargets}
-             skillTargetIds={heroAttackSelected ? [] : cardSkill.skillTargetIds}
-             skillTargetTone={heroAttackSelected ? null : cardSkill.targetTone}
-             attackHint={heroAttackSelected ? heroAttackHint : cardAttack.infoMessage}
+             readyUnitIds={readyUnitIds}
+             skillTargetIds={
+               heroAttackSelected
+                 ? []
+                 : cardSkill.selectedCasterId
+                   ? cardSkill.skillTargetIds
+                   : heroAbility.selected
+                     ? heroAbility.targetIds
+                     : []
+             }
+             skillTargetTone={
+               heroAttackSelected
+                 ? null
+                 : cardSkill.selectedCasterId
+                   ? cardSkill.targetTone
+                   : heroAbility.selected
+                     ? heroAbility.targetTone
+                     : null
+             }
+             attackHint={
+               heroAttackSelected
+                 ? heroAttackHint
+                 : cardSkill.selectedCasterId
+                   ? ""
+                   : heroAbility.selected
+                     ? heroAbility.infoMessage
+                     : cardAttack.infoMessage
+             }
              animatingUnitId={attackAnimation?.attacker.instance_id ?? ""}
              hitTokens={onHitEffects.hitTokens}
              disabledPlayerUnitIds={
-               cardSkill.selectedCasterId
+               cardSkill.selectedCasterId || heroAbility.selected
                  ? []
                  : player.table
                      .filter((unit): unit is NonNullable<typeof unit> => Boolean(unit && getStunTurns(unit) > 0))
@@ -750,6 +813,15 @@ export function BattleScreen({ currentUserId, matchId, heroes, onLeaveToMenu }: 
                   return;
                 }
                 cardSkill.clearSelection();
+                return;
+              }
+              if (heroAbility.selected) {
+                if (heroAbility.targetIds.includes(unit.instance_id)) {
+                  void heroAbility.tryCastOnUnit(unit);
+                  return;
+                }
+                heroAbility.clearSelection();
+                return;
               }
               if (getStunTurns(unit) > 0) {
                 return;
@@ -765,6 +837,15 @@ export function BattleScreen({ currentUserId, matchId, heroes, onLeaveToMenu }: 
                   return;
                 }
                 cardSkill.clearSelection();
+                return;
+              }
+              if (heroAbility.selected) {
+                if (heroAbility.targetIds.includes(unit.instance_id)) {
+                  void heroAbility.tryCastOnUnit(unit);
+                  return;
+                }
+                heroAbility.clearSelection();
+                return;
               }
               if (heroAttackSelected) {
                 void (async () => {
@@ -788,11 +869,13 @@ export function BattleScreen({ currentUserId, matchId, heroes, onLeaveToMenu }: 
             onBoardClearSelection={() => {
               setPreviewClosing(true);
               cardSkill.clearSelection();
+              heroAbility.clearSelection();
               setHeroAttackSelected(false);
               cardAttack.clearSelection();
             }}
             onPlayBattleCard={(slotIndex) => {
               cardSkill.clearSelection();
+              heroAbility.clearSelection();
               if (!previewCard || previewCard.kind !== "battle") {
                 cardAttack.clearSelection();
                 return;
@@ -815,6 +898,7 @@ export function BattleScreen({ currentUserId, matchId, heroes, onLeaveToMenu }: 
               setPreviewCard(null);
               setPreviewOrigin(null);
               cardAttack.clearSelection();
+              heroAbility.clearSelection();
               setHeroAttackSelected(false);
               void cardSkill.selectCaster(unit);
             }}
@@ -841,6 +925,7 @@ export function BattleScreen({ currentUserId, matchId, heroes, onLeaveToMenu }: 
                     setPreviewOrigin(null);
                     cardAttack.clearSelection();
                     cardSkill.clearSelection();
+                    heroAbility.clearSelection();
                     setHeroAttackSelected((current) => !current);
                   }}
                 />
@@ -860,7 +945,24 @@ export function BattleScreen({ currentUserId, matchId, heroes, onLeaveToMenu }: 
 
             <div className="battle-bottom__cluster battle-bottom__cluster--right">
               <div className="battle-bottom__main-block">
-                <AbilityBlock cooldown={player.hero_ability_cooldown} manaCost={player.hero_ability_mana_cost ?? 0} />
+                <AbilityBlock
+                  cooldown={player.hero_ability_cooldown}
+                  manaCost={player.hero_ability_mana_cost ?? 0}
+                  selected={heroAbility.selected}
+                  disabled={!canHeroAttack}
+                  onClick={() => {
+                    if (!canHeroAttack) {
+                      return;
+                    }
+                    setPreviewClosing(true);
+                    setPreviewCard(null);
+                    setPreviewOrigin(null);
+                    cardAttack.clearSelection();
+                    cardSkill.clearSelection();
+                    setHeroAttackSelected(false);
+                    void heroAbility.toggleSelection();
+                  }}
+                />
               </div>
               <div className="battle-bottom__mini">
                 <DeckCounter count={player.deck_count ?? player.deck?.length ?? 0} />

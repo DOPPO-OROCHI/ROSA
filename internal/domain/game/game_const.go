@@ -104,4 +104,6 @@ const (
 	EventCardSkill EventType = "card_skill"
 	//анимация воскрешения
 	EventResurrect EventType = "resurrect"
+	//анимация пассивки
+	EventPassive EventType = "passive"
 )

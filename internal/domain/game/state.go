@@ -104,6 +104,7 @@ type UnitEffect struct {
 	Value            int    `json:"value"`              //<-величина бафа
 	ExtraValue       int    `json:"extra_value"`        //<-специальное число под отражения (щиты)
 	SourceType       string `json:"source_type"`        //<-от кого пришел эффект
+	EffectLayer      string `json:"effect_layer"`       //<-под пассивки
 	Polarity         string `json:"polarity"`           // <-типа бафф, дебаф
 	SourceInstanceID string `json:"source_instance_id"` //<-от кого пришел эффект ?
 	Dispellable      bool   `json:"dispellable"`        //<-можно ли снять эффект ?

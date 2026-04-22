@@ -37,7 +37,8 @@ const (
 	SkillTargetSelf              = "self"        //на себя
 	SkillTargetAllySingle        = "ally_single" //соло союзник
 	SkillTargetAllySplash        = "ally_splash"
-	SkillTargetAllyAdjacent      = "ally_adjacent"       //соседний союзник (вокруг карты источника)
+	SkillTargetAllyAdjacent      = "ally_adjacent" //соседний союзник (вокруг карты источника)
+	SkillTargetSelfAndAdjacent   = "self_and_adjacent"
 	SkillTargetAllyAll           = "ally_all"            //все союзники
 	SkillTargetAllyLowestHP      = "ally_lowest_hp"      //союзник с наименьшим ХП
 	SkillTargetAllyHighestAttack = "ally_highest_attack" //союзник с наибольшей атакой
@@ -51,6 +52,7 @@ const (
 	SkillTargetEnemyHighestHP     = "enemy_highest_hp"     //противник с наибольшим ХП
 	SkillTargetEnemyHighestAttack = "enemy_highest_attack" //противник с наибольшей атакой
 	SkillTargetEnemyLowestAttack  = "enemy_lowest_attack"  //противник с наименьшей атакой
+	SkillTargetAttackTarget       = "attack_target"
 )
 
 //обычные бафы, которые висят на цели
@@ -61,6 +63,7 @@ const (
 	BuffEffectAttackAndHP     = "attack_and_hp"    //апает и атаку и ХП
 	BuffEffectAttackCooldown  = "attack_cooldown"  //режем кд основной атаки (не базовое значение, а актуальное)
 	BuffEffectSkillCooldown   = "skill_cooldown"   //режем кд скилла (опять же, не базовое)
+	BuffEffectSkillPower      = "skill_power"      //повышаем силу скилла
 	BuffEffectHealPerTurn     = "heal_per_turn"    //накидываем хил на длину ходов
 	BuffEffectSplash          = "splash"           //расширяем сплеш атаки героя
 	BuffEffectOverdrive       = "overdrive"        //даруем возможность бить дважды за ход

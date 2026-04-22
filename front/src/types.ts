@@ -18,6 +18,22 @@ export type Hero = {
   health_points: number;
   attack_power: number;
   attack_cooldown: number;
+  ability: {
+    name: string;
+    code: string;
+    description: string;
+    kind: string;
+    target: string;
+    cool_down: number;
+    mana_cost: number;
+    power: number;
+    duration: number;
+    extra_value: number;
+    apply_count: number;
+    buff_effect: string;
+    debuff_effect: string;
+    ignore_tank: boolean;
+  };
 };
 
 export type HeroesResponse = {

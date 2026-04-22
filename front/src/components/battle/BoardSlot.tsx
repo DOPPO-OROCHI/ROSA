@@ -12,6 +12,7 @@ type Props = {
   selected?: boolean;
   skillSelected?: boolean;
   attackTarget?: boolean;
+  attackReady?: boolean;
   skillTarget?: boolean;
   skillTargetTone?: SkillTargetTone | null;
   animating?: boolean;
@@ -29,6 +30,7 @@ export function BoardSlot({
   selected = false,
   skillSelected = false,
   attackTarget = false,
+  attackReady = false,
   skillTarget = false,
   skillTargetTone = null,
   animating = false,
@@ -64,11 +66,12 @@ export function BoardSlot({
   return (
     <div
       ref={slotRef}
-      className={`battle-board-slot battle-board-slot--${side} ${unit ? "battle-board-slot--filled" : ""} ${playable ? "battle-board-slot--playable" : ""} ${selected ? "battle-board-slot--selected" : ""} ${skillSelected ? "battle-board-slot--skill-selected" : ""} ${attackTarget ? "battle-board-slot--attack-target" : ""} ${skillTarget ? `battle-board-slot--skill-target battle-board-slot--skill-target-${skillTargetTone ?? "damage"}` : ""} ${animating ? "battle-board-slot--animating" : ""} ${actionDisabled ? "battle-board-slot--disabled" : ""} ${unit && isUnitStunned(unit) ? "battle-board-slot--stunned" : ""} ${auraState !== "none" ? `battle-board-slot--aura-${auraState}` : ""}`}
+      className={`battle-board-slot battle-board-slot--${side} ${unit ? "battle-board-slot--filled" : ""} ${playable ? "battle-board-slot--playable" : ""} ${selected ? "battle-board-slot--selected" : ""} ${skillSelected ? "battle-board-slot--skill-selected" : ""} ${attackTarget ? "battle-board-slot--attack-target" : ""} ${attackReady ? "battle-board-slot--attack-ready" : ""} ${skillTarget ? `battle-board-slot--skill-target battle-board-slot--skill-target-${skillTargetTone ?? "damage"}` : ""} ${animating ? "battle-board-slot--animating" : ""} ${actionDisabled ? "battle-board-slot--disabled" : ""} ${unit && isUnitStunned(unit) ? "battle-board-slot--stunned" : ""} ${auraState !== "none" ? `battle-board-slot--aura-${auraState}` : ""}`}
       data-unit-instance-id={unit?.instance_id ?? ""}
     >
       {unit ? (
         <>
+          {attackReady ? <span className="battle-board-slot__ready-ring" aria-hidden="true" /> : null}
           {auraState === "buff" || auraState === "both" ? <span className={`battle-board-slot__aura battle-board-slot__aura--buff ${auraState === "both" ? "battle-board-slot__aura--buff-half" : ""}`} /> : null}
           {auraState === "debuff" || auraState === "both" ? <span className={`battle-board-slot__aura battle-board-slot__aura--debuff ${auraState === "both" ? "battle-board-slot__aura--debuff-half" : ""}`} /> : null}
           <img

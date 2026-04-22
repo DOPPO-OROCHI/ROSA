@@ -501,6 +501,12 @@
     0 0 36px rgba(255, 70, 70, 0.18);
 }
 
+.battle-board-slot--attack-ready .battle-board-slot__art {
+  filter:
+    drop-shadow(0 0 8px rgba(86, 214, 255, 0.18))
+    drop-shadow(0 0 16px rgba(86, 214, 255, 0.1));
+}
+
 .battle-board-slot--skill-target-damage {
   box-shadow:
     0 0 0 1px rgba(255, 86, 86, 0.28),
@@ -610,6 +616,56 @@
   animation:
     battle-card-aura-rise 2400ms ease-in-out infinite,
     battle-card-aura-breathe 2200ms ease-in-out infinite;
+}
+
+.battle-board-slot__ready-ring {
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+  width: 112%;
+  height: 100%;
+  z-index: 2;
+  transform: translateX(-50%);
+  pointer-events: none;
+}
+
+.battle-board-slot__ready-ring::before,
+.battle-board-slot__ready-ring::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  clip-path: polygon(18% 0%, 82% 0%, 100% 14%, 92% 100%, 8% 100%, 0% 14%);
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  padding: 3px;
+}
+
+.battle-board-slot__ready-ring::before {
+  background: rgba(112, 222, 255, 0.18);
+  filter:
+    drop-shadow(0 0 8px rgba(82, 214, 255, 0.24))
+    drop-shadow(0 0 16px rgba(82, 214, 255, 0.12));
+  opacity: 0.88;
+}
+
+.battle-board-slot__ready-ring::after {
+  background:
+    conic-gradient(
+      from 0deg,
+      rgba(76, 205, 255, 0) 0deg,
+      rgba(76, 205, 255, 0) 210deg,
+      rgba(214, 247, 255, 0.98) 250deg,
+      rgba(96, 220, 255, 0.95) 290deg,
+      rgba(76, 205, 255, 0) 330deg,
+      rgba(76, 205, 255, 0) 360deg
+    );
+  filter:
+    drop-shadow(0 0 6px rgba(150, 235, 255, 0.42))
+    drop-shadow(0 0 14px rgba(74, 202, 255, 0.22));
+  animation: battle-attack-ready-ring-spin 2400ms linear infinite;
 }
 
 .battle-board-slot__aura--buff {
@@ -1987,6 +2043,16 @@
   100% {
     opacity: 0.82;
     filter: drop-shadow(0 0 0 rgba(56, 219, 122, 0));
+  }
+}
+
+@keyframes battle-attack-ready-ring-spin {
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
   }
 }
 
