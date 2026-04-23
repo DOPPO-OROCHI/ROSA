@@ -370,9 +370,14 @@ func applyDamageToUnit(m *MatchState, ownerIdx int, slot int,
 	result.DamageToHP = remaining
 	if result.DamageToHP > 0 {
 		target.HP -= result.DamageToHP
-	}
-	if result.DamageToHP > 0 && target.HP > 0 {
-		_ = applyLifeOnHit(target)
+		if err := DispatchPassives(m, PassiveContext{
+			Trigger:             cards.PassiveTriggerOnDamaged,
+			ActorPlayerIndex:    ownerIdx,
+			EventUnitInstanceID: target.InstanceID,
+			DamagedByInstanceID: killerInstanceID,
+		}); err != nil {
+			return result, err
+		}
 	}
 	if canReflect && result.TotalDamage > 0 && reflectPower > 0 {
 		result.ReflectedDamage = reflectPower

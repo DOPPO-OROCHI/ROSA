@@ -36,14 +36,14 @@ func StartTurn(m *MatchState, nowUnix int64) error {
 			u.Skill.CooldownLeft--
 		}
 	}
-	if err := TickerEffects(m, m.ActivePlayer); err != nil {
+	if err := DispatchPassives(m, PassiveContext{
+		Trigger:          cards.PassiveTriggerTurnStart,
+		ActorPlayerIndex: m.ActivePlayer,
+	}); err != nil {
 		return err
 	}
-	for i := 0; i < TableSize; i++ {
-		u := p.Table[i]
-		if u == nil {
-			continue
-		}
+	if err := TickerEffects(m, m.ActivePlayer); err != nil {
+		return err
 	}
 	draw := 1
 	if len(p.Deck) < draw {
@@ -79,17 +79,25 @@ func StartTurn(m *MatchState, nowUnix int64) error {
 	return nil
 }
 
-func EndTurn(m *MatchState) {
+func EndTurn(m *MatchState) error {
 	if m.Finished {
-		return
+		return nil
 	}
 	if m.Phase != PhaseMain {
-		return
+		return nil
+	}
+	endingPlayer := m.ActivePlayer
+	if err := DispatchPassives(m, PassiveContext{
+		Trigger:          cards.PassiveTriggerTurnEnd,
+		ActorPlayerIndex: endingPlayer,
+	}); err != nil {
+		return err
 	}
 	m.ActivePlayer = 1 - m.ActivePlayer
 	if err := StartTurn(m, time.Now().Unix()); err != nil {
-		return
+		return err
 	}
+	return nil
 }
 
 func PlayBattleCard(m *MatchState,
@@ -157,6 +165,7 @@ func PlayBattleCard(m *MatchState,
 		ImageKey:        tpl.ImageKey,
 		AssetBaseKey:    tpl.AssetBaseKey,
 		HasSkill:        tpl.HasSkill,
+		Passive:         tpl.Passive,
 		SkillImageKey:   tpl.SkillImageKey,
 		Effects:         nil,
 		ResurrectedUsed: false,
@@ -180,6 +189,26 @@ func PlayBattleCard(m *MatchState,
 		}
 	}
 	p.Table[targetSlot] = u
+	if err := DispatchPassives(m, PassiveContext{
+		Trigger:             cards.PassiveTriggerOnEnter,
+		ActorPlayerIndex:    playerIndex,
+		EventUnitInstanceID: u.InstanceID,
+		PlayedCardCode:      u.TemplateID,
+		PlayedCardType:      u.CardType,
+		PlayedCardIsTank:    u.IsTank,
+	}); err != nil {
+		return err
+	}
+	if err := DispatchPassives(m, PassiveContext{
+		Trigger:             cards.PassiveTriggerOnAllyPlay,
+		ActorPlayerIndex:    playerIndex,
+		EventUnitInstanceID: u.InstanceID,
+		PlayedCardCode:      u.TemplateID,
+		PlayedCardType:      u.CardType,
+		PlayedCardIsTank:    u.IsTank,
+	}); err != nil {
+		return err
+	}
 	m.Events = append(m.Events, Event{
 		Type:             string(EventSummon),
 		PlayerIndex:      playerIndex,
@@ -477,6 +506,16 @@ func CardAttack(m *MatchState,
 			}
 		}
 	}
+	if atk.HP > 0 && !isHealAttack {
+		if err := DispatchPassives(m, PassiveContext{
+			Trigger:             cards.PassiveTriggerOnAttack,
+			ActorPlayerIndex:    playerIndex,
+			EventUnitInstanceID: atk.InstanceID,
+			AttackTargetID:      defenderInstanceID,
+		}); err != nil {
+			return err
+		}
+	}
 	tpl, ok := r.GetBattleTemplate(atk.TemplateID)
 	if !ok {
 		return errors.New("unknown Battle Template: " + atk.TemplateID)
@@ -687,7 +726,18 @@ func PlayHeroSpell(m *MatchState, a Action, r Resolvers) error {
 	if !ok {
 		return ErrHeroAbilityUnknown
 	}
-	return h(m, a, owner, spec)
+	if err := h(m, a, owner, spec); err != nil {
+		return err
+	}
+	if err := DispatchPassives(m, PassiveContext{
+		Trigger:          cards.PassiveTriggerOnEnemyHeroSkill,
+		ActorPlayerIndex: a.PlayerIndex,
+		PlayedSkillCode:  spec.Code,
+		HeroSkillUsed:    true,
+	}); err != nil {
+		return err
+	}
+	return nil
 }
 
 func PlayCardSkill(m *MatchState, a Action) error {
@@ -740,10 +790,71 @@ func PlayCardSkill(m *MatchState, a Action) error {
 		}
 	}
 	caster.Skill.CooldownLeft = caster.Skill.BaseCooldown
+	if err := DispatchPassives(m, PassiveContext{
+		Trigger:             cards.PassiveTriggerOnAllySkill,
+		ActorPlayerIndex:    a.PlayerIndex,
+		EventUnitInstanceID: caster.InstanceID,
+		PlayedSkillCode:     caster.Skill.Code,
+	}); err != nil {
+		return err
+	}
 	return nil
 }
 
-// ХЕЛПЕР СМЕРТИ //
+// ДИСПЕТЧЕР ПАССИВОК
+func DispatchPassives(m *MatchState, ctx PassiveContext) error {
+	if m == nil {
+		return errors.New("nil match state")
+	}
+	if ctx.Trigger == "" {
+		return nil
+	}
+	for playerIndex := 0; playerIndex < len(m.Players); playerIndex++ {
+		owner := m.Players[playerIndex]
+		enemy := m.Players[1-playerIndex]
+		if owner == nil || enemy == nil {
+			continue
+		}
+		if (ctx.Trigger == cards.PassiveTriggerTurnStart || ctx.Trigger == cards.PassiveTriggerTurnEnd) &&
+			playerIndex != ctx.ActorPlayerIndex {
+			continue
+		}
+		sourceTrigger := resolvePassiveTriggerForSource(ctx.Trigger, playerIndex, ctx.ActorPlayerIndex)
+		for slot := 0; slot < TableSize; slot++ {
+			source := owner.Table[slot]
+			if source == nil {
+				continue
+			}
+			spec := source.Passive
+			if spec.Code == "" {
+				continue
+			}
+			if spec.Trigger != sourceTrigger {
+				continue
+			}
+			if !passiveSourceMatchesEvent(source, sourceTrigger, ctx) {
+				continue
+			}
+			if !passiveEventMatches(spec, ctx) {
+				continue
+			}
+			handler, ok := getCardPassiveHandler(spec.Code)
+			if !ok {
+				return errors.New("passive handler not found: " + spec.Code)
+			}
+			localCtx := ctx
+			localCtx.Trigger = sourceTrigger
+			localCtx.SourcePlayerIndex = playerIndex
+
+			if err := handler(m, source, owner, enemy, spec, localCtx); err != nil {
+				return err
+			}
+		}
+	}
+	return nil
+}
+
+// ХЕЛПЕР СМЕРТИ
 func killUnitAt(m *MatchState, ownerIdx int, slot int, killerInstanceID string, killerOwnerIdx int) error {
 	if m == nil {
 		return errors.New("nil match state")
@@ -773,6 +884,26 @@ func killUnitAt(m *MatchState, ownerIdx int, slot int, killerInstanceID string, 
 		Unit:       dead,
 		DiedAtTurn: owner.Turns,
 	})
+	if err := DispatchPassives(m, PassiveContext{
+		Trigger:             cards.PassiveTriggerOnLeave,
+		ActorPlayerIndex:    ownerIdx,
+		EventUnitInstanceID: u.InstanceID,
+		PlayedCardCode:      u.TemplateID,
+		PlayedCardType:      u.CardType,
+		PlayedCardIsTank:    u.IsTank,
+	}); err != nil {
+		return err
+	}
+	if err := DispatchPassives(m, PassiveContext{
+		Trigger:             cards.PassiveTriggerOnAllyDeath,
+		ActorPlayerIndex:    ownerIdx,
+		EventUnitInstanceID: u.InstanceID,
+		PlayedCardCode:      u.TemplateID,
+		PlayedCardType:      u.CardType,
+		PlayedCardIsTank:    u.IsTank,
+	}); err != nil {
+		return err
+	}
 	owner.RemoveAt(slot)
 	m.Events = append(m.Events, Event{
 		Type:             string(EventDeath),

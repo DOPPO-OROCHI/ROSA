@@ -74,6 +74,7 @@ func (c *ResolverCache) Reload(db *gorm.DB) error {
 				IgnoreTank:   t.SkillIgnoreTank,
 				HitCount:     t.SkillApplyCount,
 			},
+			Passive: t.Passive,
 		}
 		//таким образом я достал все данные из БД и положил их локально
 	}

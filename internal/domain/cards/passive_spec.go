@@ -2,11 +2,12 @@ package cards
 
 type PassiveSpec struct {
 	Name           string //<-понятно
-	Code           string `gorm:"not null"` //<-уникальный код пассивки
+	Code           string `gorm:"not null;default:''"` //<-уникальный код пассивки
 	Description    string
-	Kind           string `gorm:"not null"` //<-тип пассивки, либо аура, либо реакция
-	Trigger        string `gorm:"not null"` //<-когда пассивка срабатывает ?
-	Target         string `gorm:"not null"` //<-кого затрагивает пассивка ?
+	Kind           string `gorm:"not null;default:''"` //<-тип пассивки, либо аура, либо реакция
+	Trigger        string `gorm:"not null;default:''"` //<-когда пассивка срабатывает ?
+	EffectKind     string `gorm:"not null;default:''"`
+	Target         string `gorm:"not null;default:''"` //<-кого затрагивает пассивка ?
 	TargetRace     string
 	Power          int    `gorm:"not null;default:0"` //<-основное значение эффекта
 	Duration       int    `gorm:"not null;default:0"` //<-если пассивка вешает временный эффект
@@ -14,7 +15,7 @@ type PassiveSpec struct {
 	ApplyCount     int    `gorm:"not null;default:0"` //<-сколько раз применить, сколько целей задеть
 	BuffEffect     string //<-понятно
 	DebuffEffect   string //<-тоже понятно
-	Condition      string `gorm:"not null"` //<-дополнительное условие активации
+	Condition      string `gorm:"not null;default:''"` //<-дополнительное условие активации
 	ConditionRace  string //<-раса
 	ConditionValue int    `gorm:"not null;default:0"` //<-число, сколько карт определенной расы должно быть
 	EventFilter    string //<-какое событие интересует ? Ну типа, игрок разыграл человека, игрок кастанул скилл

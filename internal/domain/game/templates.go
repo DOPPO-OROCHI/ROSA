@@ -1,5 +1,7 @@
 package game
 
+import "TheWar/internal/domain/cards"
+
 /*Файл с содержанием карточных чертежей. Первый для боевых карт (Battle), второй для баф карт (Buff).
 Особенностью данных структур является то, что они нужны непосредственно домену. Почему ? Смотрите в чем
 прикол дорогие мои... У нас уже есть модели карт, да (cards/models). Даааа, но как бы то слой БД шаришь ?
@@ -23,9 +25,10 @@ type BattleTemplate struct {
 	SkillImageKey string
 	HasSkill      bool
 	Skill         BattleSkillTemplate
+	Passive       cards.PassiveSpec
 }
 
-//ПОТОМ ЖЕСТКО ПОДУМАТЬ ОБ УДАЛЕНИИ, ТАК КАК ДУБЛИРУЕТ UnitSkillState
+// ПОТОМ ЖЕСТКО ПОДУМАТЬ ОБ УДАЛЕНИИ, ТАК КАК ДУБЛИРУЕТ UnitSkillState
 type BattleSkillTemplate struct {
 	Name         string
 	Code         string

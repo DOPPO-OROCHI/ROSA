@@ -121,7 +121,7 @@ func ApplyAction(m *MatchState, a Action, r Resolvers) error {
 	case ActionPlayHeroSpell:
 		err = PlayHeroSpell(m, a, r)
 	case ActionEndTurn:
-		EndTurn(m)
+		err = EndTurn(m)
 	case ActionPlayCardSkill:
 		if r.Battle == nil {
 			return errors.New("battle resolver is nil")

@@ -27,27 +27,28 @@ DTO с картами битвы которые привязаны к конкр
 начиная от типа карты, заканчивая уроввнем прокачки конкретной карты и ключей эффектов. В общем все, что нужно
 */
 type OwnedBattleCardsDTO struct {
-	Kind          CardKind        `json:"kind"`
-	TemplateID    string          `json:"template_id"`
-	Name          string          `json:"name"`
-	Description   string          `json:"description"`
-	CardType      string          `json:"card_type"`
-	ManaCost      int             `json:"mana_cost"`
-	HealthPoints  int             `json:"health_points"`
-	Attack        int             `json:"attack"`
-	SplashRadius  int             `json:"splash_radius"`
-	BaseCooldown  int             `json:"base_cooldown"`
-	IsTank        bool            `json:"is_tank"`
-	MaxCopies     int             `json:"max_copies"`
-	OwnedCardID   uint            `json:"owned_card_id"`
-	Copies        int             `json:"copies"`
-	Level         int             `json:"level"`
-	XP            int             `json:"xp"`
-	ImageKey      string          `json:"image_key"`
-	AssetBaseKey  string          `json:"asset_base_key"`
-	SkillImageKey string          `json:"skill_image_key"`
-	HasSkill      bool            `json:"has_skill"`
-	Skill         *BattleSkillDTO `json:"skill,omitempty"`
+	Kind          CardKind          `json:"kind"`
+	TemplateID    string            `json:"template_id"`
+	Name          string            `json:"name"`
+	Description   string            `json:"description"`
+	CardType      string            `json:"card_type"`
+	ManaCost      int               `json:"mana_cost"`
+	HealthPoints  int               `json:"health_points"`
+	Attack        int               `json:"attack"`
+	SplashRadius  int               `json:"splash_radius"`
+	BaseCooldown  int               `json:"base_cooldown"`
+	IsTank        bool              `json:"is_tank"`
+	MaxCopies     int               `json:"max_copies"`
+	OwnedCardID   uint              `json:"owned_card_id"`
+	Copies        int               `json:"copies"`
+	Level         int               `json:"level"`
+	XP            int               `json:"xp"`
+	ImageKey      string            `json:"image_key"`
+	AssetBaseKey  string            `json:"asset_base_key"`
+	SkillImageKey string            `json:"skill_image_key"`
+	HasSkill      bool              `json:"has_skill"`
+	Skill         *BattleSkillDTO   `json:"skill,omitempty"`
+	Passive       *BattlePassiveDTO `json:"passive,omitempty"`
 }
 
 type BattleSkillDTO struct {
@@ -60,6 +61,31 @@ type BattleSkillDTO struct {
 	ExtraValue   int    `json:"extra_value"`
 	IgnoreTank   bool   `json:"ignore_tank"`
 	HitCount     int    `json:"hit_count"`
+}
+
+type BattlePassiveDTO struct {
+	Name           string `json:"name"`
+	Code           string `json:"code"`
+	Description    string `json:"description"`
+	Kind           string `json:"kind"`
+	Trigger        string `json:"trigger"`
+	EffectKind     string `json:"effect_kind"`
+	Target         string `json:"target"`
+	TargetRace     string `json:"target_race"`
+	Power          int    `json:"power"`
+	Duration       int    `json:"duration"`
+	ExtraValue     int    `json:"extra_value"`
+	ApplyCount     int    `json:"apply_count"`
+	BuffEffect     string `json:"buff_effect"`
+	DebuffEffect   string `json:"debuff_effect"`
+	Condition      string `json:"condition"`
+	ConditionRace  string `json:"condition_race"`
+	ConditionValue int    `json:"condition_value"`
+	EventFilter    string `json:"event_filter"`
+	EventRace      string `json:"event_race"`
+	ScaleMode      string `json:"scale_mode"`
+	EventIsTank    bool   `json:"event_is_tank"`
+	IgnoreTank     bool   `json:"ignore_tank"`
 }
 
 /*

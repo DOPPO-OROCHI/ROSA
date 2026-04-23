@@ -93,6 +93,7 @@ type UnitState struct {
 	HasSkill        bool                 `json:"has_skill"`
 	SkillImageKey   string               `json:"skill_image_key"`
 	Skill           cards.UnitSkillState `json:"skill"`
+	Passive         cards.PassiveSpec    `json:"passive"`
 	Effects         []UnitEffect         `json:"effects"`
 	ResurrectedUsed bool                 `json:"resurrected_used"`
 }
@@ -115,7 +116,8 @@ type UnitEffect struct {
 
 // так и вот. Это структура ивента, служащая для отдачи игроку. Как уже понятно это DTO. Здесь описывается все то, что необходимо для анимации
 type Event struct {
-	Type                  string        `json:"type"`                              //<-тип действия
+	Type                  string        `json:"type"` //<-тип действия
+	EffectKind            string        `json:"effect_kind,omitempty"`
 	PlayerIndex           int           `json:"player_index,omitempty"`            //<-сторона, которая совершила действие
 	SourceKind            string        `json:"source_kind,omitempty"`             //<-источник, который совершил действие
 	SourceInstanceID      string        `json:"source_instance_id,omitempty"`      //<-айди карты

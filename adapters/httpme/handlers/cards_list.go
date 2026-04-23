@@ -69,6 +69,33 @@ func NewCardsListHandler(d CardListHandlerDeps) http.HandlerFunc {
 					HitCount:     t.SkillApplyCount,
 				}
 			}
+			var passive *dto.BattlePassiveDTO
+			if t.Passive.Code != "" {
+				passive = &dto.BattlePassiveDTO{
+					Name:           t.Passive.Name,
+					Code:           t.Passive.Code,
+					Description:    t.Passive.Description,
+					Kind:           t.Passive.Kind,
+					Trigger:        t.Passive.Trigger,
+					EffectKind:     t.Passive.EffectKind,
+					Target:         t.Passive.Target,
+					TargetRace:     t.Passive.TargetRace,
+					Power:          t.Passive.Power,
+					Duration:       t.Passive.Duration,
+					ExtraValue:     t.Passive.ExtraValue,
+					ApplyCount:     t.Passive.ApplyCount,
+					BuffEffect:     t.Passive.BuffEffect,
+					DebuffEffect:   t.Passive.DebuffEffect,
+					Condition:      t.Passive.Condition,
+					ConditionRace:  t.Passive.ConditionRace,
+					ConditionValue: t.Passive.ConditionValue,
+					EventFilter:    t.Passive.EventFilter,
+					EventRace:      t.Passive.EventRace,
+					ScaleMode:      t.Passive.ScaleMode,
+					EventIsTank:    t.Passive.EventIsTank,
+					IgnoreTank:     t.Passive.IgnoreTank,
+				}
+			}
 			out.Battle = append(out.Battle, dto.OwnedBattleCardsDTO{
 				Kind:          dto.CardKindBattle,
 				TemplateID:    t.CodeString,
@@ -91,6 +118,7 @@ func NewCardsListHandler(d CardListHandlerDeps) http.HandlerFunc {
 				SkillImageKey: t.SkillImageKey,
 				HasSkill:      t.HasSkill,
 				Skill:         skill,
+				Passive:       passive,
 			})
 		}
 		for _, r := range buffRows {

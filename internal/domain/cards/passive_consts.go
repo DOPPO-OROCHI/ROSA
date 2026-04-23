@@ -57,8 +57,9 @@ const (
 )
 
 const (
-	PassiveEffectBuff   = "buff"
-	PassiveEffectDebuff = "debuff"
-	PassiveEffectDamage = "damage"
-	PassiveEffectHeal   = "heal"
+	PassiveEffectBuff          = "buff"
+	PassiveEffectDebuff        = "debuff"
+	PassiveEffectDamage        = "damage"
+	PassiveEffectHeal          = "heal"
+	PassiveEffectCounterattack = "counterattack"
 )

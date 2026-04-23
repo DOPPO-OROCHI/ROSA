@@ -71,6 +71,9 @@ func resolvePassiveTargets(
 		if unit == nil {
 			return
 		}
+		if player == nil {
+			return
+		}
 		if spec.TargetRace != "" && unit.CardType != spec.TargetRace {
 			return
 		}
@@ -214,10 +217,14 @@ func resolvePassiveTargets(
 		pick := rand.IntN(len(pool))
 		targets = append(targets, pool[pick])
 	case cards.SkillTargetAttackTarget:
-		if ctx.DamagedByInstanceID == "" {
+		targetID := ctx.DamagedByInstanceID
+		if ctx.Trigger == cards.PassiveTriggerOnAttack {
+			targetID = ctx.AttackTargetID
+		}
+		if targetID == "" {
 			return targets
 		}
-		slot, target := enemy.FindSlot(ctx.DamagedByInstanceID)
+		slot, target := enemy.FindSlot(targetID)
 		if target == nil || slot < 0 {
 			return targets
 		}
@@ -255,6 +262,19 @@ func countRaceTable(p *PlayerState, race string) int {
 	return n
 }
 
+func countUnitsOnTable(p *PlayerState) int {
+	if p == nil {
+		return 0
+	}
+	n := 0
+	for slot := 0; slot < TableSize; slot++ {
+		if p.Table[slot] != nil {
+			n++
+		}
+	}
+	return n
+}
+
 func allUnitsMatchRace(p *PlayerState, race string) bool {
 	if p == nil || race == "" {
 		return false
@@ -271,4 +291,119 @@ func allUnitsMatchRace(p *PlayerState, race string) bool {
 		}
 	}
 	return hasAny
+}
+
+func resolvePassiveScale(owner *PlayerState, enemy *PlayerState, spec cards.PassiveSpec) int {
+	switch spec.ScaleMode {
+	case cards.PassiveScalePerAllyUnit:
+		return countUnitsOnTable(owner)
+	case cards.PassiveScalePerEnemyUnit:
+		return countUnitsOnTable(enemy)
+	case cards.PassiveScalePerOwnerRaceCount:
+		return countRaceTable(owner, spec.ConditionRace)
+	case cards.PassiveScalePerEnemyRaceCount:
+		return countRaceTable(enemy, spec.ConditionRace)
+	case cards.PassiveScalePerEnemyTank:
+		return countTanksOnTable(enemy)
+	default:
+		return 0
+	}
+}
+
+func resolvePassiveSourceForTrigger(owner *PlayerState, source *UnitState, spec cards.PassiveSpec) *UnitState {
+	if source == nil {
+		return nil
+	}
+	if spec.Trigger == cards.PassiveTriggerOnLeave {
+		return source
+	}
+	if owner == nil {
+		return nil
+	}
+	_, aliveSource := owner.FindSlot(source.InstanceID)
+	return aliveSource
+}
+
+func countTanksOnTable(p *PlayerState) int {
+	if p == nil {
+		return 0
+	}
+	n := 0
+	for slot := 0; slot < TableSize; slot++ {
+		u := p.Table[slot]
+		if u != nil && u.IsTank {
+			n++
+		}
+	}
+	return n
+}
+
+// Переводим события в союзное\вражеское, относительно конкретного игрока
+func resolvePassiveTriggerForSource(trigger string, sourcePlayerIndex int, actorPlayerIndex int) string {
+	switch trigger {
+	case cards.PassiveTriggerOnAllyPlay, cards.PassiveTriggerOnEnemyPlay:
+		if sourcePlayerIndex == actorPlayerIndex {
+			return cards.PassiveTriggerOnAllyPlay
+		}
+		return cards.PassiveTriggerOnEnemyPlay
+	case cards.PassiveTriggerOnAllySkill, cards.PassiveTriggerOnEnemySkill:
+		if sourcePlayerIndex == actorPlayerIndex {
+			return cards.PassiveTriggerOnAllySkill
+		}
+		return cards.PassiveTriggerOnEnemySkill
+
+	case cards.PassiveTriggerOnHeroSkill, cards.PassiveTriggerOnEnemyHeroSkill:
+		if sourcePlayerIndex == actorPlayerIndex {
+			return cards.PassiveTriggerOnHeroSkill
+		}
+		return cards.PassiveTriggerOnEnemyHeroSkill
+
+	case cards.PassiveTriggerOnAllyDeath, cards.PassiveTriggerOnEnemyDeath:
+		if sourcePlayerIndex == actorPlayerIndex {
+			return cards.PassiveTriggerOnAllyDeath
+		}
+		return cards.PassiveTriggerOnEnemyDeath
+
+	default:
+		return trigger
+	}
+}
+
+func passiveSourceMatchesEvent(source *UnitState, trigger string, ctx PassiveContext) bool {
+	if source == nil {
+		return false
+	}
+	switch trigger {
+	case cards.PassiveTriggerOnAttack,
+		cards.PassiveTriggerOnDamaged,
+		cards.PassiveTriggerOnEnter,
+		cards.PassiveTriggerOnLeave:
+		return ctx.EventUnitInstanceID != "" && source.InstanceID == ctx.EventUnitInstanceID
+	default:
+		return true
+	}
+}
+
+func passiveEventMatches(spec cards.PassiveSpec, ctx PassiveContext) bool {
+	switch spec.EventFilter {
+	case "":
+	case cards.PassiveEventFilterCardPlayed:
+		if ctx.PlayedCardCode == "" {
+			return false
+		}
+	case cards.PassiveEventFilterSkillUsed:
+		if ctx.PlayedSkillCode == "" && !ctx.HeroSkillUsed {
+			return false
+		}
+	default:
+		return false
+	}
+	if spec.EventRace != "" && spec.EventRace != ctx.PlayedCardType {
+		return false
+	}
+
+	if spec.EventIsTank && !ctx.PlayedCardIsTank {
+		return false
+	}
+	return true
 }
