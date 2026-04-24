@@ -41,6 +41,8 @@ type App struct {
 	QueueStatus  http.HandlerFunc
 	AcceptQueue  http.HandlerFunc
 	DeclineQueue http.HandlerFunc
+
+	ReadyMatch http.HandlerFunc
 }
 
 /*
@@ -89,6 +91,9 @@ func NewMux(app App) *http.ServeMux {
 			return
 		case r.Method == http.MethodGet && tail == "stream":
 			app.StreamMatch(w, r)
+			return
+		case r.Method == http.MethodPost && tail == "ready":
+			app.ReadyMatch(w, r)
 			return
 		default:
 			w.WriteHeader(http.StatusMethodNotAllowed)

@@ -571,6 +571,7 @@ export function App() {
           currentUserId={me.user_id}
           matchId={activeMatchId}
           heroes={heroes}
+          deckEntries={deckEntries}
           onLeaveToMenu={() => {
             setActiveMatchId(null);
             setQueueStatus({ state: "idle", search_duration_sec: 0 });

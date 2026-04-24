@@ -1,9 +1,11 @@
 type Props = {
   progress: number;
   label: string;
+  playerReady?: boolean;
+  enemyReady?: boolean;
 };
 
-export function BattleLoadingScreen({ progress, label }: Props) {
+export function BattleLoadingScreen({ progress, label, playerReady = false, enemyReady = false }: Props) {
   const percent = Math.round(progress * 100);
 
   return (
@@ -25,6 +27,11 @@ export function BattleLoadingScreen({ progress, label }: Props) {
         <div className="battle-loading-screen__meta">
           <span>Подготавливаем арену</span>
           <span>{percent}%</span>
+        </div>
+
+        <div className="battle-loading-screen__meta">
+          <span>YOU: {playerReady ? "READY" : "LOADING"}</span>
+          <span>ENEMY: {enemyReady ? "READY" : "WAITING"}</span>
         </div>
       </div>
     </section>

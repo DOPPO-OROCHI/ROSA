@@ -1,12 +1,22 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { resolveCardAssetVariantSrc, resolveHeroAssetVariantSrc } from "../../lib/api";
 import type { MaskedBattleMatchState } from "./types";
+import type { DeckEntry } from "../../types";
 
 const warmedAssetUrls = new Set<string>();
 const inFlightAssetUrls = new Map<string, Promise<void>>();
 
+const STATIC_BATTLE_ASSET_URLS = [
+  "/assets/battle_board/image.png",
+  "/assets/battle_background/image.png",
+  "/assets/ui/click.mp3",
+  "/assets/ui/music/battle.mp3",
+  "/assets/attack_sfx/impact.mp3",
+];
+
 type BattlePreloadState = {
   visible: boolean;
+  completed: boolean;
   progress: number;
   actualProgress: number;
   loadedCount: number;
@@ -18,8 +28,29 @@ function unique<T>(items: T[]) {
   return Array.from(new Set(items));
 }
 
-function collectBattleAssetUrls(match: MaskedBattleMatchState): string[] {
-  const urls: string[] = [];
+function addCardAssetUrls(urls: string[], kind: "battle" | "buff", templateId: string) {
+  urls.push(resolveCardAssetVariantSrc(kind, templateId, "view"));
+  urls.push(resolveCardAssetVariantSrc(kind, templateId, "full_art"));
+
+  if (kind === "battle") {
+    urls.push(resolveCardAssetVariantSrc(kind, templateId, "on_table"));
+    urls.push(`/assets/cards/battle/${templateId}/sfx/summon/sound.mp3`);
+    urls.push(`/assets/cards/battle/${templateId}/sfx/attack/sound.mp3`);
+    urls.push(`/assets/cards/battle/${templateId}/sfx/death/sound.mp3`);
+    urls.push(`/assets/cards/battle/${templateId}/sfx/spell/sound.mp3`);
+    urls.push(`/assets/cards/battle/${templateId}/sfx/impact/sound.mp3`);
+  }
+}
+
+function collectBattleAssetUrls(match: MaskedBattleMatchState, deckEntries: DeckEntry[]): string[] {
+  const urls: string[] = [...STATIC_BATTLE_ASSET_URLS];
+
+  deckEntries.forEach((entry) => {
+    if (entry.count <= 0) {
+      return;
+    }
+    addCardAssetUrls(urls, entry.kind, entry.template_id);
+  });
 
   match.players.forEach((player) => {
     if (!player) {
@@ -27,6 +58,8 @@ function collectBattleAssetUrls(match: MaskedBattleMatchState): string[] {
     }
 
     if (player.hero_code) {
+      urls.push(resolveHeroAssetVariantSrc(player.hero_code, "view"));
+      urls.push(resolveHeroAssetVariantSrc(player.hero_code, "full_art"));
       urls.push(resolveHeroAssetVariantSrc(player.hero_code, "battle_icon"));
     }
 
@@ -35,9 +68,7 @@ function collectBattleAssetUrls(match: MaskedBattleMatchState): string[] {
         return;
       }
 
-      urls.push(resolveCardAssetVariantSrc("battle", unit.template_id, "view"));
-      urls.push(resolveCardAssetVariantSrc("battle", unit.template_id, "on_table"));
-      urls.push(resolveCardAssetVariantSrc("battle", unit.template_id, "full_art"));
+      addCardAssetUrls(urls, "battle", unit.template_id);
     });
 
     [player.hand ?? [], player.deck ?? [], player.discard ?? []].forEach((zone) => {
@@ -46,9 +77,7 @@ function collectBattleAssetUrls(match: MaskedBattleMatchState): string[] {
           return;
         }
 
-        urls.push(resolveCardAssetVariantSrc(card.kind, card.template_id, "view"));
-        urls.push(resolveCardAssetVariantSrc(card.kind, card.template_id, "on_table"));
-        urls.push(resolveCardAssetVariantSrc(card.kind, card.template_id, "full_art"));
+        addCardAssetUrls(urls, card.kind, card.template_id);
       });
     });
   });
@@ -94,6 +123,52 @@ function preloadImage(url: string): Promise<void> {
   return promise;
 }
 
+function preloadAudio(url: string): Promise<void> {
+  if (warmedAssetUrls.has(url)) {
+    return Promise.resolve();
+  }
+
+  const inFlight = inFlightAssetUrls.get(url);
+  if (inFlight) {
+    return inFlight;
+  }
+
+  const promise = new Promise<void>((resolve) => {
+    const audio = new Audio(url);
+    let settled = false;
+
+    const cleanup = () => {
+      audio.removeEventListener("canplaythrough", finish);
+      audio.removeEventListener("loadeddata", finish);
+      audio.removeEventListener("error", finish);
+    };
+
+    const finish = () => {
+      if (settled) {
+        return;
+      }
+      settled = true;
+      cleanup();
+      warmedAssetUrls.add(url);
+      inFlightAssetUrls.delete(url);
+      resolve();
+    };
+
+    audio.preload = "auto";
+    audio.addEventListener("canplaythrough", finish);
+    audio.addEventListener("loadeddata", finish);
+    audio.addEventListener("error", finish);
+    audio.load();
+  });
+
+  inFlightAssetUrls.set(url, promise);
+  return promise;
+}
+
+function preloadAsset(url: string): Promise<void> {
+  return /\.(mp3|wav|ogg)(?:$|\?)/i.test(url) ? preloadAudio(url) : preloadImage(url);
+}
+
 function warmUrls(urls: string[], onProgress: (loadedCount: number) => void) {
   if (urls.length === 0) {
     onProgress(0);
@@ -105,7 +180,7 @@ function warmUrls(urls: string[], onProgress: (loadedCount: number) => void) {
 
   return Promise.all(
     urls.map((url) =>
-      preloadImage(url).then(() => {
+      preloadAsset(url).then(() => {
         loadedCount += 1;
         onProgress(loadedCount);
       }),
@@ -113,18 +188,18 @@ function warmUrls(urls: string[], onProgress: (loadedCount: number) => void) {
   ).then(() => undefined);
 }
 
-export function useBattlePreload(match: MaskedBattleMatchState | null): BattlePreloadState {
+export function useBattlePreload(match: MaskedBattleMatchState | null, deckEntries: DeckEntry[] = []): BattlePreloadState {
   const [visible, setVisible] = useState(true);
+  const [completed, setCompleted] = useState(false);
   const [progress, setProgress] = useState(0);
   const [actualProgress, setActualProgress] = useState(0);
   const [loadedCount, setLoadedCount] = useState(0);
   const [totalCount, setTotalCount] = useState(0);
   const startedMatchIdRef = useRef<number | null>(null);
   const backgroundWarmedUrlsRef = useRef<Set<string>>(new Set());
-  const actualProgressRef = useRef(0);
   const currentMatchId = match?.match_id ?? null;
 
-  const urls = useMemo(() => (match ? collectBattleAssetUrls(match) : []), [match]);
+  const urls = useMemo(() => (match ? collectBattleAssetUrls(match, deckEntries) : []), [deckEntries, match]);
   const urlsRef = useRef<string[]>([]);
 
   useEffect(() => {
@@ -145,12 +220,8 @@ export function useBattlePreload(match: MaskedBattleMatchState | null): BattlePr
       backgroundWarmedUrlsRef.current.add(url);
     });
 
-    void Promise.all(freshUrls.map((url) => preloadImage(url)));
+    void Promise.all(freshUrls.map((url) => preloadAsset(url)));
   }, [match, urls]);
-
-  useEffect(() => {
-    actualProgressRef.current = actualProgress;
-  }, [actualProgress]);
 
   useEffect(() => {
     if (!currentMatchId) {
@@ -163,23 +234,13 @@ export function useBattlePreload(match: MaskedBattleMatchState | null): BattlePr
 
     startedMatchIdRef.current = currentMatchId;
     setVisible(true);
+    setCompleted(false);
     setProgress(0);
     setActualProgress(0);
     setLoadedCount(0);
     setTotalCount(urlsRef.current.length);
 
-    const startTime = Date.now();
-    const minimumDurationMs = 5000;
     let disposed = false;
-
-    const progressInterval = window.setInterval(() => {
-      if (disposed) {
-        return;
-      }
-      const elapsed = Date.now() - startTime;
-      const timeProgress = Math.min(elapsed / minimumDurationMs, 1);
-      setProgress((current) => Math.max(current, actualProgressRef.current, timeProgress));
-    }, 60);
 
     void warmUrls(urlsRef.current, (nextLoadedCount) => {
       if (disposed) {
@@ -190,21 +251,18 @@ export function useBattlePreload(match: MaskedBattleMatchState | null): BattlePr
       const nextActualProgress = total > 0 ? nextLoadedCount / total : 1;
       setLoadedCount(nextLoadedCount);
       setActualProgress(nextActualProgress);
-      setProgress((current) => Math.max(current, nextActualProgress));
-    });
-
-    const finishTimeout = window.setTimeout(() => {
+      setProgress(nextActualProgress);
+    }).then(() => {
       if (disposed) {
         return;
       }
       setProgress(1);
+      setCompleted(true);
       setVisible(false);
-    }, minimumDurationMs);
+    });
 
     return () => {
       disposed = true;
-      window.clearInterval(progressInterval);
-      window.clearTimeout(finishTimeout);
     };
   }, [currentMatchId]);
 
@@ -215,6 +273,7 @@ export function useBattlePreload(match: MaskedBattleMatchState | null): BattlePr
 
   return {
     visible,
+    completed,
     progress,
     actualProgress,
     loadedCount,

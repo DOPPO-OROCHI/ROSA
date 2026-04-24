@@ -27,17 +27,18 @@ import { ProjectileLayer, useProjectileRuntime } from "./projectiles";
 import { useBattleEventSfx } from "./sfx";
 import { Victory } from "./Victory";
 import type { ApplyBattleActionRequest, BattleCardInMatch, MaskedBattleMatchState, MaskedBattlePlayerState } from "./types";
-import type { Hero } from "../../types";
+import type { DeckEntry, Hero } from "../../types";
 import "./battle.css";
 
 type Props = {
   currentUserId: number;
   matchId: number;
   heroes: Hero[];
+  deckEntries: DeckEntry[];
   onLeaveToMenu: () => void;
 };
 
-export function BattleScreen({ currentUserId, matchId, heroes, onLeaveToMenu }: Props) {
+export function BattleScreen({ currentUserId, matchId, heroes, deckEntries, onLeaveToMenu }: Props) {
   const [match, setMatch] = useState<MaskedBattleMatchState | null>(null);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
@@ -61,6 +62,7 @@ export function BattleScreen({ currentUserId, matchId, heroes, onLeaveToMenu }: 
   const shellRef = useRef<HTMLDivElement | null>(null);
   const lastProcessedVersionRef = useRef(0);
   const currentMatchRef = useRef<MaskedBattleMatchState | null>(null);
+  const readyRequestSentForMatchRef = useRef<number | null>(null);
 
   const playerIndex = useMemo(() => {
     if (!match) {
@@ -71,7 +73,9 @@ export function BattleScreen({ currentUserId, matchId, heroes, onLeaveToMenu }: 
 
   const player = playerIndex >= 0 ? match?.players[playerIndex] ?? null : null;
   const enemy = playerIndex >= 0 ? match?.players[playerIndex === 0 ? 1 : 0] ?? null : null;
-  const preload = useBattlePreload(match);
+  const preload = useBattlePreload(match, deckEntries);
+  const playerReady = playerIndex >= 0 ? Boolean(match?.loading_ready?.[playerIndex]) : false;
+  const enemyReady = playerIndex >= 0 ? Boolean(match?.loading_ready?.[playerIndex === 0 ? 1 : 0]) : false;
   const playerHeroInstanceId = playerIndex >= 0 ? `hero:p${playerIndex}` : "";
   const enemyHeroInstanceId = playerIndex >= 0 ? `hero:p${playerIndex === 0 ? 1 : 0}` : "";
   const playerHero = player ? heroes.find((hero) => hero.hero_code === player.hero_code) ?? null : null;
@@ -482,6 +486,10 @@ export function BattleScreen({ currentUserId, matchId, heroes, onLeaveToMenu }: 
     currentMatchRef.current = match;
   }, [match]);
 
+  useEffect(() => {
+    readyRequestSentForMatchRef.current = null;
+  }, [matchId]);
+
   function handlePreview(card: BattleCardInMatch | null, originRect?: DOMRect) {
     if (!card) {
       setPreviewClosing(true);
@@ -601,6 +609,30 @@ export function BattleScreen({ currentUserId, matchId, heroes, onLeaveToMenu }: 
   }, [cardAttack, cardSkill, heroAbility, isPlayerTurn]);
 
   useEffect(() => {
+    if (!match || match.phase !== "START" || playerIndex < 0 || !preload.completed || playerReady) {
+      return;
+    }
+
+    if (readyRequestSentForMatchRef.current === match.match_id) {
+      return;
+    }
+
+    readyRequestSentForMatchRef.current = match.match_id;
+
+    void request<MaskedBattleMatchState>(`/matches/${matchId}/ready`, {
+      method: "POST",
+    })
+      .then((nextMatch) => {
+        setMatch(nextMatch);
+        setError("");
+      })
+      .catch((err) => {
+        readyRequestSentForMatchRef.current = null;
+        setError(err instanceof Error ? err.message : "Failed to confirm battle readiness");
+      });
+  }, [match, matchId, playerIndex, playerReady, preload.completed]);
+
+  useEffect(() => {
     async function loadMatch() {
       setLoading(true);
       try {
@@ -666,8 +698,21 @@ export function BattleScreen({ currentUserId, matchId, heroes, onLeaveToMenu }: 
     return <section className="battle-screen battle-screen--state">{error || "МАТЧ НЕДОСТУПЕН"}</section>;
   }
 
-  if (preload.visible) {
-    return <BattleLoadingScreen progress={preload.progress} label={preload.label} />;
+  if (preload.visible || match.phase === "START") {
+    const loadingLabel = preload.completed
+      ? playerReady
+        ? "Ready. Waiting for opponent"
+        : "Confirming readiness"
+      : preload.label;
+
+    return (
+      <BattleLoadingScreen
+        progress={preload.completed ? 1 : preload.progress}
+        label={loadingLabel}
+        playerReady={playerReady}
+        enemyReady={enemyReady}
+      />
+    );
   }
 
   return (

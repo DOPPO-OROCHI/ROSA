@@ -55,6 +55,8 @@ func maskMatchStateForUser(st *game.MatchState, viewerUserID uint) *dto.MaskedMa
 		TurnDeadlineAt: st.TurnDeadline,
 		TurnTimeSec:    st.TurnTimeSec,
 		ServerNow:      time.Now().Unix(),
+		LoadingReady:   st.LoadingReady,
+		StartedAt:      st.StartedAt,
 	}
 	/*Принимаем PlayerState, потому что мы маскируем уже готовое состояние игрока. Дело в том,
 	что в MatchState мы уже держим двух игроков в виде указателей. Чтобы не дублировать овер много

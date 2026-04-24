@@ -59,6 +59,30 @@ export type BattleCard = {
   copies: number;
   image_key: string;
   asset_base_key: string;
+  passive?: {
+    name: string;
+    code: string;
+    description: string;
+    kind: string;
+    trigger: string;
+    effect_kind: string;
+    target: string;
+    target_race: string;
+    power: number;
+    duration: number;
+    extra_value: number;
+    apply_count: number;
+    buff_effect: string;
+    debuff_effect: string;
+    condition: string;
+    condition_race: string;
+    condition_value: number;
+    event_filter: string;
+    event_race: string;
+    scale_mode: string;
+    event_is_tank: boolean;
+    ignore_tank: boolean;
+  } | null;
 };
 
 export type BuffCard = {

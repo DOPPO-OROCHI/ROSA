@@ -209,6 +209,9 @@ func PlayBattleCard(m *MatchState,
 	}); err != nil {
 		return err
 	}
+	if err := RefreshPassiveAuras(m); err != nil {
+		return err
+	}
 	m.Events = append(m.Events, Event{
 		Type:             string(EventSummon),
 		PlayerIndex:      playerIndex,
@@ -854,6 +857,12 @@ func DispatchPassives(m *MatchState, ctx PassiveContext) error {
 	return nil
 }
 
+func RefreshPassiveAuras(m *MatchState) error {
+	return DispatchPassives(m, PassiveContext{
+		Trigger: cards.PassiveTriggerWhileAlive,
+	})
+}
+
 // ХЕЛПЕР СМЕРТИ
 func killUnitAt(m *MatchState, ownerIdx int, slot int, killerInstanceID string, killerOwnerIdx int) error {
 	if m == nil {
@@ -904,7 +913,16 @@ func killUnitAt(m *MatchState, ownerIdx int, slot int, killerInstanceID string, 
 	}); err != nil {
 		return err
 	}
+	needRefreshAuras := dead.Passive.Kind == cards.PassiveKindAura && dead.Passive.Trigger == cards.PassiveTriggerWhileAlive
+	if needRefreshAuras {
+		clearPassiveAuraEffect(owner, dead.InstanceID, dead.Passive)
+	}
 	owner.RemoveAt(slot)
+	if needRefreshAuras {
+		if err := RefreshPassiveAuras(m); err != nil {
+			return err
+		}
+	}
 	m.Events = append(m.Events, Event{
 		Type:             string(EventDeath),
 		SourceKind:       string(SourceUnit),

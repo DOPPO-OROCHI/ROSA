@@ -5,7 +5,6 @@ import (
 	"TheWar/internal/domain/heroes"
 	"encoding/json"
 	"errors"
-	"time"
 
 	"gorm.io/datatypes"
 	"gorm.io/gorm"
@@ -251,7 +250,6 @@ func CreateMatchTX(db *gorm.DB,
 		}
 		//после чего мы собираем матч
 		st := game.NewMatchState(row.ID, &p1, &p2)
-		game.StartTurn(st, time.Now().Unix())
 		b, err := json.Marshal(st)
 		if err != nil {
 			return err

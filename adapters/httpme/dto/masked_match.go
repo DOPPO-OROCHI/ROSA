@@ -58,4 +58,6 @@ type MaskedMatchState struct {
 	TurnDeadlineAt int64                 `json:"turn_deadline_at"`
 	TurnTimeSec    int                   `json:"turn_time_sec"`
 	ServerNow      int64                 `json:"server_now"`
+	LoadingReady   [2]bool               `json:"loading_ready"`
+	StartedAt      int64                 `json:"started_at,omitempty"`
 }

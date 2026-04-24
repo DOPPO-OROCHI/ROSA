@@ -47,20 +47,20 @@ func ApplyDrawNeed(m *MatchState) bool {
 }
 
 /*Функция запуска матча. Принимает состояние матча, для того, чтобы влиять на него*/
-func EnsureStartTurn(m *MatchState) error {
-	//если матч завершен -возвращаем ошибку, которая об этом говорит
-	if m.Finished {
-		return ErrMatchFinished
-	}
-	//если фаза в матче старт (системная подготовка к ходу)
-	if m.Phase == PhaseStart {
-		//запускаем функцию, которая помимо прочего ограничивает время на ход. Подробнее о ней в следующих файлах
-		if err := StartTurn(m, time.Now().Unix()); err != nil {
-			return err
-		}
-	}
-	return nil
-}
+// func EnsureStartTurn(m *MatchState) error {
+// 	//если матч завершен -возвращаем ошибку, которая об этом говорит
+// 	if m.Finished {
+// 		return ErrMatchFinished
+// 	}
+// 	//если фаза в матче старт (системная подготовка к ходу)
+// 	if m.Phase == PhaseStart {
+// 		//запускаем функцию, которая помимо прочего ограничивает время на ход. Подробнее о ней в следующих файлах
+// 		if err := StartTurn(m, time.Now().Unix()); err != nil {
+// 			return err
+// 		}
+// 	}
+// 	return nil
+// }
 
 /*Данная функция по большей части служит для принудительного старта хода игроком, который на ход претендует.
 Делает он это с помощью принятия состояния матча, откуда и берет информацию о том, чей сейчас ход. Так же проверяет
@@ -88,8 +88,8 @@ func ApplyAction(m *MatchState, a Action, r Resolvers) error {
 		m.Version++ //<-обязательно версионируем, поскольку лив из матча, это по сути тоже версия
 		return nil
 	}
-	if err := EnsureStartTurn(m); err != nil { //<-стартуем ход
-		return err
+	if m.Phase != PhaseMain {
+		return ErrWrongPhase
 	}
 	now := time.Now().Unix()                                                 //<-объявляем переменную времени для отсчета дедлайна на ход
 	if m.Phase == PhaseMain && m.TurnDeadline > 0 && now >= m.TurnDeadline { //<-и если время вышло, возвращаем ошибку
@@ -229,6 +229,33 @@ func TableEmpty(p *PlayerState) bool {
 		}
 	}
 	return true
+}
+
+// ОСНОВНАЯ ФУНКЦИЯ СТАРТА МАТЧА ПОСЛЕ ПРОВЕРКИ  ИГРОКОВ НА ГОТОВНОСТЬ К БОЮ
+func MarkLoadingReady(m *MatchState, playerIndex int, nowUnix int64) (bool, error) {
+	if m.Finished {
+		return false, ErrMatchFinished
+	}
+	if playerIndex < 0 || playerIndex > 1 {
+		return false, errors.New("bad player index")
+	}
+	if m.Phase != PhaseStart {
+		return false, nil
+	}
+	if m.LoadingReady[playerIndex] {
+		return false, nil
+	}
+	m.Events = m.Events[:0]
+	m.LoadingReady[playerIndex] = true
+	started := m.LoadingReady[0] && m.LoadingReady[1]
+	if started {
+		m.StartedAt = nowUnix
+		if err := StartTurn(m, nowUnix); err != nil {
+			return false, err
+		}
+	}
+	m.Version++
+	return started, nil
 }
 
 /*Таким образом реализованы функции по созданию состояния матча, апруве любого доступного действия и обязательно проверки

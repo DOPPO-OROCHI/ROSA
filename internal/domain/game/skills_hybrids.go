@@ -591,6 +591,7 @@ func CastSummonSelfCopySkill(m *MatchState, a Action, caster *UnitState) error {
 			HasSkill:        false,
 			Effects:         nil,
 			ResurrectedUsed: false,
+			Passive:         caster.Passive,
 		}
 		owner.Table[slot] = copyUnit
 		summoned++
@@ -601,6 +602,9 @@ func CastSummonSelfCopySkill(m *MatchState, a Action, caster *UnitState) error {
 	}
 	if summoned == 0 {
 		return ErrSlotOccupied
+	}
+	if err := RefreshPassiveAuras(m); err != nil {
+		return err
 	}
 	m.Events = append(m.Events, Event{
 		Type:             string(EventCardSkill),

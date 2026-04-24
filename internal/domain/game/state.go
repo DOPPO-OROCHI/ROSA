@@ -22,6 +22,8 @@ type MatchState struct {
 	TurnStartedAt int64           //<-время начала хода, для таймера
 	TurnDeadline  int64           //<-время, когда ход закончится, для таймера
 	TurnTimeSec   int             //<-сколько секунд на ход
+	LoadingReady  [2]bool         `json:"loading_ready"`
+	StartedAt     int64           `json:"started_at,omitempty"`
 }
 
 /*

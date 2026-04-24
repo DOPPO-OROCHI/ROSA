@@ -145,6 +145,8 @@ export type MaskedBattleMatchState = {
   turn_started_at: number;
   turn_deadline_at: number;
   turn_time_sec: number;
+  loading_ready: [boolean, boolean];
+  started_at?: number;
   server_now: number;
 };
 

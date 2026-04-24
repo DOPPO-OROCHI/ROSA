@@ -84,6 +84,7 @@ export function InventoryCard({
             +
           </button>
         ) : null}
+        <div className="inventory-card__name">{card.name}</div>
         <div className="inventory-card__text-slot">
           <div className="inventory-card__description">{description ?? card.description}</div>
         </div>
