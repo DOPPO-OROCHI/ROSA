@@ -396,12 +396,12 @@
 
 .battle-field__board {
   position: relative;
-  border-radius: 22px;
+  border-radius: 12px;
   border: 1px solid var(--battle-line);
   background: linear-gradient(120deg, rgba(7, 10, 18, 0.18) 0%, rgba(7, 10, 18, 0.28) 100%);
-  padding: -5px 4px;
+  padding: -0px 5px;
   display: grid;
-  gap: 8px;
+  gap: px;
   overflow: hidden;
   isolation: isolate;
 }
@@ -706,6 +706,153 @@
   clip-path: inset(0 50% 0 0);
 }
 
+.battle-board-slot__shield-aura {
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+  width: 118%;
+  height: 108%;
+  z-index: 2;
+  transform: translateX(-50%);
+  pointer-events: none;
+  opacity: 0.98;
+}
+
+.battle-board-slot__shield-aura--plain {
+  clip-path: polygon(18% 0%, 82% 0%, 100% 14%, 92% 100%, 8% 100%, 0% 14%);
+  background:
+    radial-gradient(circle at 50% 16%, rgba(255, 249, 209, 0.28) 0%, rgba(255, 249, 209, 0.04) 30%, transparent 52%),
+    linear-gradient(
+      180deg,
+      rgba(255, 233, 154, 0.04) 0%,
+      rgba(255, 226, 128, 0.08) 20%,
+      rgba(255, 219, 110, 0.34) 62%,
+      rgba(255, 198, 84, 0.92) 88%,
+      rgba(110, 66, 18, 0.22) 100%
+    );
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  padding: 4px;
+  filter:
+    drop-shadow(0 0 8px rgba(255, 212, 94, 0.34))
+    drop-shadow(0 0 16px rgba(255, 186, 58, 0.2));
+  animation:
+    battle-shield-aura-rise 2200ms ease-in-out infinite,
+    battle-shield-aura-breathe 1800ms ease-in-out infinite;
+}
+
+.battle-board-slot__shield-aura--reflect {
+  clip-path: polygon(18% 0%, 82% 0%, 100% 14%, 92% 100%, 8% 100%, 0% 14%);
+  background:
+    radial-gradient(circle at 50% 16%, rgba(255, 251, 214, 0.32) 0%, rgba(255, 251, 214, 0.05) 28%, transparent 52%),
+    linear-gradient(
+      180deg,
+      rgba(255, 236, 164, 0.05) 0%,
+      rgba(255, 221, 124, 0.08) 20%,
+      rgba(255, 210, 104, 0.38) 62%,
+      rgba(255, 188, 66, 0.96) 88%,
+      rgba(112, 64, 14, 0.24) 100%
+    );
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  padding: 4px;
+  filter:
+    drop-shadow(0 0 9px rgba(255, 218, 110, 0.4))
+    drop-shadow(0 0 18px rgba(255, 193, 74, 0.24));
+  animation:
+    battle-shield-aura-rise 2200ms ease-in-out infinite,
+    battle-shield-aura-breathe 1600ms ease-in-out infinite;
+}
+
+.battle-board-slot__shield-aura--reflect::before,
+.battle-board-slot__shield-aura--reflect::after {
+  content: "";
+  position: absolute;
+  inset: -6% -5%;
+  pointer-events: none;
+}
+
+.battle-board-slot__shield-aura--reflect::before {
+  background:
+    conic-gradient(
+      from 0deg,
+      rgba(255, 214, 108, 0.94) 0deg,
+      rgba(255, 214, 108, 0.94) 10deg,
+      transparent 10deg 30deg,
+      rgba(255, 231, 154, 0.92) 30deg 40deg,
+      transparent 40deg 60deg,
+      rgba(255, 214, 108, 0.9) 60deg 70deg,
+      transparent 70deg 90deg,
+      rgba(255, 231, 154, 0.92) 90deg 100deg,
+      transparent 100deg 120deg,
+      rgba(255, 214, 108, 0.9) 120deg 130deg,
+      transparent 130deg 150deg,
+      rgba(255, 231, 154, 0.92) 150deg 160deg,
+      transparent 160deg 180deg,
+      rgba(255, 214, 108, 0.9) 180deg 190deg,
+      transparent 190deg 210deg,
+      rgba(255, 231, 154, 0.92) 210deg 220deg,
+      transparent 220deg 240deg,
+      rgba(255, 214, 108, 0.9) 240deg 250deg,
+      transparent 250deg 270deg,
+      rgba(255, 231, 154, 0.92) 270deg 280deg,
+      transparent 280deg 300deg,
+      rgba(255, 214, 108, 0.9) 300deg 310deg,
+      transparent 310deg 330deg,
+      rgba(255, 231, 154, 0.92) 330deg 340deg,
+      transparent 340deg 360deg
+    );
+  clip-path: polygon(19% 0%, 81% 0%, 100% 13%, 93% 100%, 7% 100%, 0% 13%);
+  -webkit-mask: radial-gradient(circle at center, transparent 58%, #000 63%);
+  mask: radial-gradient(circle at center, transparent 58%, #000 63%);
+  opacity: 0.9;
+  animation: battle-reflect-shield-spikes 1500ms ease-in-out infinite;
+}
+
+.battle-board-slot__shield-aura--reflect::after {
+  background:
+    radial-gradient(circle at 50% 50%, rgba(255, 226, 132, 0) 56%, rgba(255, 217, 108, 0.26) 69%, transparent 78%);
+  filter: blur(3px);
+  opacity: 0.7;
+  animation: battle-reflect-shield-pulse 1700ms ease-in-out infinite;
+}
+
+.battle-board-slot__shield-value {
+  position: absolute;
+  left: 50%;
+  top: -10%;
+  z-index: 4;
+  min-width: 28px;
+  padding: 1px 7px 2px;
+  transform: translateX(-50%);
+  border-radius: 999px;
+  border: 1px solid rgba(255, 230, 157, 0.46);
+  background:
+    linear-gradient(180deg, rgba(76, 48, 8, 0.96), rgba(28, 17, 4, 0.96));
+  color: #fff4cf;
+  text-align: center;
+  font-family: "Zenter SP Demo Black", Georgia, "Times New Roman", serif;
+  font-size: 0.62rem;
+  line-height: 1;
+  letter-spacing: 0.05em;
+  text-shadow:
+    -1px -1px 0 rgba(0, 0, 0, 0.9),
+    1px -1px 0 rgba(0, 0, 0, 0.9),
+    -1px 1px 0 rgba(0, 0, 0, 0.9),
+    1px 1px 0 rgba(0, 0, 0, 0.9),
+    0 0 8px rgba(255, 216, 110, 0.38);
+  box-shadow:
+    0 1px 5px rgba(0, 0, 0, 0.45),
+    inset 0 1px 0 rgba(255, 244, 205, 0.22);
+  pointer-events: none;
+}
+
 .battle-board-slot__attack,
 .battle-board-slot__cooldown,
 .battle-board-slot__hp,
@@ -807,6 +954,82 @@
 .battle-board-slot__skill-button .battle-board-slot__skill-label {
   position: static;
   display: block;
+}
+
+.battle-board-slot__status-layer {
+  position: absolute;
+  left: 6%;
+  right: 6%;
+  bottom: -16px;
+  z-index: 9;
+  display: grid;
+  justify-items: center;
+  pointer-events: none;
+}
+
+.battle-board-slot__status-bar {
+  min-width: 58%;
+  min-height: 16px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  padding: 1px 8px 2px;
+  border: 1px solid rgba(196, 207, 236, 0.24);
+  border-radius: 999px;
+  background: rgba(8, 11, 20, 0.94);
+  color: #e9eefc;
+  font-family: "Zenter SP Demo Black", Georgia, "Times New Roman", serif;
+  font-size: 0.48rem;
+  line-height: 1;
+  letter-spacing: 0.05em;
+  box-shadow:
+    0 3px 8px rgba(0, 0, 0, 0.34),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  pointer-events: auto;
+  cursor: pointer;
+}
+
+.battle-board-slot__status-bar--open {
+  border-color: rgba(245, 213, 128, 0.4);
+  color: #fff2c9;
+}
+
+.battle-board-slot__status-count {
+  color: #ffd981;
+}
+
+.battle-board-slot__status-text {
+  opacity: 0.88;
+}
+
+.battle-board-slot__status-popover {
+  width: max-content;
+  max-width: 220px;
+  margin-top: 6px;
+  padding: 8px 10px;
+  border: 1px solid rgba(206, 216, 248, 0.22);
+  border-radius: 12px;
+  background: rgba(7, 10, 18, 0.97);
+  box-shadow:
+    0 14px 24px rgba(0, 0, 0, 0.42),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  pointer-events: auto;
+}
+
+.battle-board-slot__status-entry {
+  color: #eef2ff;
+  font-family: "Zenter SP Demo Black", Georgia, "Times New Roman", serif;
+  font-size: 0.5rem;
+  line-height: 1.2;
+  text-align: center;
+  text-wrap: balance;
+}
+
+.battle-board-slot__status-entry + .battle-board-slot__status-entry {
+  margin-top: 5px;
+  padding-top: 5px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .battle-board-slot__hp {
@@ -2081,6 +2304,56 @@
   to {
     opacity: 0;
     transform: translate(-50%, -50%) scale(1.05);
+  }
+}
+
+@keyframes battle-shield-aura-rise {
+  0%,
+  100% {
+    transform: translateX(-50%) translateY(0);
+  }
+  50% {
+    transform: translateX(-50%) translateY(-2px);
+  }
+}
+
+@keyframes battle-shield-aura-breathe {
+  0%,
+  100% {
+    opacity: 0.82;
+    filter:
+      drop-shadow(0 0 8px rgba(255, 212, 94, 0.28))
+      drop-shadow(0 0 16px rgba(255, 186, 58, 0.14));
+  }
+  50% {
+    opacity: 1;
+    filter:
+      drop-shadow(0 0 12px rgba(255, 223, 128, 0.44))
+      drop-shadow(0 0 24px rgba(255, 196, 74, 0.22));
+  }
+}
+
+@keyframes battle-reflect-shield-spikes {
+  0%,
+  100% {
+    transform: scale(0.98) rotate(0deg);
+    opacity: 0.82;
+  }
+  50% {
+    transform: scale(1.04) rotate(6deg);
+    opacity: 1;
+  }
+}
+
+@keyframes battle-reflect-shield-pulse {
+  0%,
+  100% {
+    transform: scale(0.96);
+    opacity: 0.42;
+  }
+  50% {
+    transform: scale(1.08);
+    opacity: 0.78;
   }
 }
 

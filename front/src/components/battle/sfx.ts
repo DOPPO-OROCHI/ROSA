@@ -1,7 +1,7 @@
 import { useEffect, useRef } from "react";
 import type { MaskedBattleMatchState, BattleEvent, BattleUnitState } from "./types";
 
-export type BattleCardSfxKind = "summon" | "attack" | "death" | "spell" | "impact";
+export type BattleCardSfxKind = "summon" | "death" | "spell";
 
 export const COMMON_ATTACK_HIT_SFX_SRC = "/assets/attack_sfx/impact.mp3";
 
@@ -104,11 +104,6 @@ export function useBattleEventSfx(match: MaskedBattleMatchState | null) {
 
       const templateId = resolveEventTemplateId(match, event);
       if (!templateId) {
-        return;
-      }
-
-      if (event.type === "card_attack" || event.type === "attack") {
-        playBattleCardSfx(templateId, "attack", 0.92);
         return;
       }
 

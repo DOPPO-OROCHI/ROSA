@@ -6,6 +6,7 @@ export {
   getBoardSkillLabel,
   getSilenceTurns,
   getStunTurns,
+  getUnitStatusEntries,
   getUnitSkill,
   getUnitAuraState,
   isBoardSkillReady,

@@ -106,6 +106,11 @@ export function CardViewer({
           <div className="card-viewer__anchor card-viewer__anchor--hp">
             <span className="card-viewer__stat">{card.health_points}</span>
           </div>
+          {card.is_tank ? (
+            <div className="card-viewer__tank-badge" aria-label="Tank card" title="Tank card">
+              <span className="card-viewer__tank-label">TANK</span>
+            </div>
+          ) : null}
 
           <div className={`card-viewer__description ${passiveOpen ? "card-viewer__description--passive" : ""}`}>
             {passiveOpen && passive ? passive.description : card.description}

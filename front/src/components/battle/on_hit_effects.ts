@@ -51,9 +51,10 @@ export function useOnHitEffects(match: MaskedBattleMatchState | null) {
         return;
       }
 
-      const isAttackEvent = event.type.toLowerCase().includes("attack");
+      const isHeroSource = event.source_kind === "hero" || (event.source_instance_id ?? "").startsWith("hero:");
+      const isBasicCardAttackEvent = event.type === "card_attack" || (event.type === "attack" && !isHeroSource);
       const isHealEvent = event.type.toLowerCase().includes("heal");
-      if (isHealEvent || !isAttackEvent) {
+      if (isHealEvent || !isBasicCardAttackEvent) {
         return;
       }
 

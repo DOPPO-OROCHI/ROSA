@@ -34,7 +34,11 @@ func runTelegramBot(ctx context.Context) error {
 	if webAppURL == "" {
 		return errors.New("nil URL")
 	}
-	bot, err := tgbotapi.NewBotAPI(api)
+	client, err := newTelegramHTTPClientFromEnv()
+	if err != nil {
+		return err
+	}
+	bot, err := tgbotapi.NewBotAPIWithClient(api, tgbotapi.APIEndpoint, client)
 	if err != nil {
 		return err
 	}

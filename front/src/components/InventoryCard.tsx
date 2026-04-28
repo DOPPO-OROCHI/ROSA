@@ -56,6 +56,11 @@ export function InventoryCard({
           <span className="inventory-card__stat">{card.health_points}</span>
         </div>
         {countBadge && countBadge > 1 ? <div className="inventory-card__count-badge">x{countBadge}</div> : null}
+        {card.is_tank ? (
+          <div className="inventory-card__tank-badge" aria-label="Tank card" title="Tank card">
+            <span className="inventory-card__tank-label">TANK</span>
+          </div>
+        ) : null}
         {onRemove ? (
           <button
             type="button"

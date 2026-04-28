@@ -35,10 +35,8 @@ function addCardAssetUrls(urls: string[], kind: "battle" | "buff", templateId: s
   if (kind === "battle") {
     urls.push(resolveCardAssetVariantSrc(kind, templateId, "on_table"));
     urls.push(`/assets/cards/battle/${templateId}/sfx/summon/sound.mp3`);
-    urls.push(`/assets/cards/battle/${templateId}/sfx/attack/sound.mp3`);
     urls.push(`/assets/cards/battle/${templateId}/sfx/death/sound.mp3`);
     urls.push(`/assets/cards/battle/${templateId}/sfx/spell/sound.mp3`);
-    urls.push(`/assets/cards/battle/${templateId}/sfx/impact/sound.mp3`);
   }
 }
 

@@ -3,6 +3,8 @@ import type { SkillTargetTone } from "./types";
 
 const EFFECT_STUN = "stun";
 const EFFECT_SILENCE = "silence";
+const EFFECT_SHIELD = "shield";
+const EFFECT_REFLECT_SHIELD = "reflect_shield";
 
 function getMaxEffectTurns(effects: BattleUnitEffect[], effectType: string): number {
   return effects.reduce((max, effect) => {
@@ -177,4 +179,153 @@ export function getUnitAuraState(unit: BattleUnitState | null | undefined): "non
   }
 
   return "none";
+}
+
+export function getUnitShieldState(unit: BattleUnitState | null | undefined): {
+  totalShield: number;
+  totalReflect: number;
+  hasShield: boolean;
+  hasReflectShield: boolean;
+  label: string;
+} {
+  if (!unit) {
+    return {
+      totalShield: 0,
+      totalReflect: 0,
+      hasShield: false,
+      hasReflectShield: false,
+      label: "",
+    };
+  }
+
+  let totalShield = 0;
+  let totalReflect = 0;
+  let hasShield = false;
+  let hasReflectShield = false;
+
+  (unit.effects ?? []).forEach((effect) => {
+    if (effect.effect_type === EFFECT_SHIELD) {
+      totalShield += Math.max(0, effect.value ?? 0);
+      hasShield = true;
+    }
+
+    if (effect.effect_type === EFFECT_REFLECT_SHIELD) {
+      totalShield += Math.max(0, effect.value ?? 0);
+      totalReflect += Math.max(0, effect.extra_value ?? 0);
+      hasReflectShield = true;
+    }
+  });
+
+  return {
+    totalShield,
+    totalReflect,
+    hasShield: totalShield > 0 && (hasShield || hasReflectShield),
+    hasReflectShield: totalShield > 0 && hasReflectShield,
+    label: totalReflect > 0 ? `${totalShield}+${totalReflect}` : totalShield > 0 ? `${totalShield}` : "",
+  };
+}
+
+function getEffectDisplayName(effectType: string): string {
+  switch (effectType) {
+    case "shield":
+      return "Shield";
+    case "reflect_shield":
+      return "Reflect Shield";
+    case "stun":
+      return "Stun";
+    case "silence":
+      return "Silence";
+    case "attack":
+      return "Attack Buff";
+    case "attack_and_hp":
+      return "Attack + HP";
+    case "hp":
+      return "HP Buff";
+    case "attack_cooldown":
+      return "Attack Speed";
+    case "skill_cooldown":
+      return "Skill Speed";
+    case "skill_power":
+      return "Skill Power";
+    case "heal_per_turn":
+      return "Regeneration";
+    case "splash":
+      return "Splash";
+    case "overdrive":
+      return "Overdrive";
+    case "multicast":
+      return "Multicast";
+    case "make_tank":
+      return "Tank";
+    case "vampiric_strike":
+      return "Vampiric Strike";
+    case "chain_attack":
+      return "Chain Attack";
+    case "damage_reduction":
+      return "Damage Reduction";
+    case "death_explosion":
+      return "Death Explosion";
+    case "death_mass_heal":
+      return "Death Mass Heal";
+    case "counterattack":
+      return "Counterattack";
+    case "life_on_hit":
+      return "Life On Hit";
+    case "bonus_after_attack":
+      return "Bonus After Attack";
+    case "attack_down":
+      return "Attack Down";
+    case "cooldown_up":
+      return "Cooldown Up";
+    case "skill_cooldown_up":
+      return "Skill Cooldown Up";
+    case "damage_over_time":
+      return "Damage Over Time";
+    case "no_heal":
+      return "No Heal";
+    case "vulnerable":
+      return "Vulnerable";
+    case "disarm":
+      return "Disarm";
+    default:
+      return effectType
+        .split("_")
+        .filter(Boolean)
+        .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+        .join(" ");
+  }
+}
+
+function getEffectValueLabel(effect: BattleUnitEffect): string {
+  if (effect.effect_type === EFFECT_REFLECT_SHIELD) {
+    return `${Math.max(0, effect.value ?? 0)}/${Math.max(0, effect.extra_value ?? 0)}`;
+  }
+
+  if (effect.effect_type === "attack_and_hp") {
+    return `${Math.max(0, effect.value ?? 0)}/${Math.max(0, effect.extra_value ?? 0)}`;
+  }
+
+  if ((effect.extra_value ?? 0) > 0) {
+    return `${Math.max(0, effect.value ?? 0)}/${Math.max(0, effect.extra_value ?? 0)}`;
+  }
+
+  return `${Math.max(0, effect.value ?? 0)}`;
+}
+
+export function getUnitStatusEntries(unit: BattleUnitState | null | undefined): Array<{
+  key: string;
+  label: string;
+  valueLabel: string;
+  turnsLabel: string;
+}> {
+  if (!unit) {
+    return [];
+  }
+
+  return (unit.effects ?? []).map((effect, index) => ({
+    key: `${unit.instance_id}-${effect.effect_type}-${effect.source_instance_id}-${index}`,
+    label: getEffectDisplayName(effect.effect_type),
+    valueLabel: getEffectValueLabel(effect),
+    turnsLabel: (effect.turns_left ?? 0) > 0 ? `${effect.turns_left} turns` : "infinite",
+  }));
 }

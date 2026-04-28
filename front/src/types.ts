@@ -51,6 +51,7 @@ export type BattleCard = {
   attack: number;
   splash_radius: number;
   base_cooldown: number;
+  is_tank: boolean;
   has_skill?: boolean;
   skill?: {
     base_cooldown: number;

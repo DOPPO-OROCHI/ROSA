@@ -1,7 +1,7 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { resolveCardAssetVariantSrc } from "../../lib/api";
 import { getBoardAttackDisplayKind, getBoardAttackDisplayValue } from "./card_attack";
-import { SkillButton, getBoardSkillLabel, getUnitAuraState, isUnitStunned } from "./CARD_SKILLS";
+import { SkillButton, getBoardSkillLabel, getUnitAuraState, getUnitStatusEntries, isUnitStunned } from "./CARD_SKILLS";
 import type { BattleUnitState } from "./types";
 import type { SkillTargetTone } from "./CARD_SKILLS";
 
@@ -44,7 +44,9 @@ export function BoardSlot({
   const primaryValue = unit ? getBoardAttackDisplayValue(unit) : 0;
   const primaryKind = unit ? getBoardAttackDisplayKind(unit) : "attack";
   const auraState = getUnitAuraState(unit);
+  const statusEntries = getUnitStatusEntries(unit);
   const slotRef = useRef<HTMLDivElement | null>(null);
+  const [statusOpen, setStatusOpen] = useState(false);
 
   useEffect(() => {
     if (!hitToken || !slotRef.current) {
@@ -62,6 +64,10 @@ export function BoardSlot({
 
     return () => window.clearTimeout(timeoutId);
   }, [hitToken]);
+
+  useEffect(() => {
+    setStatusOpen(false);
+  }, [unit?.instance_id]);
 
   return (
     <div
@@ -96,6 +102,31 @@ export function BoardSlot({
             ) : (
               <span className="battle-board-slot__skill-label">{skillLabel}</span>
             )
+          ) : null}
+          {statusEntries.length > 0 ? (
+            <div className="battle-board-slot__status-layer">
+              <button
+                type="button"
+                className={`battle-board-slot__status-bar ${statusOpen ? "battle-board-slot__status-bar--open" : ""}`}
+                onClick={(event) => {
+                  event.stopPropagation();
+                  setStatusOpen((current) => !current);
+                }}
+                aria-label={`Show ${statusEntries.length} effects on ${unit.template_id}`}
+              >
+                <span className="battle-board-slot__status-count">{statusEntries.length}</span>
+                <span className="battle-board-slot__status-text">effects</span>
+              </button>
+              {statusOpen ? (
+                <div className="battle-board-slot__status-popover" onClick={(event) => event.stopPropagation()}>
+                  {statusEntries.map((entry) => (
+                    <div key={entry.key} className="battle-board-slot__status-entry">
+                      {entry.label} - {entry.valueLabel} - {entry.turnsLabel}
+                    </div>
+                  ))}
+                </div>
+              ) : null}
+            </div>
           ) : null}
           <button type="button" className="battle-board-slot__tap" onClick={onClick} disabled={!onClick || actionDisabled} aria-label={unit.template_id} />
         </>

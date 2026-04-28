@@ -371,16 +371,30 @@ button {
   max-height: calc(100dvh - 34px - env(safe-area-inset-bottom));
   padding: 16px 14px 14px;
   display: grid;
+  grid-template-rows: minmax(0, 1fr) auto;
   gap: 14px;
   overflow: hidden;
 }
 
 .inventory-deck-modal__grid {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 7px;
+  grid-template-columns: repeat(3, minmax(0, 250px));
+  justify-content: center;
+  gap: 0px;
+  min-height: 0;
   overflow-y: auto;
-  padding-right: 2px;
+  overscroll-behavior: contain;
+  padding: 0 4px 1px;
+}
+
+.inventory-deck-modal .inventory-card--deck {
+  width: 100%;
+  margin-left: 0;
+  margin-right: 0;
+}
+
+.inventory-deck-modal .inventory-card--deck .inventory-card__frame {
+  --stat-font-size: clamp(0.66rem, 1.5vw, 0.86rem);
 }
 
 .inventory-toggle--modal {
@@ -569,6 +583,7 @@ button {
 }
 
 .inventory-card__count-badge,
+.inventory-card__tank-badge,
 .inventory-card__deck-action,
 .inventory-card__catalog-action {
   position: absolute;
@@ -589,6 +604,56 @@ button {
   font-size: clamp(0.5rem, 1.8vw, 0.74rem);
   font-weight: 800;
   letter-spacing: 0.04em;
+}
+
+.inventory-card__tank-badge {
+  left: 50%;
+  bottom: 0%;
+  transform: translateX(-50%);
+  width: 28%;
+  height: 6.8%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  place-items: center;
+  isolation: isolate;
+  overflow: hidden;
+  padding: 0 5px;
+  border: 1px solid rgba(194, 203, 205, 0.72);
+  border-radius: 2px;
+  background:
+    linear-gradient(135deg, transparent 0 7%, rgba(255, 255, 255, 0.16) 7% 10%, transparent 10% 100%),
+    linear-gradient(180deg, rgba(102, 111, 116, 0.94), rgba(21, 25, 28, 0.98) 54%, rgba(6, 8, 10, 0.98)),
+    linear-gradient(90deg, rgba(126, 9, 20, 0.96), rgba(56, 5, 11, 0.96));
+  box-shadow:
+    0 1px 0 rgba(0, 0, 0, 0.92),
+    0 3px 5px rgba(0, 0, 0, 0.56),
+    inset 0 1px 0 rgba(255, 255, 255, 0.24),
+    inset 0 -2px 0 rgba(0, 0, 0, 0.5);
+  clip-path: polygon(7% 0, 100% 0, 93% 100%, 0 100%);
+}
+
+.inventory-card__tank-badge::before {
+  content: "";
+  position: absolute;
+  inset: 1px 4px;
+  z-index: -1;
+  border-top: 1px solid rgba(255, 61, 72, 0.82);
+  border-bottom: 1px solid rgba(87, 0, 8, 0.86);
+  background: linear-gradient(90deg, rgba(159, 13, 27, 0.84), rgba(64, 5, 10, 0.9));
+}
+
+.inventory-card__tank-label {
+  color: #f4f6f2;
+  font-family: "Zenter SP Demo Black", Georgia, "Times New Roman", serif;
+  font-size: clamp(0.34rem, 1vw, 0.48rem);
+  font-weight: 900;
+  line-height: 0.8;
+  letter-spacing: 0.07em;
+  transform: translateY(0.05em);
+  text-shadow:
+    0 1px 0 rgba(0, 0, 0, 0.95),
+    0 0 5px rgba(255, 31, 49, 0.42);
 }
 
 .inventory-card__deck-action,
@@ -825,6 +890,55 @@ button {
     -1px 1px 0 #000,
     1px 1px 0 #000,
     0 5px 12px rgba(0, 0, 0, 0.95);
+}
+
+.card-viewer__tank-badge {
+  position: absolute;
+  left: 50%;
+  bottom: 90%;
+  z-index: 3;
+  width: 31%;
+  min-height: 5%;
+  display: grid;
+  place-items: center;
+  isolation: isolate;
+  overflow: hidden;
+  transform: translateX(-50%);
+  padding: 6px 12px;
+  border: 2px solid rgba(194, 203, 205, 0.72);
+  border-radius: 5px;
+  background:
+    linear-gradient(135deg, transparent 0 9%, rgba(255, 255, 255, 0.16) 9% 12%, transparent 12% 100%),
+    linear-gradient(180deg, rgba(102, 111, 116, 0.94), rgba(21, 25, 28, 0.98) 54%, rgba(6, 8, 10, 0.98)),
+    linear-gradient(90deg, rgba(126, 9, 20, 0.96), rgba(56, 5, 11, 0.96));
+  box-shadow:
+    0 3px 0 rgba(0, 0, 0, 0.92),
+    0 8px 14px rgba(0, 0, 0, 0.56),
+    inset 0 1px 0 rgba(255, 255, 255, 0.24),
+    inset 0 -4px 0 rgba(0, 0, 0, 0.5);
+  clip-path: polygon(8% 0, 100% 0, 92% 100%, 0 100%);
+}
+
+.card-viewer__tank-badge::before {
+  content: "";
+  position: absolute;
+  inset: 3px 8px;
+  z-index: -1;
+  border-top: 1px solid rgba(255, 61, 72, 0.82);
+  border-bottom: 1px solid rgba(87, 0, 8, 0.86);
+  background: linear-gradient(90deg, rgba(159, 13, 27, 0.84), rgba(64, 5, 10, 0.9));
+}
+
+.card-viewer__tank-label {
+  color: #f4f6f2;
+  font-family: "Zenter SP Demo Black", Georgia, "Times New Roman", serif;
+  font-size: clamp(0.84rem, 2.2vw, 1.08rem);
+  font-weight: 900;
+  line-height: 1;
+  letter-spacing: 0.1em;
+  text-shadow:
+    0 1px 0 rgba(0, 0, 0, 0.95),
+    0 0 7px rgba(0, 0, 0, 0.42);
 }
 
 .card-viewer__description,
