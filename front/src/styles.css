@@ -1,6 +1,6 @@
 ﻿@font-face {
-  font-family: "Zenter SP Demo Black";
-  src: url("/fonts/ZenterSPDemo-Black.otf") format("opentype");
+  font-family: "Times New Roman Fallback";
+  src: local("Times New Roman");
   font-style: normal;
   font-weight: 400;
   font-display: swap;
@@ -8,7 +8,7 @@
 
 :root {
   color-scheme: dark;
-  font-family: "Zenter SP Demo Black", "Trebuchet MS", "Segoe UI", sans-serif;
+  font-family: "Times New Roman", Georgia, serif;
   background: #070a11;
   color: #eef3ff;
   --line: rgba(179, 157, 255, 0.34);
@@ -82,6 +82,7 @@ button {
   grid-template-rows: auto auto 1fr;
   gap: 18px;
   isolation: isolate;
+  animation: main-menu-enter 420ms cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
 .video-stage {
@@ -111,6 +112,30 @@ button {
     linear-gradient(180deg, rgba(7, 10, 17, 0.18), rgba(4, 8, 16, 0.58));
 }
 
+@keyframes main-menu-enter {
+  from {
+    opacity: 0;
+    transform: translateY(18px) scale(0.985);
+    filter: saturate(0.82);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    filter: saturate(1);
+  }
+}
+
+@keyframes main-menu-section-enter {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 .menu-topbar,
 .hero-focus,
 .menu-actions,
@@ -121,21 +146,30 @@ button {
 
 .menu-topbar {
   display: grid;
-  grid-template-columns: 84px minmax(0, 1fr) 84px;
+  grid-template-columns: minmax(0, 1fr) 84px;
   align-items: center;
   gap: 10px;
   width: 100%;
+  animation: main-menu-section-enter 360ms ease-out 60ms both;
+}
+
+.hero-focus {
+  animation: main-menu-section-enter 360ms ease-out 120ms both;
+}
+
+.menu-actions {
+  animation: main-menu-section-enter 360ms ease-out 180ms both;
 }
 
 .menu-title {
   margin: 0;
-  text-align: center;
+  text-align: left;
   font-size: clamp(1.6rem, 6vw, 2.45rem);
   line-height: 0.95;
   letter-spacing: 0.06em;
   color: #f1ebff;
   text-shadow: 0 0 24px rgba(130, 106, 255, 0.18);
-  justify-self: center;
+  justify-self: start;
   min-width: 0;
   max-width: 100%;
 }
@@ -258,6 +292,15 @@ button {
   display: grid;
   place-items: center;
   font-size: 1rem;
+  overflow: hidden;
+  padding: 0;
+}
+
+.menu-panel__image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
 }
 
 .inventory-screen {
@@ -266,6 +309,7 @@ button {
   min-height: 86dvh;
   padding: 14px;
   isolation: isolate;
+  animation: main-menu-enter 420ms cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
 .inventory-screen__content {
@@ -276,6 +320,7 @@ button {
 .inventory-topbar {
   display: flex;
   justify-content: flex-start;
+  animation: main-menu-section-enter 360ms ease-out 60ms both;
 }
 
 .inventory-back {
@@ -288,8 +333,23 @@ button {
   padding: 12px;
 }
 
+.inventory-deck {
+  animation: main-menu-section-enter 360ms ease-out 120ms both;
+}
+
+.inventory-catalog {
+  animation: main-menu-section-enter 360ms ease-out 180ms both;
+}
+
+.inventory-shop {
+  animation: main-menu-section-enter 360ms ease-out 240ms both;
+}
+
 .inventory-catalog {
   padding: 10px 8px 8px;
+  display: grid;
+  grid-template-rows: auto auto minmax(0, 1fr) auto;
+  align-content: start;
 }
 
 .inventory-deck__summary {
@@ -367,24 +427,30 @@ button {
 }
 
 .inventory-deck-modal {
-  width: min(100%, 430px);
+  width: min(100%, 400px);
   max-height: calc(100dvh - 34px - env(safe-area-inset-bottom));
-  padding: 16px 14px 14px;
+  padding: 56px 4px 1px;
   display: grid;
   grid-template-rows: minmax(0, 1fr) auto;
-  gap: 14px;
+  gap: 1px;
   overflow: hidden;
+  animation: inventory-sheet-enter 280ms cubic-bezier(0.2, 0.84, 0.28, 1);
+}
+
+.inventory-deck-modal--closing {
+  animation: inventory-sheet-exit 220ms cubic-bezier(0.36, 0.04, 0.8, 0.24) both;
 }
 
 .inventory-deck-modal__grid {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 250px));
-  justify-content: center;
-  gap: 0px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  justify-content: stretch;
+  column-gap: 0;
+  row-gap: 180px;
   min-height: 0;
   overflow-y: auto;
   overscroll-behavior: contain;
-  padding: 0 4px 1px;
+  padding: 0 0 1px;
 }
 
 .inventory-deck-modal .inventory-card--deck {
@@ -394,7 +460,7 @@ button {
 }
 
 .inventory-deck-modal .inventory-card--deck .inventory-card__frame {
-  --stat-font-size: clamp(0.66rem, 1.5vw, 0.86rem);
+  --stat-font-size: clamp(1.5rem, 1.5vw, 0.1rem);
 }
 
 .inventory-toggle--modal {
@@ -479,10 +545,24 @@ button {
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 4px;
   min-height: 0;
+  align-content: start;
+}
+
+.inventory-catalog__body {
+  min-height: 0;
+  min-height: 350px;
+}
+
+.inventory-catalog__body--forward {
+  animation: inventory-catalog-page-forward 260ms cubic-bezier(0.2, 0.84, 0.28, 1);
+}
+
+.inventory-catalog__body--back {
+  animation: inventory-catalog-page-back 260ms cubic-bezier(0.2, 0.84, 0.28, 1);
 }
 
 .inventory-catalog__empty {
-  min-height: 420px;
+  min-height: 390px;
   display: grid;
   place-items: center;
   text-align: center;
@@ -569,7 +649,7 @@ button {
 }
 
 .inventory-card__stat {
-  font-family: "Zenter SP Demo Black", Georgia, "Times New Roman", serif;
+  font-family: "Times New Roman", Georgia, serif;
   font-size: var(--stat-font-size);
   font-weight: 900;
   line-height: 1;
@@ -645,7 +725,7 @@ button {
 
 .inventory-card__tank-label {
   color: #f4f6f2;
-  font-family: "Zenter SP Demo Black", Georgia, "Times New Roman", serif;
+  font-family: "Times New Roman", Georgia, serif;
   font-size: clamp(0.34rem, 1vw, 0.48rem);
   font-weight: 900;
   line-height: 0.8;
@@ -698,7 +778,7 @@ button {
   top: 83.8%;
   z-index: 2;
   color: #ffffff;
-  font-family: "Zenter SP Demo Black", Georgia, "Times New Roman", serif;
+  font-family: "Times New Roman", Georgia, serif;
   font-size: clamp(0.38rem, 1vw, 0.40rem);
   font-weight: 800;
   line-height: 0.92;
@@ -747,7 +827,7 @@ button {
 
 .inventory-card--deck .inventory-card__frame {
   --slot-size: 14.8%;
-  --stat-font-size: clamp(0.9rem, 2vw, 1.24rem);
+  --stat-font-size: clamp(0.1rem, 1vw, 1.24rem);
 }
 
 .inventory-card--deck {
@@ -779,6 +859,11 @@ button {
   background: transparent;
   border: none;
   box-shadow: none;
+  animation: inventory-sheet-enter 280ms cubic-bezier(0.2, 0.84, 0.28, 1);
+}
+
+.card-viewer--closing {
+  animation: inventory-sheet-exit 220ms cubic-bezier(0.36, 0.04, 0.8, 0.24) both;
 }
 
 .card-viewer__close {
@@ -879,7 +964,7 @@ button {
 }
 
 .card-viewer__stat {
-  font-family: "Zenter SP Demo Black", Georgia, "Times New Roman", serif;
+  font-family: "Times New Roman", Georgia, serif;
   font-size: clamp(3.2rem, 9.4vw, 4.8rem);
   font-weight: 900;
   line-height: 1;
@@ -931,7 +1016,7 @@ button {
 
 .card-viewer__tank-label {
   color: #f4f6f2;
-  font-family: "Zenter SP Demo Black", Georgia, "Times New Roman", serif;
+  font-family: "Times New Roman", Georgia, serif;
   font-size: clamp(0.84rem, 2.2vw, 1.08rem);
   font-weight: 900;
   line-height: 1;
@@ -948,7 +1033,7 @@ button {
   position: absolute;
   z-index: 2;
   color: #ffffff;
-  font-family: "Zenter SP Demo Black", Georgia, "Times New Roman", serif;
+  font-family: "Times New Roman", Georgia, serif;
   text-align: center;
   text-shadow:
     0 1px 2px rgba(0, 0, 0, 0.96),
@@ -1033,7 +1118,7 @@ button {
   border-radius: 999px;
   background: rgba(8, 14, 24, 0.42);
   color: rgba(233, 248, 255, 0.82);
-  font-family: "Zenter SP Demo Black", Georgia, "Times New Roman", serif;
+  font-family: "Times New Roman", Georgia, serif;
   font-size: clamp(0.44rem, 1.06vw, 0.58rem);
   letter-spacing: 0.06em;
   line-height: 1;
@@ -1211,6 +1296,10 @@ button {
   backdrop-filter: blur(12px);
 }
 
+.overlay--closing {
+  animation: overlay-fade-out 220ms ease both;
+}
+
 .picker {
   width: min(100%, 430px);
   padding: 18px;
@@ -1220,7 +1309,7 @@ button {
 }
 
 .picker-close {
-  margin-left: auto;
+  margin-left: 0;
   padding: 9px 12px;
   border-radius: 12px;
   background: rgba(97, 107, 142, 0.18);
@@ -1244,10 +1333,14 @@ button {
   box-shadow: none;
 }
 
+.hero-select--closing {
+  animation: inventory-sheet-exit 220ms cubic-bezier(0.36, 0.04, 0.8, 0.24) both;
+}
+
 .hero-select__header {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: center;
   gap: 12px;
   margin-bottom: 16px;
 }
@@ -1292,7 +1385,7 @@ button {
   min-height: 25%;
   z-index: 2;
   color: #ffffff;
-  font-family: "Zenter SP Demo Black", Georgia, "Times New Roman", serif;
+  font-family: "Times New Roman", Georgia, serif;
   font-size: clamp(0.46rem, 1.15vw, 0.69rem);
   line-height: 1.16;
   text-align: center;
@@ -1314,14 +1407,14 @@ button {
 }
 
 .hero-viewer__anchor--attack {
-  left: 6%;
-  bottom: 10%;
+  left: 7%;
+  bottom: 9%;
   justify-content: flex-start;
 }
 
 .hero-viewer__anchor--hp {
-  right: 3%;
-  bottom: 10%;
+  right: 4%;
+  bottom: 9%;
   justify-content: flex-end;
 }
 
@@ -1444,6 +1537,12 @@ button {
     inset 0 1px 0 rgba(255, 255, 255, 0.05);
 }
 
+.hero-viewer--inline .hero-viewer__frame {
+  border: none;
+  background: transparent;
+  box-shadow: none;
+}
+
 .hero-viewer__art {
   object-fit: cover;
 }
@@ -1535,7 +1634,7 @@ button {
   z-index: 0;
   border-radius: inherit;
   background:
-    url("/assets/game_mode_panel_background/image.png");
+    url("/assets/ui/pictures/panels/game_mode_background/image.png");
   background-size: 160%;
   background-position: center;
   background-repeat: no-repeat;
@@ -1579,7 +1678,7 @@ button {
   overflow: hidden;
   background:
     linear-gradient(180deg, rgba(16, 22, 36, 0.24), rgba(9, 12, 20, 0.5)),
-    url("/assets/game_mode_panel/image.png"),
+    url("/assets/ui/pictures/panels/game_mode/image.png"),
     linear-gradient(180deg, rgba(27, 34, 52, 0.94), rgba(11, 15, 24, 0.94));
   background-size: cover;
   background-position: center;
@@ -1686,55 +1785,110 @@ button {
 }
 
 .queue-search-overlay {
-  place-items: start center;
+  place-items: center;
   padding: calc(18px + env(safe-area-inset-top)) 14px calc(22px + env(safe-area-inset-bottom));
 }
 
-.queue-search-stack {
-  width: min(100%, 430px);
-  display: grid;
-  gap: 14px;
-}
-
-.queue-search-panel {
-  width: 100%;
-  padding: 18px;
-  display: grid;
-  gap: 12px;
+.queue-search-stage {
+  position: relative;
+  isolation: isolate;
+  width: min(100%, 420px);
+  min-height: min(78dvh, 300px);
+  overflow: hidden;
   animation: hero-select-drop 220ms ease-out;
 }
 
-.queue-search-panel__top {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
+.queue-search-stage__backdrop,
+.queue-search-stage__image,
+.queue-search-stage__shade {
+  position: absolute;
+  inset: 0;
 }
 
-.queue-search-panel__top .eyebrow {
-  margin-bottom: 0;
+.queue-search-stage__backdrop {
+  z-index: 0;
 }
 
-.queue-search-panel__timer {
-  color: #edf0ff;
-  font-size: 0.9rem;
+.queue-search-stage__image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0;
+  transform: scale(1.05);
+  transition:
+    opacity 900ms ease,
+    transform 3200ms ease;
 }
 
-.queue-search-panel__status {
+.queue-search-stage__image--active {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.queue-search-stage__shade {
+  background:
+    radial-gradient(circle at 50% 24%, rgba(120, 96, 255, 0.18), transparent 22%),
+    radial-gradient(circle at 50% 62%, rgba(82, 170, 255, 0.12), transparent 30%),
+    linear-gradient(180deg, rgba(7, 11, 19, 0.28), rgba(5, 9, 16, 0.84));
+}
+
+.queue-search-stage__content {
+  position: relative;
+  z-index: 1;
+  min-height: inherit;
+  padding: 30px 24px 24px;
+  display: grid;
+  align-content: center;
+  justify-items: center;
+  gap: 16px;
+  text-align: center;
+}
+
+.queue-search-stage__eyebrow {
+  margin: 0;
+  color: rgba(131, 178, 255, 0.92);
+  font-size: 0.72rem;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+}
+
+.queue-search-stage__title {
+  margin: 0;
+  color: #f4f7ff;
+  font-size: clamp(1.6rem, 6vw, 2.4rem);
+  line-height: 0.96;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  text-shadow: 0 0 24px rgba(120, 159, 255, 0.2);
+}
+
+.queue-search-stage__timer {
+  min-width: 166px;
   min-height: 58px;
+  padding: 12px 24px;
   border-radius: 18px;
-  border: 1px solid rgba(188, 167, 255, 0.24);
-  background: rgba(10, 14, 24, 0.72);
+  border: 1px solid rgba(188, 167, 255, 0.28);
+  background: rgba(10, 14, 24, 0.7);
   display: grid;
   place-items: center;
   color: #eef3ff;
-  font-size: 1rem;
-  letter-spacing: 0.06em;
+  font-size: clamp(1.2rem, 4.4vw, 1.7rem);
+  letter-spacing: 0.16em;
 }
 
-.queue-search-panel__cancel {
-  width: 100%;
+.queue-search-stage__status {
+  min-height: 34px;
+  color: rgba(225, 233, 255, 0.86);
+  font-size: 0.82rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.queue-search-stage__cancel {
+  margin-top: 8px;
+  min-width: 180px;
   min-height: 46px;
+  padding: 0 20px;
   border-radius: 16px;
   border: 1px solid rgba(255, 184, 184, 0.32);
   background: rgba(58, 18, 25, 0.72);
@@ -1822,7 +1976,7 @@ button {
 }
 
 .queue-loadout-card__stat {
-  font-family: "Zenter SP Demo Black", Georgia, "Times New Roman", serif;
+  font-family: "Times New Roman", Georgia, serif;
   font-size: clamp(0.74rem, 1.8vw, 1rem);
   line-height: 1;
   color: #fff1cc;
@@ -1841,7 +1995,7 @@ button {
   top: 83.2%;
   z-index: 2;
   color: #ffffff;
-  font-family: "Zenter SP Demo Black", Georgia, "Times New Roman", serif;
+  font-family: "Times New Roman", Georgia, serif;
   font-size: clamp(0.34rem, 0.82vw, 0.44rem);
   line-height: 1.05;
   text-align: center;
@@ -2088,5 +2242,67 @@ button {
     opacity: 1;
     transform: translateX(0) scale(1);
     filter: blur(0);
+  }
+}
+
+@keyframes inventory-sheet-enter {
+  from {
+    opacity: 0;
+    transform: translateY(20px) scale(0.975);
+    filter: saturate(0.86);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    filter: saturate(1);
+  }
+}
+
+@keyframes inventory-sheet-exit {
+  from {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    filter: saturate(1);
+  }
+
+  to {
+    opacity: 0;
+    transform: translateY(18px) scale(0.978);
+    filter: saturate(0.9);
+  }
+}
+
+@keyframes overlay-fade-out {
+  from {
+    opacity: 1;
+  }
+
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes inventory-catalog-page-forward {
+  from {
+    opacity: 0;
+    transform: translateX(18px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes inventory-catalog-page-back {
+  from {
+    opacity: 0;
+    transform: translateX(-18px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(0);
   }
 }

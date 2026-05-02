@@ -35,6 +35,7 @@ export function CardViewer({
   onForward,
   onClose,
 }: Props) {
+  const [closing, setClosing] = useState(false);
   const [passiveOpen, setPassiveOpen] = useState(false);
   const [slideDirection, setSlideDirection] = useState<"back" | "forward" | null>(null);
   const passive = card.passive?.code ? card.passive : null;
@@ -43,7 +44,14 @@ export function CardViewer({
     setPassiveOpen(false);
   }, [card.template_id]);
 
+  useEffect(() => {
+    setClosing(false);
+  }, [card.template_id]);
+
   function shift(direction: "back" | "forward") {
+    if (closing) {
+      return;
+    }
     setPassiveOpen(false);
     setSlideDirection(direction);
     if (direction === "back") {
@@ -53,17 +61,31 @@ export function CardViewer({
     onForward();
   }
 
+  function handleClose() {
+    if (closing) {
+      return;
+    }
+    setClosing(true);
+  }
+
   return (
-    <div className="overlay">
-      <section className="card-viewer surface">
-        <button type="button" className="card-viewer__close" onClick={onClose} aria-label={`Close ${card.name} viewer`}>
+    <div className={`overlay ${closing ? "overlay--closing" : ""}`}>
+      <section
+        className={`card-viewer surface ${closing ? "card-viewer--closing" : ""}`}
+        onAnimationEnd={() => {
+          if (closing) {
+            onClose();
+          }
+        }}
+      >
+        <button type="button" className="card-viewer__close" onClick={handleClose} aria-label={`Close ${card.name} viewer`}>
           x
         </button>
         <button
           type="button"
           className="card-viewer__nav card-viewer__nav--back"
           onClick={() => shift("back")}
-          disabled={!canGoBack}
+          disabled={!canGoBack || closing}
           aria-label="Previous card"
         >
           {"<"}
@@ -72,7 +94,7 @@ export function CardViewer({
           type="button"
           className="card-viewer__nav card-viewer__nav--forward"
           onClick={() => shift("forward")}
-          disabled={!canGoForward}
+          disabled={!canGoForward || closing}
           aria-label="Next card"
         >
           {">"}
@@ -123,6 +145,9 @@ export function CardViewer({
               type="button"
               className={`card-viewer__passive-hotspot ${passiveOpen ? "card-viewer__passive-hotspot--active" : ""}`}
               onClick={(event) => {
+                if (closing) {
+                  return;
+                }
                 event.stopPropagation();
                 setPassiveOpen((value) => !value);
               }}

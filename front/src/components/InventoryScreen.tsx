@@ -64,6 +64,7 @@ export function InventoryScreen({
   onDeckSaved,
 }: Props) {
   const [showFullDeck, setShowFullDeck] = useState(false);
+  const [fullDeckClosing, setFullDeckClosing] = useState(false);
   const [catalogKind, setCatalogKind] = useState<"battle" | "buff">("battle");
   const [battleSortKey, setBattleSortKey] = useState<BattleSortKey>("mana");
   const [filterOpen, setFilterOpen] = useState(false);
@@ -72,6 +73,7 @@ export function InventoryScreen({
   const [deckSyncState, setDeckSyncState] = useState<"idle" | "syncing" | "saved" | "error">("idle");
   const [deckMessage, setDeckMessage] = useState("");
   const [viewerState, setViewerState] = useState<ViewerState | null>(null);
+  const [pageMotion, setPageMotion] = useState<"back" | "forward" | null>(null);
   const lastSavedDeckRef = useRef(JSON.stringify(savedDeckEntries));
 
   const groupedDeck = useMemo(() => groupDeck(draftDeckEntries, battleCards), [draftDeckEntries, battleCards]);
@@ -162,11 +164,13 @@ export function InventoryScreen({
     };
   }, [draftDeckEntries, deckCardCount, onDeckSaved]);
 
-  function setPage(nextPage: number) {
+  function setPage(nextPage: number, direction?: "back" | "forward") {
     if (catalogKind === "battle") {
+      setPageMotion(direction ?? null);
       setBattlePage(nextPage);
       return;
     }
+    setPageMotion(direction ?? null);
     setBuffPage(nextPage);
   }
 
@@ -242,10 +246,28 @@ export function InventoryScreen({
     });
   }
 
+  function openFullDeck() {
+    setFullDeckClosing(false);
+    setShowFullDeck(true);
+  }
+
+  function closeFullDeck() {
+    setFullDeckClosing(true);
+  }
+
+  function handleFullDeckAnimationEnd() {
+    if (!fullDeckClosing) {
+      return;
+    }
+
+    setFullDeckClosing(false);
+    setShowFullDeck(false);
+  }
+
   return (
     <section className="inventory-screen surface">
       <div className="video-stage" aria-hidden="true">
-        <img className="video-stage__image" src="/assets/inventory/image.png" alt="" />
+        <img className="video-stage__image" src="/assets/ui/pictures/backgrounds/inventory/image.png" alt="" />
         <div className="video-stage__glow" />
       </div>
 
@@ -277,7 +299,7 @@ export function InventoryScreen({
               </div>
             ))}
           </div>
-          <button type="button" className="inventory-toggle" onClick={() => setShowFullDeck(true)}>
+          <button type="button" className="inventory-toggle" onClick={openFullDeck}>
             Показать все
           </button>
         </section>
@@ -328,28 +350,37 @@ export function InventoryScreen({
             </div>
           ) : null}
 
-          {catalogKind === "battle" ? (
-            <div className="inventory-catalog__grid">
-              {battleVisibleCards.map((card) => (
-                <InventoryCard
-                  key={card.template_id}
-                  card={card}
-                  description={card.description}
-                  countBadge={deckCountMap.get(card.template_id) ?? null}
-                  onOpen={() => openViewer(sortedBattleCards, sortedBattleCards.findIndex((item) => item.template_id === card.template_id))}
-                  onAdd={() => addCard(card.template_id)}
-                  addDisabled={!canAddCard(card)}
-                />
-              ))}
-            </div>
-          ) : (
-            <div className="inventory-catalog__empty">
-              {buffVisibleCards.length > 0 ? "Buff cards layer reserved for future cards." : "Buff cards are not available yet."}
-            </div>
-          )}
+          <div
+            className={`inventory-catalog__body ${pageMotion ? `inventory-catalog__body--${pageMotion}` : ""}`}
+            onAnimationEnd={() => setPageMotion(null)}
+          >
+            {catalogKind === "battle" ? (
+              <div className="inventory-catalog__grid">
+                {battleVisibleCards.map((card) => (
+                  <InventoryCard
+                    key={card.template_id}
+                    card={card}
+                    description={card.description}
+                    countBadge={deckCountMap.get(card.template_id) ?? null}
+                    onOpen={() => openViewer(sortedBattleCards, sortedBattleCards.findIndex((item) => item.template_id === card.template_id))}
+                    onAdd={() => addCard(card.template_id)}
+                    addDisabled={!canAddCard(card)}
+                  />
+                ))}
+              </div>
+            ) : (
+              <div className="inventory-catalog__empty">
+                {buffVisibleCards.length > 0 ? "Buff cards layer reserved for future cards." : "Buff cards are not available yet."}
+              </div>
+            )}
+          </div>
 
           <div className="inventory-pager">
-            <button type="button" className="inventory-pager__button" onClick={() => setPage(Math.max(0, page - 1))}>
+            <button
+              type="button"
+              className="inventory-pager__button"
+              onClick={() => setPage(Math.max(0, page - 1), "back")}
+            >
               Prev
             </button>
             <span>
@@ -358,19 +389,20 @@ export function InventoryScreen({
             <button
               type="button"
               className="inventory-pager__button"
-              onClick={() => setPage(Math.min(pageCount - 1, page + 1))}
+              onClick={() => setPage(Math.min(pageCount - 1, page + 1), "forward")}
             >
               Next
             </button>
           </div>
         </section>
-
-        <section className="inventory-shop surface-shell">Shop Placeholder</section>
       </div>
 
       {showFullDeck ? (
-        <div className="overlay">
-          <section className="inventory-deck-modal surface">
+        <div className={`overlay ${fullDeckClosing ? "overlay--closing" : ""}`}>
+          <section
+            className={`inventory-deck-modal surface ${fullDeckClosing ? "inventory-deck-modal--closing" : ""}`}
+            onAnimationEnd={handleFullDeckAnimationEnd}
+          >
             <div className="inventory-deck-modal__grid">
               {groupedDeck.map((stack) => (
                 <div key={stack.card.template_id} className="inventory-deck__all-slot">
@@ -385,7 +417,7 @@ export function InventoryScreen({
                 </div>
               ))}
             </div>
-            <button type="button" className="inventory-toggle inventory-toggle--modal" onClick={() => setShowFullDeck(false)}>
+            <button type="button" className="inventory-toggle inventory-toggle--modal" onClick={closeFullDeck}>
               Скрыть
             </button>
           </section>

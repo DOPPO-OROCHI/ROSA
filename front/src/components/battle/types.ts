@@ -128,9 +128,11 @@ export type MaskedBattlePlayerState = {
   hand?: BattleCardInMatch[];
   deck?: BattleCardInMatch[];
   discard?: BattleCardInMatch[];
+  graveyard?: BattleCardInMatch[];
   hand_count?: number;
   deck_count?: number;
   discard_count?: number;
+  graveyard_count?: number;
 };
 
 export type MaskedBattleMatchState = {

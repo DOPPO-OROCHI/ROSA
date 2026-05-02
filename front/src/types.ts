@@ -130,6 +130,7 @@ export type LeaveQueueResponse = {
 export type QueueStatusResponse = {
   state: QueueState;
   opponent_user_id?: number;
+  opponent_rating?: number;
   search_duration_sec?: number;
   penalty_until?: string;
   accept_deadline_at?: string;

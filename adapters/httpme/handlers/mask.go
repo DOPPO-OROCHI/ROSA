@@ -6,6 +6,29 @@ import (
 	"time"
 )
 
+func graveEntryToCard(entry game.GraveEntry) game.CardsInMatch {
+	u := entry.Unit
+	return game.CardsInMatch{
+		InstanceID:    u.InstanceID,
+		Kind:          "battle",
+		TemplateID:    u.TemplateID,
+		GamerCardID:   u.GamerCardID,
+		CardLevel:     u.CardLevel,
+		Name:          u.TemplateID,
+		Description:   "",
+		ManaCost:      0,
+		Attack:        u.Attack,
+		HealthPoints:  u.MaxHP,
+		CardType:      u.CardType,
+		ImageKey:      u.ImageKey,
+		AssetBaseKey:  u.AssetBaseKey,
+		SplashRadius:  u.SplashRadius,
+		BaseCooldown:  u.BaseCooldown,
+		HasSkill:      u.HasSkill,
+		SkillImageKey: u.SkillImageKey,
+	}
+}
+
 /*
 В этом файле реализовывается основная логика маскирования данных. Дело в том, что игроку напротив я не должен
 отдавать все данные, а лишь те, которые мы определяем как нужные. В чем здесь мем ? Как вижно из входящих аргументов,
@@ -98,13 +121,18 @@ func maskMatchStateForUser(st *game.MatchState, viewerUserID uint) *dto.MaskedMa
 		if i == viewerIndex {
 			mp.Hand = append(mp.Hand, p.Hand...)
 			mp.Discard = append(mp.Discard, p.Discard...)
+			for _, graveEntry := range p.GraveYard {
+				mp.GraveYard = append(mp.GraveYard, graveEntryToCard(graveEntry))
+			}
 			mp.DeckCount = len(p.Deck)
 			mp.DiscCount = len(p.Discard)
+			mp.GraveCount = len(p.GraveYard)
 			//если нет, то раскрываем лишь количество карт в руке,деке противника
 		} else {
 			mp.HandCount = len(p.Hand)
 			mp.DeckCount = len(p.Deck)
 			mp.DiscCount = len(p.Discard)
+			mp.GraveCount = len(p.GraveYard)
 		}
 		//записываем всю муру в out в поле Players
 		out.Players[i] = mp

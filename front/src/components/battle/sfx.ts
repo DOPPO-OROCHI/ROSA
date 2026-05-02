@@ -3,7 +3,7 @@ import type { MaskedBattleMatchState, BattleEvent, BattleUnitState } from "./typ
 
 export type BattleCardSfxKind = "summon" | "death" | "spell";
 
-export const COMMON_ATTACK_HIT_SFX_SRC = "/assets/attack_sfx/impact.mp3";
+export const COMMON_ATTACK_HIT_SFX_SRC = "/assets/ui/sounds/combat/impact.mp3";
 
 const audioCache = new Map<string, HTMLAudioElement>();
 const missingAudioSources = new Set<string>();

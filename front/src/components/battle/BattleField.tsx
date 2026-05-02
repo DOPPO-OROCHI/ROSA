@@ -4,6 +4,14 @@ import type { SkillTargetTone } from "./CARD_SKILLS";
 import { EndTurnButton } from "./EndTurnButton";
 import { TurnTimer } from "./TurnTimer";
 
+function toDisplayName(value: string): string {
+  return value
+    .split(/[_:\-]+/)
+    .filter(Boolean)
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(" ");
+}
+
 type Props = {
   match: MaskedBattleMatchState;
   enemy: MaskedBattlePlayerState;
@@ -53,12 +61,26 @@ export function BattleField({
   onPlayBattleCard,
   onPlayerUnitSkill,
 }: Props) {
+  const effectSourceLabels = Object.fromEntries(
+    match.players.flatMap((battlePlayer, playerIndex) => {
+      const heroEntry = battlePlayer
+        ? [[`hero:p${playerIndex}`, toDisplayName(battlePlayer.hero_code)] as const]
+        : [];
+      const unitEntries = (battlePlayer?.table ?? [])
+        .filter((unit): unit is BattleUnitState => Boolean(unit))
+        .map((unit) => [unit.instance_id, toDisplayName(unit.template_id)] as const);
+
+      return [...heroEntry, ...unitEntries];
+    }),
+  );
+
   return (
     <section className="battle-field">
       <div className="battle-field__board">
         <BoardLane
           units={enemy.table}
           side="enemy"
+          effectSourceLabels={effectSourceLabels}
           targetUnitIds={attackTargetIds}
           readyUnitIds={[]}
           skillTargetIds={skillTargetIds}
@@ -79,6 +101,7 @@ export function BattleField({
         <BoardLane
           units={player.table}
           side="player"
+          effectSourceLabels={effectSourceLabels}
           selectedUnitId={selectedAttackerId}
           selectedSkillCasterId={selectedSkillCasterId}
           readyUnitIds={readyUnitIds}

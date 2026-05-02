@@ -7,6 +7,7 @@ import { CardAttackAnimation, type CardAttackAnimationState } from "./CardAttack
 import { BattleCardViewer, type BattleCardViewerOrigin } from "./BattleCardViewer";
 import { BattleField } from "./BattleField";
 import { BattleFloatingNumbers, type FloatingNumber } from "./BattleFloatingNumbers";
+import { BattleGraveyardModal } from "./BattleGraveyardModal";
 import { BattleInfoToast } from "./BattleInfoToast";
 import { BattleLoadingScreen } from "./BattleLoadingScreen";
 import { DeckCounter } from "./DeckCounter";
@@ -47,6 +48,7 @@ export function BattleScreen({ currentUserId, matchId, heroes, deckEntries, onLe
   const [previewCard, setPreviewCard] = useState<BattleCardInMatch | null>(null);
   const [previewOrigin, setPreviewOrigin] = useState<BattleCardViewerOrigin | null>(null);
   const [previewClosing, setPreviewClosing] = useState(false);
+  const [graveyardOpen, setGraveyardOpen] = useState(false);
   const [attackAnimation, setAttackAnimation] = useState<CardAttackAnimationState | null>(null);
   const [deathAnimations, setDeathAnimations] = useState<DeathAnimationState[]>([]);
   const [floatingNumbers, setFloatingNumbers] = useState<FloatingNumber[]>([]);
@@ -680,7 +682,7 @@ export function BattleScreen({ currentUserId, matchId, heroes, deckEntries, onLe
       enqueueDeathAnimations(nextMatch);
       setMatch(nextMatch);
       setError("");
-      if (leaveAfter) {
+      if (leaveAfter && !nextMatch.finished) {
         onLeaveToMenu();
       }
     } catch (err) {
@@ -953,7 +955,15 @@ export function BattleScreen({ currentUserId, matchId, heroes, deckEntries, onLe
           <div className="battle-bottom__hero-row">
             <div className="battle-bottom__cluster battle-bottom__cluster--left">
               <div className="battle-bottom__mini">
-                <GraveyardBlock count={player.discard_count ?? player.discard?.length ?? 0} />
+                <GraveyardBlock
+                  count={player.graveyard_count ?? player.graveyard?.length ?? 0}
+                  onOpen={() => {
+                    setPreviewClosing(true);
+                    setPreviewCard(null);
+                    setPreviewOrigin(null);
+                    setGraveyardOpen(true);
+                  }}
+                />
               </div>
               <div className="battle-bottom__main-block">
                 <AttackBlock
@@ -1031,6 +1041,16 @@ export function BattleScreen({ currentUserId, matchId, heroes, deckEntries, onLe
               setPreviewClosing(false);
               setPreviewCard(null);
               setPreviewOrigin(null);
+            }}
+          />
+        ) : null}
+        {graveyardOpen ? (
+          <BattleGraveyardModal
+            cards={player.graveyard ?? []}
+            onClose={() => setGraveyardOpen(false)}
+            onOpenCard={(card, originRect) => {
+              setGraveyardOpen(false);
+              handlePreview(card, originRect);
             }}
           />
         ) : null}

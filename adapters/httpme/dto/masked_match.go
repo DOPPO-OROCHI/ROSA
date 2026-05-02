@@ -36,9 +36,11 @@ type MaskedPlayerState struct {
 	Hand      []game.CardsInMatch `json:"hand,omitempty"`    //<-что в руке у игрока
 	Deck      []game.CardsInMatch `json:"deck,omitempty"`    //<-что в колоде у игрока (сколько карт)
 	Discard   []game.CardsInMatch `json:"discard,omitempty"` //<- сколько карт проебал
+	GraveYard []game.CardsInMatch `json:"graveyard,omitempty"`
 	HandCount int                 `json:"hand_count,omitempty"`
 	DeckCount int                 `json:"deck_count,omitempty"`
 	DiscCount int                 `json:"discard_count,omitempty"`
+	GraveCount int                `json:"graveyard_count,omitempty"`
 }
 
 /*

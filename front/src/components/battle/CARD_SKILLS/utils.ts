@@ -236,15 +236,15 @@ function getEffectDisplayName(effectType: string): string {
     case "silence":
       return "Silence";
     case "attack":
-      return "Attack Buff";
+      return "ATK";
     case "attack_and_hp":
-      return "Attack + HP";
+      return "ATK + HP";
     case "hp":
-      return "HP Buff";
+      return "HP";
     case "attack_cooldown":
-      return "Attack Speed";
+      return "ATK CD";
     case "skill_cooldown":
-      return "Skill Speed";
+      return "SKILL CD";
     case "skill_power":
       return "Skill Power";
     case "heal_per_turn":
@@ -296,36 +296,105 @@ function getEffectDisplayName(effectType: string): string {
   }
 }
 
+function formatEffectValue(value: number): string {
+  if (value > 0) {
+    return `+${value}`;
+  }
+  return `${value}`;
+}
+
 function getEffectValueLabel(effect: BattleUnitEffect): string {
   if (effect.effect_type === EFFECT_REFLECT_SHIELD) {
-    return `${Math.max(0, effect.value ?? 0)}/${Math.max(0, effect.extra_value ?? 0)}`;
+    return `${formatEffectValue(effect.value ?? 0)}/${formatEffectValue(effect.extra_value ?? 0)}`;
   }
 
   if (effect.effect_type === "attack_and_hp") {
-    return `${Math.max(0, effect.value ?? 0)}/${Math.max(0, effect.extra_value ?? 0)}`;
+    return `${formatEffectValue(effect.value ?? 0)}/${formatEffectValue(effect.extra_value ?? 0)}`;
   }
 
   if ((effect.extra_value ?? 0) > 0) {
-    return `${Math.max(0, effect.value ?? 0)}/${Math.max(0, effect.extra_value ?? 0)}`;
+    return `${formatEffectValue(effect.value ?? 0)}/${formatEffectValue(effect.extra_value ?? 0)}`;
   }
 
-  return `${Math.max(0, effect.value ?? 0)}`;
+  return formatEffectValue(effect.value ?? 0);
 }
 
-export function getUnitStatusEntries(unit: BattleUnitState | null | undefined): Array<{
+export function getUnitStatusEntries(
+  unit: BattleUnitState | null | undefined,
+  sourceLabels: Record<string, string> = {},
+): Array<{
   key: string;
+  effectType: string;
+  sourceLabel: string;
   label: string;
   valueLabel: string;
   turnsLabel: string;
+  tone: "buff" | "debuff" | "neutral";
 }> {
   if (!unit) {
     return [];
   }
 
-  return (unit.effects ?? []).map((effect, index) => ({
-    key: `${unit.instance_id}-${effect.effect_type}-${effect.source_instance_id}-${index}`,
-    label: getEffectDisplayName(effect.effect_type),
-    valueLabel: getEffectValueLabel(effect),
-    turnsLabel: (effect.turns_left ?? 0) > 0 ? `${effect.turns_left} turns` : "infinite",
-  }));
+  const grouped = new Map<string, {
+    sourceLabel: string;
+    effectType: string;
+    totalValue: number;
+    totalExtraValue: number;
+    turns: number[];
+    tone: "buff" | "debuff" | "neutral";
+  }>();
+
+  (unit.effects ?? []).forEach((effect) => {
+    const sourceLabel = sourceLabels[effect.source_instance_id] ?? "Unknown Source";
+    const key = `${effect.source_instance_id}:${effect.effect_type}:${effect.polarity ?? ""}`;
+    const current = grouped.get(key);
+    const nextTone = effect.polarity === "buff" ? "buff" : effect.polarity === "debuff" ? "debuff" : "neutral";
+
+    if (!current) {
+      grouped.set(key, {
+        sourceLabel,
+        effectType: effect.effect_type,
+        totalValue: effect.value ?? 0,
+        totalExtraValue: effect.extra_value ?? 0,
+        turns: [effect.turns_left ?? 0],
+        tone: nextTone,
+      });
+      return;
+    }
+
+    current.totalValue += effect.value ?? 0;
+    current.totalExtraValue += effect.extra_value ?? 0;
+    current.turns.push(effect.turns_left ?? 0);
+    if (current.tone === "neutral") {
+      current.tone = nextTone;
+    }
+  });
+
+  return Array.from(grouped.entries())
+    .map(([key, group]) => {
+      const hasInfinite = group.turns.some((turn) => turn <= 0);
+      const maxTurns = group.turns.reduce((max, turn) => Math.max(max, turn), 0);
+      const aggregatedEffect: BattleUnitEffect = {
+        effect_type: group.effectType,
+        turns_left: maxTurns,
+        value: group.totalValue,
+        extra_value: group.totalExtraValue,
+        source_type: "",
+        polarity: group.tone,
+        source_instance_id: "",
+        dispellable: true,
+        targeting: "",
+      };
+
+      return {
+        key: `${unit.instance_id}-${key}`,
+        effectType: group.effectType,
+        sourceLabel: group.sourceLabel,
+        label: getEffectDisplayName(group.effectType),
+        valueLabel: getEffectValueLabel(aggregatedEffect),
+        turnsLabel: hasInfinite ? "INF" : `${maxTurns}T`,
+        tone: group.tone,
+      };
+    })
+    .sort((left, right) => left.sourceLabel.localeCompare(right.sourceLabel) || left.label.localeCompare(right.label));
 }

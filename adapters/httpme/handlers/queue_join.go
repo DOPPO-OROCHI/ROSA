@@ -4,6 +4,8 @@ import (
 	"TheWar/adapters/httpme/middleware"
 	"TheWar/internal/domain/player"
 	"TheWar/internal/domain/queue"
+	"TheWar/internal/infra/repository"
+	"errors"
 	"net/http"
 
 	"gorm.io/gorm"
@@ -44,12 +46,36 @@ func JoinQueue(q JoinQueueHandler) http.HandlerFunc {
 			middleware.WriteErr(w, http.StatusInternalServerError, "server error")
 			return
 		}
+		if user.SelectedHeroTemplateID == nil {
+			middleware.WriteErr(w, http.StatusBadRequest, "selected hero is not set")
+			return
+		}
+		entries, err := repository.LoadDeckTx(q.db, userID)
+		if err != nil {
+			middleware.WriteErr(w, http.StatusInternalServerError, "server error")
+			return
+		}
+		totalCards := 0
+		for _, entry := range entries {
+			totalCards += entry.Count
+		}
+		if totalCards != 20 {
+			middleware.WriteErr(w, http.StatusBadRequest, "deck size must be 20")
+			return
+		}
 		userInQueue := queue.UserInQueue{
 			UserID: int(userID),
 			Rating: user.Rating,
 		}
 		if err := q.queue.AddUserToQueue(&userInQueue); err != nil {
-			middleware.WriteErr(w, http.StatusInternalServerError, "server error")
+			switch {
+			case errors.Is(err, queue.ErrUserAlreadyInQueue):
+				middleware.WriteErr(w, http.StatusConflict, err.Error())
+			case errors.Is(err, queue.ErrUserQueuePenalty):
+				middleware.WriteErr(w, http.StatusConflict, err.Error())
+			default:
+				middleware.WriteErr(w, http.StatusInternalServerError, "server error")
+			}
 			return
 		}
 		_, opponent, reserved, err := q.queue.ReserveMatchForUser(int(userID))

@@ -1,16 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
-import { resolveCardAssetVariantSrc, resolveHeroAssetVariantSrc } from "../lib/api";
-import type { Hero } from "../types";
 
 type QueueState = "idle" | "searching" | "pending_match" | "penalty";
-type QueueDeckCard = {
-  templateId: string;
-  name: string;
-  count: number;
-  manaCost: number;
-  attack: number;
-  healthPoints: number;
-};
 
 type Props = {
   open: boolean;
@@ -22,12 +12,14 @@ type Props = {
   queueHint: string;
   searchDurationSec: number;
   canQueue: boolean;
-  selectedHero: Hero | null;
-  deckCards: QueueDeckCard[];
   onClose: () => void;
   onFindMatch: () => void;
   onCancelSearch: () => void;
 };
+
+const SEARCH_BACKDROP_IMAGES = [
+  "/assets/ui/pictures/backgrounds/queue_search/queue_search_01.png",
+];
 
 export function GameModePanel({
   open,
@@ -39,8 +31,6 @@ export function GameModePanel({
   queueHint,
   searchDurationSec,
   canQueue,
-  selectedHero,
-  deckCards,
   onClose,
   onFindMatch,
   onCancelSearch,
@@ -48,6 +38,7 @@ export function GameModePanel({
   const [selectedMode, setSelectedMode] = useState<"ranked">("ranked");
   const [dotCount, setDotCount] = useState(1);
   const [penaltyNow, setPenaltyNow] = useState(() => Date.now());
+  const [searchBackdropIndex, setSearchBackdropIndex] = useState(0);
 
   useEffect(() => {
     if (!searching) {
@@ -58,6 +49,30 @@ export function GameModePanel({
     const id = window.setInterval(() => {
       setDotCount((current) => (current >= 3 ? 1 : current + 1));
     }, 300);
+
+    return () => window.clearInterval(id);
+  }, [searching]);
+
+  useEffect(() => {
+    if (!searching) {
+      setSearchBackdropIndex(0);
+      return;
+    }
+
+    const id = window.setInterval(() => {
+      setSearchBackdropIndex((current) => {
+        if (SEARCH_BACKDROP_IMAGES.length <= 1) {
+          return current;
+        }
+
+        let next = current;
+        while (next === current) {
+          next = Math.floor(Math.random() * SEARCH_BACKDROP_IMAGES.length);
+        }
+
+        return next;
+      });
+    }, 3200);
 
     return () => window.clearInterval(id);
   }, [searching]);
@@ -162,55 +177,31 @@ export function GameModePanel({
       ) : null}
 
       {searching ? (
-        <div className="overlay queue-search-overlay" onClick={onCancelSearch}>
-          <div className="queue-search-stack" onClick={(event) => event.stopPropagation()}>
-            <section className="queue-search-panel surface">
-              <div className="queue-search-panel__top">
-                <p className="eyebrow">ПОИСК МАТЧА</p>
-                <span className="queue-search-panel__timer">{searchTimer}</span>
-              </div>
+        <div className="overlay queue-search-overlay">
+          <section className="queue-search-stage surface">
+            <div className="queue-search-stage__backdrop" aria-hidden="true">
+              {SEARCH_BACKDROP_IMAGES.map((src, index) => (
+                <img
+                  key={src}
+                  className={`queue-search-stage__image ${index === searchBackdropIndex ? "queue-search-stage__image--active" : ""}`}
+                  src={src}
+                  alt=""
+                />
+              ))}
+              <div className="queue-search-stage__shade" />
+            </div>
 
-              <div className="queue-search-panel__status">{searchLabel}</div>
+            <div className="queue-search-stage__content">
+              <p className="queue-search-stage__eyebrow">MATCHMAKING</p>
+              <h2 className="queue-search-stage__title">ПОИСК ИГРЫ</h2>
+              <div className="queue-search-stage__timer">{searchTimer}</div>
+              <div className="queue-search-stage__status">{searchLabel}</div>
 
-              <button type="button" className="queue-search-panel__cancel" onClick={onCancelSearch}>
+              <button type="button" className="queue-search-stage__cancel" onClick={onCancelSearch}>
                 ОТМЕНА
               </button>
-            </section>
-
-            <section className="queue-loadout surface">
-              <div className="queue-loadout__hero">
-                {selectedHero ? (
-                  <img
-                    src={resolveHeroAssetVariantSrc(selectedHero.hero_code, "battle_icon")}
-                    alt={selectedHero.name}
-                  />
-                ) : null}
-              </div>
-
-              <div className="queue-loadout__deck">
-                {deckCards.map((card) => (
-                  <article key={card.templateId} className="queue-loadout-card">
-                    <img
-                      className="queue-loadout-card__art"
-                      src={resolveCardAssetVariantSrc("battle", card.templateId, "view")}
-                      alt={card.name}
-                    />
-                    <div className="queue-loadout-card__anchor queue-loadout-card__anchor--mana">
-                      <span className="queue-loadout-card__stat">{card.manaCost}</span>
-                    </div>
-                    <div className="queue-loadout-card__anchor queue-loadout-card__anchor--attack">
-                      <span className="queue-loadout-card__stat">{card.attack}</span>
-                    </div>
-                    <div className="queue-loadout-card__anchor queue-loadout-card__anchor--hp">
-                      <span className="queue-loadout-card__stat">{card.healthPoints}</span>
-                    </div>
-                    <div className="queue-loadout-card__name">{card.name}</div>
-                    {card.count > 1 ? <span className="queue-loadout-card__badge">x{card.count}</span> : null}
-                  </article>
-                ))}
-              </div>
-            </section>
-          </div>
+            </div>
+          </section>
         </div>
       ) : null}
     </>

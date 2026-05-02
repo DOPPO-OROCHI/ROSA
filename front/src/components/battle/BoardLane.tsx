@@ -5,6 +5,7 @@ import type { BattleUnitState } from "./types";
 type Props = {
   units: Array<BattleUnitState | null>;
   side: "player" | "enemy";
+  effectSourceLabels?: Record<string, string>;
   canPlayIntoEmpty?: boolean;
   selectedUnitId?: string;
   selectedSkillCasterId?: string;
@@ -24,6 +25,7 @@ type Props = {
 export function BoardLane({
   units,
   side,
+  effectSourceLabels = {},
   canPlayIntoEmpty = false,
   selectedUnitId = "",
   selectedSkillCasterId = "",
@@ -46,6 +48,7 @@ export function BoardLane({
           key={`${side}-${index}-${unit?.instance_id ?? "empty"}`}
           unit={unit}
           side={side}
+          effectSourceLabels={effectSourceLabels}
           playable={unit == null && canPlayIntoEmpty}
           selected={Boolean(unit && unit.instance_id === selectedUnitId)}
           skillSelected={Boolean(unit && unit.instance_id === selectedSkillCasterId)}

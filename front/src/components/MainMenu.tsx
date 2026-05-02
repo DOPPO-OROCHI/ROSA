@@ -14,6 +14,7 @@ type Props = {
   onStartMatch: () => void;
   inventoryHidden?: boolean;
   startMatchDisabled?: boolean;
+  startMatchLabel?: string;
   onInventory: () => void;
   musicEnabled: boolean;
   onToggleMusic: () => void;
@@ -33,14 +34,11 @@ export function MainMenu(props: Props) {
     <>
       <section className="main-menu surface">
         <div className="video-stage" aria-hidden="true">
-          <img className="video-stage__image" src="/assets/main_menu/image.png" alt="" />
+          <img className="video-stage__image" src="/assets/ui/pictures/backgrounds/menu/image.png" alt="" />
           <div className="video-stage__glow" />
         </div>
 
         <header className="menu-topbar">
-          <button type="button" className="top-slot top-slot--left">
-            <AutoFitText text="FRIENDS" className="top-slot__label" maxFontSize={14} minFontSize={8} />
-          </button>
           <h1 className="menu-title">PROJECT ROSE</h1>
           <button type="button" className="top-slot top-slot--right" onClick={props.onToggleMusic}>
             <AutoFitText
@@ -77,16 +75,20 @@ export function MainMenu(props: Props) {
             onClick={props.onStartMatch}
             disabled={props.startMatchDisabled}
           >
-            Start Match
+            {props.startMatchLabel ?? "Start Match"}
           </button>
           {props.inventoryHidden ? null : (
             <button type="button" className="menu-button" onClick={props.onInventory}>
               Inventory
             </button>
           )}
-          <button type="button" className="menu-panel">
-            Shop Placeholder
-          </button>
+          <div className="menu-panel" aria-hidden="true">
+            <img
+              className="menu-panel__image"
+              src="/assets/ui/pictures/panels/shop/image.png"
+              alt=""
+            />
+          </div>
         </section>
       </section>
 

@@ -774,7 +774,7 @@ var DefaultBattleCards = []BattleCardTemplate{
 		SplashRadius:      0,
 		IsTank:            false,
 		CardType:          Human,
-		BaseCooldown:      0,
+		BaseCooldown:      1,
 		ManaCost:          5,
 		MaxCopies:         4,
 		ImageKey:          "",

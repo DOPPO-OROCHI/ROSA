@@ -7,11 +7,11 @@ const warmedAssetUrls = new Set<string>();
 const inFlightAssetUrls = new Map<string, Promise<void>>();
 
 const STATIC_BATTLE_ASSET_URLS = [
-  "/assets/battle_board/image.png",
-  "/assets/battle_background/image.png",
-  "/assets/ui/click.mp3",
-  "/assets/ui/music/battle.mp3",
-  "/assets/attack_sfx/impact.mp3",
+  "/assets/ui/pictures/boards/battle/image.png",
+  "/assets/ui/pictures/backgrounds/battle/image.png",
+  "/assets/ui/sounds/ui/click.mp3",
+  "/assets/ui/sounds/music/battle.mp3",
+  "/assets/ui/sounds/combat/impact.mp3",
 ];
 
 type BattlePreloadState = {
@@ -69,7 +69,7 @@ function collectBattleAssetUrls(match: MaskedBattleMatchState, deckEntries: Deck
       addCardAssetUrls(urls, "battle", unit.template_id);
     });
 
-    [player.hand ?? [], player.deck ?? [], player.discard ?? []].forEach((zone) => {
+    [player.hand ?? [], player.deck ?? [], player.discard ?? [], player.graveyard ?? []].forEach((zone) => {
       zone.forEach((card) => {
         if (!card.template_id || (card.kind !== "battle" && card.kind !== "buff")) {
           return;

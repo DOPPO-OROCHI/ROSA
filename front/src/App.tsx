@@ -15,20 +15,30 @@ import type {
   HeroesResponse,
   JoinQueueResponse,
   MeResponse,
+  QueueState,
   QueueStatusResponse,
 } from "./types";
 import type { MaskedBattleMatchState } from "./components/battle/types";
 
 const QUICK_USERS = ["dev", "roman", "test", "rosa"];
+const MENU_MUSIC_VOLUME = 0.35;
+const MENU_MUSIC_MATCH_FOUND_VOLUME = MENU_MUSIC_VOLUME * 0.5;
+const BATTLE_MUSIC_VOLUME = 0.28;
+const MUSIC_FADE_MS = 420;
 
 type Screen = "menu" | "inventory" | "battle";
 
 export function App() {
   const clickAudioRef = useRef<HTMLAudioElement | null>(null);
+  const matchFoundAudioRef = useRef<HTMLAudioElement | null>(null);
   const menuMusicRef = useRef<HTMLAudioElement | null>(null);
   const battleMusicRef = useRef<HTMLAudioElement | null>(null);
+  const menuMusicFadeFrameRef = useRef<number | null>(null);
+  const battleMusicFadeFrameRef = useRef<number | null>(null);
+  const battleMusicUnlockedRef = useRef(false);
   const screenRef = useRef<Screen>("menu");
   const musicEnabledRef = useRef(true);
+  const prevQueueStateRef = useRef<QueueState>("idle");
   const [screen, setScreen] = useState<Screen>("menu");
   const [username, setUsername] = useState("dev");
   const [userId, setUserId] = useState("");
@@ -52,8 +62,8 @@ export function App() {
   const [acceptedByMeLatch, setAcceptedByMeLatch] = useState(false);
   const [musicEnabled, setMusicEnabled] = useState(true);
 
-  const selectedHero = heroes.find((hero) => hero.hero_code === selectedHeroCode) ?? heroes[0] ?? null;
-  const deckCardCount = deckEntries.reduce((total, entry) => total + entry.count, 0);
+  const selectedHero = heroes.find((hero) => hero.hero_code === selectedHeroCode) ?? null;
+  const deckCardCount = draftDeckEntries.reduce((total, entry) => total + entry.count, 0);
   const canJoinQueue = Boolean(selectedHeroCode) && deckCardCount === 20;
   const queueHint = !selectedHeroCode && deckCardCount !== 20
     ? "НЕТ ГЕРОЯ | НЕПОЛНАЯ ДЕКА"
@@ -64,31 +74,66 @@ export function App() {
         : "";
   const queueSearching = queueStatus.state === "searching" || queueStatus.state === "pending_match";
   const queuePenalty = queueStatus.state === "penalty";
-  const queueDeckCards = deckEntries
-    .filter((entry) => entry.kind === "battle" && entry.count > 0)
-    .map((entry) => {
-      const card = battleCards.find((item) => item.template_id === entry.template_id);
-      if (!card) {
-        return null;
+  const matchTransitionLocked = Boolean(activeMatchId) && (acceptedByMeLatch || matchFoundVerdict === "countdown");
+  const startMatchLabel = !selectedHeroCode && deckCardCount !== 20
+    ? "НЕТ ГЕРОЯ / НЕПОЛНАЯ ДЕКА"
+    : !selectedHeroCode
+      ? "НЕ ВЫБРАН ПЕРСОНАЖ"
+      : deckCardCount !== 20
+        ? "НЕПОЛНАЯ ДЕКА"
+        : "START MATCH";
+  function fadeAudioTo(
+    audio: HTMLAudioElement | null,
+    frameRef: React.MutableRefObject<number | null>,
+    targetVolume: number,
+    durationMs = MUSIC_FADE_MS,
+  ) {
+    if (!audio) {
+      return;
+    }
+
+    if (frameRef.current !== null) {
+      window.cancelAnimationFrame(frameRef.current);
+      frameRef.current = null;
+    }
+
+    const startVolume = audio.volume;
+    if (Math.abs(startVolume - targetVolume) < 0.005) {
+      audio.volume = targetVolume;
+      return;
+    }
+
+    const startedAt = performance.now();
+    const tick = (now: number) => {
+      const progress = Math.min((now - startedAt) / durationMs, 1);
+      const eased = 1 - Math.pow(1 - progress, 3);
+      audio.volume = startVolume + (targetVolume - startVolume) * eased;
+
+      if (progress < 1) {
+        frameRef.current = window.requestAnimationFrame(tick);
+        return;
       }
 
-      return {
-        templateId: card.template_id,
-        name: card.name,
-        count: entry.count,
-        manaCost: card.mana_cost,
-        attack: card.attack,
-        healthPoints: card.health_points,
-      };
-    })
-    .filter((entry): entry is {
-      templateId: string;
-      name: string;
-      count: number;
-      manaCost: number;
-      attack: number;
-      healthPoints: number;
-    } => entry !== null);
+      audio.volume = targetVolume;
+      frameRef.current = null;
+    };
+
+    frameRef.current = window.requestAnimationFrame(tick);
+  }
+
+  function getMenuMusicTargetVolume() {
+    return queueStatus.state === "pending_match"
+      ? MENU_MUSIC_MATCH_FOUND_VOLUME
+      : MENU_MUSIC_VOLUME;
+  }
+
+  function fadeMenuMusicTo(targetVolume: number, durationMs = MUSIC_FADE_MS) {
+    fadeAudioTo(menuMusicRef.current, menuMusicFadeFrameRef, targetVolume, durationMs);
+  }
+
+  function fadeBattleMusicTo(targetVolume: number, durationMs = MUSIC_FADE_MS) {
+    fadeAudioTo(battleMusicRef.current, battleMusicFadeFrameRef, targetVolume, durationMs);
+  }
 
   function syncMusicPlayback(nextScreen: Screen, nextMusicEnabled: boolean) {
     const menuAudio = menuMusicRef.current;
@@ -100,20 +145,31 @@ export function App() {
     if (!nextMusicEnabled) {
       menuAudio.pause();
       battleAudio.pause();
+      menuAudio.volume = getMenuMusicTargetVolume();
+      battleAudio.volume = BATTLE_MUSIC_VOLUME;
       return;
     }
 
     if (nextScreen === "menu" || nextScreen === "inventory") {
-      battleAudio.pause();
       if (menuAudio.paused) {
         void menuAudio.play().catch(() => undefined);
       }
+      if (battleMusicUnlockedRef.current && battleAudio.paused) {
+        battleAudio.volume = 0;
+        void battleAudio.play().catch(() => undefined);
+      }
+      fadeBattleMusicTo(0);
+      fadeMenuMusicTo(getMenuMusicTargetVolume());
       return;
     }
 
-    menuAudio.pause();
-    if (nextScreen === "battle" && battleAudio.paused) {
-      void battleAudio.play().catch(() => undefined);
+    if (nextScreen === "battle") {
+      if (battleAudio.paused) {
+        battleAudio.volume = 0;
+        void battleAudio.play().catch(() => undefined);
+      }
+      fadeMenuMusicTo(0);
+      fadeBattleMusicTo(BATTLE_MUSIC_VOLUME);
     }
   }
 
@@ -128,7 +184,7 @@ export function App() {
     const active = matches.find((match) => !match.finished);
     if (active) {
       setActiveMatchId(active.match_id);
-      if (queueStatus.state === "pending_match" || matchFoundVerdict === "countdown") {
+      if (queueStatus.state === "pending_match" || acceptedByMeLatch || matchFoundVerdict === "countdown") {
         setMatchFoundVerdict("countdown");
         return active.match_id;
       }
@@ -146,7 +202,7 @@ export function App() {
     ]);
     setMe(nextMe);
     setHeroes(nextHeroes.heroes);
-    setSelectedHeroCode(nextMe.selected_hero_code || nextHeroes.heroes[0]?.hero_code || "");
+    setSelectedHeroCode(nextMe.selected_hero_code || "");
     setError("");
   }
 
@@ -191,7 +247,7 @@ export function App() {
   }, [musicEnabled]);
 
   useEffect(() => {
-    const audio = new Audio("/assets/ui/click.mp3");
+    const audio = new Audio("/assets/ui/sounds/ui/click.mp3");
     audio.preload = "auto";
     clickAudioRef.current = audio;
 
@@ -243,6 +299,21 @@ export function App() {
       if (battleAudio && screenRef.current === "battle" && battleAudio.paused) {
         void battleAudio.play().catch(() => undefined);
       }
+
+      if (battleAudio && !battleMusicUnlockedRef.current) {
+        const previousVolume = battleAudio.volume;
+        battleAudio.volume = 0;
+        void battleAudio.play()
+          .then(() => {
+            battleAudio.pause();
+            battleAudio.currentTime = 0;
+            battleAudio.volume = previousVolume;
+            battleMusicUnlockedRef.current = true;
+          })
+          .catch(() => {
+            battleAudio.volume = previousVolume;
+          });
+      }
     }
 
     window.addEventListener("pointerdown", handleUiClick, { passive: true });
@@ -250,14 +321,33 @@ export function App() {
   }, []);
 
   useEffect(() => {
-    const audio = new Audio("/assets/ui/menu_music.mp3");
+    const audio = new Audio("/assets/ui/sounds/ui/match_found.mp3");
+    audio.preload = "auto";
+    audio.volume = 0.62;
+    matchFoundAudioRef.current = audio;
+
+    return () => {
+      audio.pause();
+      audio.currentTime = 0;
+      if (matchFoundAudioRef.current === audio) {
+        matchFoundAudioRef.current = null;
+      }
+    };
+  }, []);
+
+  useEffect(() => {
+    const audio = new Audio("/assets/ui/sounds/music/menu_music.mp3");
     audio.preload = "auto";
     audio.loop = true;
-    audio.volume = 0.35;
+    audio.volume = MENU_MUSIC_VOLUME;
     menuMusicRef.current = audio;
     syncMusicPlayback(screenRef.current, musicEnabledRef.current);
 
     return () => {
+      if (menuMusicFadeFrameRef.current !== null) {
+        window.cancelAnimationFrame(menuMusicFadeFrameRef.current);
+        menuMusicFadeFrameRef.current = null;
+      }
       audio.pause();
       audio.currentTime = 0;
       if (menuMusicRef.current === audio) {
@@ -267,7 +357,7 @@ export function App() {
   }, []);
 
   useEffect(() => {
-    const audio = new Audio("/assets/ui/music/battle.mp3");
+    const audio = new Audio("/assets/ui/sounds/music/battle.mp3");
     audio.preload = "auto";
     audio.loop = true;
     audio.volume = 0.28;
@@ -277,6 +367,7 @@ export function App() {
     return () => {
       audio.pause();
       audio.currentTime = 0;
+      battleMusicUnlockedRef.current = false;
       if (battleMusicRef.current === audio) {
         battleMusicRef.current = null;
       }
@@ -286,6 +377,31 @@ export function App() {
   useEffect(() => {
     syncMusicPlayback(screen, musicEnabled);
   }, [musicEnabled, screen]);
+
+  useEffect(() => {
+    if (!musicEnabled) {
+      return;
+    }
+
+    fadeMenuMusicTo(
+      queueStatus.state === "pending_match"
+        ? MENU_MUSIC_MATCH_FOUND_VOLUME
+        : MENU_MUSIC_VOLUME,
+    );
+  }, [musicEnabled, queueStatus.state]);
+
+  useEffect(() => {
+    const previousState = prevQueueStateRef.current;
+    if (queueStatus.state === "pending_match" && previousState !== "pending_match") {
+      const baseAudio = matchFoundAudioRef.current;
+      if (baseAudio) {
+        const matchFoundAudio = baseAudio.cloneNode() as HTMLAudioElement;
+        matchFoundAudio.volume = baseAudio.volume;
+        void matchFoundAudio.play().catch(() => undefined);
+      }
+    }
+    prevQueueStateRef.current = queueStatus.state;
+  }, [queueStatus.state]);
 
   useEffect(() => {
     if (!queueSearching && !queuePenalty) {
@@ -332,6 +448,13 @@ export function App() {
       return () => window.clearTimeout(id);
     }
   }, [acceptedByMeLatch, queueStatus.state, queueStatus.accepted_by_me]);
+
+  useEffect(() => {
+    if (!activeMatchId || !acceptedByMeLatch || matchFoundVerdict === "countdown") {
+      return;
+    }
+    setMatchFoundVerdict("countdown");
+  }, [acceptedByMeLatch, activeMatchId, matchFoundVerdict]);
 
   useEffect(() => {
     if (matchFoundVerdict !== "countdown" || !activeMatchId) {
@@ -410,7 +533,6 @@ export function App() {
       const nextMe = await request<MeResponse>("/me");
       setSelectedHeroCode(hero.hero_code);
       setMe(nextMe);
-      setHeroPickerOpen(false);
       setScreen("menu");
     } catch (err) {
       const message = err instanceof Error ? err.message : "Failed to select hero";
@@ -525,11 +647,17 @@ export function App() {
           setHeroPickerOpen={setHeroPickerOpen}
           chooseHero={chooseHero}
           onStartMatch={() => {
+            if (!canJoinQueue) {
+              setQueueError(queueHint || "РќР•Р›Р¬Р—РЇ РќРђР§РђРўР¬ РџРћРРЎРљ");
+              setGameModeOpen(true);
+              return;
+            }
             setQueueError("");
             setGameModeOpen(true);
           }}
           inventoryHidden={queueSearching}
-          startMatchDisabled={queueSearching}
+          startMatchDisabled={queueSearching || !canJoinQueue}
+          startMatchLabel={startMatchLabel}
           onInventory={() => setScreen("inventory")}
           musicEnabled={musicEnabled}
           onToggleMusic={() => {
@@ -566,7 +694,7 @@ export function App() {
           onDraftDeckChange={setDraftDeckEntries}
           onDeckSaved={setDeckEntries}
         />
-      ) : activeMatchId && me ? (
+      ) : activeMatchId && me && !matchTransitionLocked ? (
         <BattleScreen
           currentUserId={me.user_id}
           matchId={activeMatchId}
@@ -580,6 +708,7 @@ export function App() {
             setMatchFoundCountdown(3);
             setAcceptedByMeLatch(false);
             setScreen("menu");
+            void loadSession().catch(() => undefined);
             void loadQueueStatus().catch(() => undefined);
           }}
         />
@@ -646,8 +775,6 @@ export function App() {
         queueHint={queueHint}
         searchDurationSec={queueStatus.search_duration_sec ?? 0}
         canQueue={canJoinQueue}
-        selectedHero={selectedHero}
-        deckCards={queueDeckCards}
         onClose={() => {
           setGameModeOpen(false);
           setQueueError("");
@@ -657,7 +784,13 @@ export function App() {
       />
 
       <MatchFoundPanel
-        open={queueStatus.state === "pending_match" || matchFoundVerdict === "declined_self" || matchFoundVerdict === "declined_opponent" || matchFoundVerdict === "countdown"}
+        open={
+          queueStatus.state === "pending_match" ||
+          matchFoundVerdict === "declined_self" ||
+          matchFoundVerdict === "declined_opponent" ||
+          matchFoundVerdict === "countdown" ||
+          (Boolean(activeMatchId) && acceptedByMeLatch)
+        }
         busy={queueBusy}
         error={queueError}
         acceptedByMe={Boolean(queueStatus.accepted_by_me) || acceptedByMeLatch}
@@ -666,7 +799,7 @@ export function App() {
         verdict={matchFoundVerdict}
         countdownSec={matchFoundCountdown}
         playerRating={me?.rating}
-        opponentRating={queueStatus.opponent_user_id ?? 0}
+        opponentRating={queueStatus.opponent_rating ?? 0}
         onAccept={acceptFoundMatch}
         onDecline={declineFoundMatch}
       />

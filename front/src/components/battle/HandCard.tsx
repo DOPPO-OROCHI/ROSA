@@ -2,6 +2,16 @@ import { resolveCardImageSrc } from "../../lib/api";
 import type { BattleCardInMatch } from "./types";
 import type { CSSProperties, MouseEvent } from "react";
 
+function getHandNameFitClass(name: string): string {
+  if (name.length >= 18) {
+    return "battle-hand-card__name--long";
+  }
+  if (name.length >= 11) {
+    return "battle-hand-card__name--medium";
+  }
+  return "battle-hand-card__name--short";
+}
+
 type Props = {
   card: BattleCardInMatch;
   selected?: boolean;
@@ -70,6 +80,7 @@ export function HandCard({
             </div>
           </>
         ) : null}
+        <span className={`battle-hand-card__name ${getHandNameFitClass(card.name)}`}>{card.name}</span>
         {count > 1 ? <span className="battle-hand-card__count">x{count}</span> : null}
       </div>
     </button>

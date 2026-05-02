@@ -25,11 +25,13 @@ export function HeroSelect({ open, heroes, selectedHero, onClose, onChooseHero }
   const [slideNonce, setSlideNonce] = useState(0);
   const [missingFullArtHeroCodes, setMissingFullArtHeroCodes] = useState<Record<string, boolean>>({});
   const [submitting, setSubmitting] = useState(false);
+  const [closing, setClosing] = useState(false);
   const [error, setError] = useState("");
 
   useEffect(() => {
     if (!open) {
       setSubmitting(false);
+      setClosing(false);
       setError("");
     }
   }, [open]);
@@ -86,7 +88,7 @@ export function HeroSelect({ open, heroes, selectedHero, onClose, onChooseHero }
   }
 
   async function handleChooseHero() {
-    if (!currentHero || submitting) {
+    if (!currentHero || submitting || closing) {
       return;
     }
 
@@ -95,6 +97,7 @@ export function HeroSelect({ open, heroes, selectedHero, onClose, onChooseHero }
 
     try {
       await onChooseHero(currentHero);
+      setClosing(true);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to choose hero");
     } finally {
@@ -102,16 +105,31 @@ export function HeroSelect({ open, heroes, selectedHero, onClose, onChooseHero }
     }
   }
 
+  function handleClose() {
+    if (closing) {
+      return;
+    }
+
+    setClosing(true);
+  }
+
   if (!open) {
     return null;
   }
 
   return (
-    <div className="overlay hero-select-overlay" onClick={onClose}>
-      <section className="hero-select surface" onClick={(event) => event.stopPropagation()}>
+    <div className={`overlay hero-select-overlay ${closing ? "overlay--closing" : ""}`} onClick={handleClose}>
+      <section
+        className={`hero-select surface ${closing ? "hero-select--closing" : ""}`}
+        onClick={(event) => event.stopPropagation()}
+        onAnimationEnd={() => {
+          if (closing) {
+            onClose();
+          }
+        }}
+      >
         <header className="hero-select__header">
-          <p className="eyebrow">HERO SELECT</p>
-          <button type="button" className="picker-close" onClick={onClose}>
+          <button type="button" className="picker-close" onClick={handleClose}>
             CLOSE
           </button>
         </header>
@@ -126,6 +144,7 @@ export function HeroSelect({ open, heroes, selectedHero, onClose, onChooseHero }
                   type="button"
                   className="hero-carousel__nav hero-carousel__nav--left"
                   onClick={showPreviousHero}
+                  disabled={closing}
                   aria-label="Previous hero"
                 >
                   {"<"}
@@ -169,7 +188,7 @@ export function HeroSelect({ open, heroes, selectedHero, onClose, onChooseHero }
                     type="button"
                     className="hero-viewer__choose hero-viewer__choose--static"
                     onClick={handleChooseHero}
-                    disabled={submitting}
+                    disabled={submitting || closing}
                   >
                     {submitting ? "CHOOSING..." : "CHOOSE"}
                   </button>
@@ -179,6 +198,7 @@ export function HeroSelect({ open, heroes, selectedHero, onClose, onChooseHero }
                   type="button"
                   className="hero-carousel__nav hero-carousel__nav--right"
                   onClick={showNextHero}
+                  disabled={closing}
                   aria-label="Next hero"
                 >
                   {">"}
