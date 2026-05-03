@@ -102,6 +102,7 @@ func maskMatchStateForUser(st *game.MatchState, viewerUserID uint) *dto.MaskedMa
 			HeroAttackBaseCooldown: p.HeroAttackBaseCooldown,
 			HeroSplashRadius:       p.HeroSplashRadius,
 			HeroAbilityCooldown:    p.HeroAbilityCooldown,
+			HeroAbilityManaCost:    p.HeroAbilityManaCost,
 			Mana:                   p.Mana,
 			Turns:                  p.Turns,
 			Table:                  p.Table,

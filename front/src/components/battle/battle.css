@@ -2005,10 +2005,10 @@
 }
 
 .battle-graveyard-modal__header {
-  display: flex;
-  align-items: start;
-  justify-content: space-between;
-  gap: 12px;
+  position: relative;
+  display: grid;
+  place-items: center;
+  min-height: 32px;
 }
 
 .battle-graveyard-modal__eyebrow {
@@ -2022,11 +2022,16 @@
 .battle-graveyard-modal__title {
   margin: 0;
   color: #f3f7ff;
-  font-size: 1.16rem;
-  letter-spacing: 0.03em;
+  font-size: 1.08rem;
+  letter-spacing: 0.12em;
+  text-align: center;
 }
 
 .battle-graveyard-modal__close {
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
   width: 30px;
   height: 30px;
   border-radius: 999px;
@@ -2045,23 +2050,30 @@
 
 .battle-graveyard-modal__grid {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 10px;
+  grid-template-columns: repeat(3, 96px);
+  justify-content: center;
+  gap: 10px 4px;
   max-height: min(46vh, 360px);
   overflow-y: auto;
-  padding-right: 2px;
+  padding-right: 1px;
 }
 
 .battle-graveyard-modal__card {
   position: relative;
   min-width: 0;
-  border: 1px solid rgba(171, 204, 255, 0.14);
+  border: 1px solid transparent;
   border-radius: 16px;
-  background: rgba(9, 12, 20, 0.84);
-  padding: 6px 6px 8px;
-  display: grid;
-  gap: 6px;
+  background: transparent;
+  padding: 0;
+  display: block;
   cursor: pointer;
+  --graveyard-card-mana-x: 12.5%;
+  --graveyard-card-mana-y: 12.5%;
+  --graveyard-card-attack-x: 13%;
+  --graveyard-card-attack-y: 86%;
+  --graveyard-card-hp-x: 87%;
+  --graveyard-card-hp-y: 86%;
+  --graveyard-card-stat-size: 1.1rem;
 }
 
 .battle-graveyard-modal__art {
@@ -2072,13 +2084,61 @@
   display: block;
 }
 
-.battle-graveyard-modal__name {
+.battle-graveyard-modal__card-name {
+  position: absolute;
+  left: 18%;
+  right: 18%;
+  top: 83.2%;
+  z-index: 2;
   color: #f1f5ff;
   font-family: "Times New Roman", Georgia, serif;
-  font-size: 0.56rem;
-  line-height: 1.1;
+  font-size: 0.34rem;
+  font-weight: 800;
+  line-height: 0.95;
   text-align: center;
   text-transform: uppercase;
+  text-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.96),
+    0 0 8px rgba(0, 0, 0, 0.58);
+  pointer-events: none;
+  overflow-wrap: anywhere;
+}
+
+.battle-graveyard-modal__stat {
+  position: absolute;
+  z-index: 2;
+  display: grid;
+  place-items: center;
+  width: var(--graveyard-card-stat-size);
+  height: var(--graveyard-card-stat-size);
+  color: #fff1cc;
+  font-family: "Times New Roman", Georgia, serif;
+  font-size: 1.06rem;
+  font-weight: 900;
+  line-height: 1;
+  text-align: center;
+  text-shadow:
+    -1px -1px 0 #000,
+    1px -1px 0 #000,
+    -1px 1px 0 #000,
+    1px 1px 0 #000,
+    0 3px 8px rgba(0, 0, 0, 0.94);
+  pointer-events: none;
+}
+
+.battle-graveyard-modal__stat--mana {
+  left: calc(var(--graveyard-card-mana-x) - (var(--graveyard-card-stat-size) / 2));
+  top: calc(var(--graveyard-card-mana-y) - (var(--graveyard-card-stat-size) / 2));
+}
+
+.battle-graveyard-modal__stat--attack {
+  left: calc(var(--graveyard-card-attack-x) - (var(--graveyard-card-stat-size) / 2));
+  top: calc(var(--graveyard-card-attack-y) - (var(--graveyard-card-stat-size) / 2));
+}
+
+.battle-graveyard-modal__stat--hp {
+  left: calc(var(--graveyard-card-hp-x) - (var(--graveyard-card-stat-size) / 2));
+  top: calc(var(--graveyard-card-hp-y) - (var(--graveyard-card-stat-size) / 2));
 }
 
 .battle-graveyard-modal__count {

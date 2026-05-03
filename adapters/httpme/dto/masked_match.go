@@ -26,6 +26,7 @@ type MaskedPlayerState struct {
 	HeroAttackBaseCooldown int    `json:"hero_attack_base_cooldown"` //<-базовое кд атаки героя игрока
 	HeroSplashRadius       int    `json:"hero_splash_radius"`        //<-радиус атаки героя игрока
 	HeroAbilityCooldown    int    `json:"hero_ability_cooldown"`     //<-текущее кд способности героя игрока
+	HeroAbilityManaCost    int    `json:"hero_ability_mana_cost"`    //<-стоимость в мане
 
 	Mana  int `json:"mana"`  //<-понятно
 	Turns int `json:"turns"` //<-кол-во ходов, которые игрок провел в матче
@@ -33,14 +34,14 @@ type MaskedPlayerState struct {
 	Table [game.TableSize]*game.UnitState `json:"table"` //<-здесь проблема, поскольку я отдаю доменную часть, что хуево
 	//А здесь уже инфа о руке, колоде, сбросе. НО! Она отдается только тому игроку, которому она принадлежит.
 	//Типа, это отдается тому чуваку, который смотрит на это состояние. Можно сказать, он смотрит на себя
-	Hand      []game.CardsInMatch `json:"hand,omitempty"`    //<-что в руке у игрока
-	Deck      []game.CardsInMatch `json:"deck,omitempty"`    //<-что в колоде у игрока (сколько карт)
-	Discard   []game.CardsInMatch `json:"discard,omitempty"` //<- сколько карт проебал
-	GraveYard []game.CardsInMatch `json:"graveyard,omitempty"`
-	HandCount int                 `json:"hand_count,omitempty"`
-	DeckCount int                 `json:"deck_count,omitempty"`
-	DiscCount int                 `json:"discard_count,omitempty"`
-	GraveCount int                `json:"graveyard_count,omitempty"`
+	Hand       []game.CardsInMatch `json:"hand,omitempty"`    //<-что в руке у игрока
+	Deck       []game.CardsInMatch `json:"deck,omitempty"`    //<-что в колоде у игрока (сколько карт)
+	Discard    []game.CardsInMatch `json:"discard,omitempty"` //<- сколько карт проебал
+	GraveYard  []game.CardsInMatch `json:"graveyard,omitempty"`
+	HandCount  int                 `json:"hand_count,omitempty"`
+	DeckCount  int                 `json:"deck_count,omitempty"`
+	DiscCount  int                 `json:"discard_count,omitempty"`
+	GraveCount int                 `json:"graveyard_count,omitempty"`
 }
 
 /*

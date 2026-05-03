@@ -35,10 +35,7 @@ export function BattleGraveyardModal({ cards, onClose, onOpenCard }: Props) {
     <div className="battle-graveyard-modal-layer" onClick={onClose}>
       <section className="battle-graveyard-modal" onClick={(event) => event.stopPropagation()} aria-label="Graveyard">
         <div className="battle-graveyard-modal__header">
-          <div>
-            <p className="battle-graveyard-modal__eyebrow">Battle Zone</p>
-            <h2 className="battle-graveyard-modal__title">Graveyard</h2>
-          </div>
+          <h2 className="battle-graveyard-modal__title">ПАДШИЕ</h2>
           <button type="button" className="battle-graveyard-modal__close" onClick={onClose} aria-label="Close graveyard">
             x
           </button>
@@ -71,7 +68,10 @@ export function BattleGraveyardModal({ cards, onClose, onOpenCard }: Props) {
                       : "/assets/placeholders/card_image.svg";
                   }}
                 />
-                <span className="battle-graveyard-modal__name">{card.name}</span>
+                <span className="battle-graveyard-modal__stat battle-graveyard-modal__stat--mana">{card.mana_cost}</span>
+                <span className="battle-graveyard-modal__stat battle-graveyard-modal__stat--attack">{card.attack}</span>
+                <span className="battle-graveyard-modal__stat battle-graveyard-modal__stat--hp">{card.health_points}</span>
+                <span className="battle-graveyard-modal__card-name">{card.name}</span>
                 {count > 1 ? <span className="battle-graveyard-modal__count">x{count}</span> : null}
               </button>
             ))}

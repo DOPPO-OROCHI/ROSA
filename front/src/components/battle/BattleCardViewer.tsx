@@ -20,33 +20,33 @@ type Props = {
 
 function buildCombatInfo(card: BattleCardInMatch): string {
   const skillCd = card.base_cooldown ?? 0;
-  return `ATK ${card.attack} | HP ${card.health_points} | SPLASH ${card.splash_radius} | SKILL CD ${skillCd}`;
+  return `SPLASH ${card.splash_radius} | SKILL CD ${skillCd}`;
 }
 
 function pickDescriptionFontSize(length: number) {
   if (length > 180) {
-    return "0.24rem";
+    return "0.42rem";
   }
   if (length > 140) {
-    return "0.27rem";
+    return "0.45rem";
   }
   if (length > 100) {
-    return "0.31rem";
+    return "0.48rem";
   }
   if (length > 70) {
-    return "0.35rem";
+    return "0.52rem";
   }
-  return "0.4rem";
+  return "0.56rem";
 }
 
 function pickCombatFontSize(length: number) {
   if (length > 48) {
-    return "0.22rem";
+    return "0.34rem";
   }
   if (length > 36) {
-    return "0.25rem";
+    return "0.38rem";
   }
-  return "0.29rem";
+  return "0.42rem";
 }
 
 export function BattleCardViewer({ card, onClose, onExited, origin, shellHeight, closing = false }: Props) {
