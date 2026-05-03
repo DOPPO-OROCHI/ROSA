@@ -11,7 +11,7 @@ var DefaultHeroTemplate = []CharacterTemplate{
 		CharacterCode:  "imperial_commander",
 		AttackPower:    4,
 		HealthPoints:   60,
-		AttackCooldown: 2,
+		AttackCooldown: 3,
 		SplashRadius:   0,
 		Ability: AbilitySpec{
 			Name:         "Военная машина",
@@ -124,11 +124,12 @@ var DefaultHeroTemplate = []CharacterTemplate{
 		AttackImageKey: "",
 	},
 	{
-		Name:          "Электро-Жрец",
-		CharacterCode: "slavic_priest",
-		AttackPower:   4,
-		HealthPoints:  60,
-		SplashRadius:  1,
+		Name:           "Электро-Жрец",
+		CharacterCode:  "slavic_priest",
+		AttackPower:    4,
+		HealthPoints:   60,
+		AttackCooldown: 2,
+		SplashRadius:   1,
 		Ability: AbilitySpec{
 			Name:         "Мастерство молнии",
 			Code:         "lightning_mastery",

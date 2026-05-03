@@ -445,8 +445,8 @@ button {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   justify-content: stretch;
-  column-gap: 0;
-  row-gap: 180px;
+  align-content: start;
+  gap: 10px 0;
   min-height: 0;
   overflow-y: auto;
   overscroll-behavior: contain;
