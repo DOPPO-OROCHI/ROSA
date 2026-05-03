@@ -1,0 +1,199 @@
+.battle-event-feed {
+  position: absolute;
+  left: 0;
+  top: 66px;
+  z-index: 42;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0;
+  width: min(78vw, 360px);
+  pointer-events: none;
+}
+
+.battle-event-feed__item {
+  --battle-event-overlap: -9px;
+  position: relative;
+  width: fit-content;
+  min-width: 132px;
+  max-width: 100%;
+  min-height: 48px;
+  margin-top: calc(var(--battle-event-index, 0) * var(--battle-event-overlap));
+  padding: 5px 7px;
+  border: 1px solid rgba(147, 199, 255, 0.3);
+  border-left: 0;
+  border-radius: 0 14px 14px 0;
+  background:
+    linear-gradient(90deg, rgba(4, 7, 14, 0.96), rgba(15, 20, 34, 0.9));
+  box-shadow:
+    0 8px 22px rgba(0, 0, 0, 0.26),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  display: flex;
+  align-items: center;
+  flex-wrap: nowrap;
+  gap: 5px;
+  transform-origin: left center;
+  animation: battle-event-feed-life 2500ms cubic-bezier(0.2, 0.85, 0.18, 1) forwards;
+}
+
+.battle-event-feed__item--attack,
+.battle-event-feed__item--hero_attack,
+.battle-event-feed__item--card_skill {
+  border-color: rgba(255, 116, 116, 0.36);
+  background:
+    linear-gradient(90deg, rgba(5, 7, 14, 0.98), rgba(35, 15, 20, 0.88));
+}
+
+.battle-event-feed__item--heal,
+.battle-event-feed__item--buff,
+.battle-event-feed__item--resurrect {
+  border-color: rgba(116, 255, 177, 0.28);
+  background:
+    linear-gradient(90deg, rgba(5, 8, 14, 0.98), rgba(14, 32, 24, 0.88));
+}
+
+.battle-event-feed__portrait {
+  position: relative;
+  flex: 0 0 auto;
+  width: 34px;
+  height: 38px;
+  border-radius: 8px;
+  border: 1px solid rgba(198, 218, 255, 0.22);
+  background: rgba(5, 8, 15, 0.78);
+  overflow: hidden;
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.04),
+    0 0 12px rgba(95, 176, 255, 0.1);
+}
+
+.battle-event-feed__portrait--hero {
+  border-radius: 50%;
+}
+
+.battle-event-feed__portrait--target + .battle-event-feed__portrait--target {
+  margin-left: -8px;
+}
+
+.battle-event-feed__portrait img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.battle-event-feed__portrait--card img {
+  object-position: center 18%;
+}
+
+.battle-event-feed__portrait--empty {
+  border-style: dashed;
+  opacity: 0.42;
+}
+
+.battle-event-feed__action {
+  position: relative;
+  flex: 0 0 auto;
+  width: 25px;
+  height: 25px;
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+  border: 1px solid rgba(195, 228, 255, 0.28);
+  background:
+    radial-gradient(circle, rgba(88, 195, 255, 0.18), rgba(5, 9, 18, 0.94) 68%);
+  box-shadow:
+    0 0 12px rgba(92, 193, 255, 0.16),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.04);
+}
+
+.battle-event-feed__action::before,
+.battle-event-feed__action::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  width: 10px;
+  height: 1px;
+  background: rgba(195, 228, 255, 0.34);
+}
+
+.battle-event-feed__action::before {
+  right: 100%;
+}
+
+.battle-event-feed__action::after {
+  left: 100%;
+}
+
+.battle-event-feed__action img {
+  width: 18px;
+  height: 18px;
+  object-fit: contain;
+  display: block;
+  filter: drop-shadow(0 0 5px rgba(120, 210, 255, 0.36));
+}
+
+.battle-event-feed__targets {
+  position: relative;
+  min-width: 34px;
+  max-width: 230px;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  row-gap: 2px;
+  padding-right: 2px;
+}
+
+@keyframes battle-event-feed-life {
+  0% {
+    opacity: 0;
+    transform: translateX(-112%) scale(0.98);
+  }
+
+  12% {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+  }
+
+  82% {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+  }
+
+  100% {
+    opacity: 0;
+    transform: translateX(-112%) scale(0.98);
+  }
+}
+
+@media (max-width: 390px) {
+  .battle-event-feed {
+    top: 62px;
+    width: min(82vw, 300px);
+  }
+
+  .battle-event-feed__item {
+    min-width: 122px;
+    min-height: 44px;
+    padding: 4px 6px;
+    gap: 4px;
+  }
+
+  .battle-event-feed__targets {
+    max-width: 176px;
+  }
+
+  .battle-event-feed__portrait {
+    width: 31px;
+    height: 35px;
+  }
+
+  .battle-event-feed__action {
+    width: 23px;
+    height: 23px;
+  }
+
+  .battle-event-feed__action img {
+    width: 16px;
+    height: 16px;
+  }
+}

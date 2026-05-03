@@ -95,6 +95,7 @@ export type BattleEvent = {
   id?: string;
   event_id?: string;
   type: string;
+  effect_kind?: string;
   player_index?: number;
   source_kind?: string;
   source_instance_id?: string;

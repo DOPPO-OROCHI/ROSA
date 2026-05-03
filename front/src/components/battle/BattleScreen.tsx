@@ -6,6 +6,7 @@ import { getStunTurns, useCardSkill } from "./CARD_SKILLS";
 import { CardAttackAnimation, type CardAttackAnimationState } from "./CardAttackAnimation";
 import { BattleCardViewer, type BattleCardViewerOrigin } from "./BattleCardViewer";
 import { BattleField } from "./BattleField";
+import { BattleEventFeed } from "./BattleEventFeed";
 import { BattleFloatingNumbers, type FloatingNumber } from "./BattleFloatingNumbers";
 import { BattleGraveyardModal } from "./BattleGraveyardModal";
 import { BattleInfoToast } from "./BattleInfoToast";
@@ -754,6 +755,7 @@ export function BattleScreen({ currentUserId, matchId, heroes, deckEntries, onLe
               <span className="battle-turn-status__turn">ХОД {turnNumber}</span>
             </div>
           </div>
+          <BattleEventFeed match={match} heroes={heroes} />
           <EnemyCharacter
             player={enemy as MaskedBattlePlayerState}
             maxHp={enemyHero?.health_points ?? enemy.hero_hp}
