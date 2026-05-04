@@ -29,6 +29,7 @@ func StartTurn(m *MatchState, nowUnix int64) error {
 		if u == nil {
 			continue
 		}
+		u.AttacksThisTurn = 0
 		if u.Cooldown > 0 {
 			u.Cooldown--
 		}
@@ -87,6 +88,7 @@ func EndTurn(m *MatchState) error {
 		return nil
 	}
 	endingPlayer := m.ActivePlayer
+	finalizeOverdriveCooldowns(m.Players[endingPlayer])
 	if err := DispatchPassives(m, PassiveContext{
 		Trigger:          cards.PassiveTriggerTurnEnd,
 		ActorPlayerIndex: endingPlayer,
@@ -98,6 +100,20 @@ func EndTurn(m *MatchState) error {
 		return err
 	}
 	return nil
+}
+
+func finalizeOverdriveCooldowns(p *PlayerState) {
+	if p == nil {
+		return
+	}
+	for _, u := range p.Table {
+		if u == nil {
+			continue
+		}
+		if u.AttacksThisTurn > 0 && u.Cooldown == 0 {
+			u.Cooldown = u.BaseCooldown
+		}
+	}
 }
 
 func PlayBattleCard(m *MatchState,
@@ -161,6 +177,7 @@ func PlayBattleCard(m *MatchState,
 		CardType:        tpl.CardType,
 		BaseCooldown:    tpl.BaseCooldown,
 		Cooldown:        0,
+		AttacksThisTurn: 0,
 		SummonedInTurn:  p.Turns,
 		ImageKey:        tpl.ImageKey,
 		AssetBaseKey:    tpl.AssetBaseKey,
@@ -343,12 +360,12 @@ func CardAttack(m *MatchState,
 	if HasEffect(atk, cards.DebuffEffectDisarm) {
 		return errors.New("attacker is disarmed")
 	}
+	if atk.AttacksThisTurn >= maxAttacksPerTurn(atk) {
+		return ErrAttackerOnCooldown
+	}
 	targets := make([]EventTarget, 0, 3)
 	isHealAttack := false
 	attackRepeats := 1
-	if hasOverdrive(atk) {
-		attackRepeats = 2
-	}
 	for rep := 0; rep < attackRepeats; rep++ {
 		if atk == nil || atk.HP <= 0 {
 			break
@@ -423,6 +440,9 @@ func CardAttack(m *MatchState,
 		} else {
 			di, du := defPlayer.FindSlot(defenderInstanceID)
 			if di == -1 || du == nil {
+				if rep > 0 {
+					break
+				}
 				return ErrDefenderNotFound
 			}
 			if defenderHasTank && !du.IsTank {
@@ -539,7 +559,14 @@ func CardAttack(m *MatchState,
 	if isHealAttack {
 		eventType = string(EventHeal)
 	}
-	atk.Cooldown = atk.BaseCooldown
+	if atk.HP > 0 {
+		atk.AttacksThisTurn++
+		if hasOverdrive(atk) && atk.AttacksThisTurn < maxAttacksPerTurn(atk) {
+			atk.Cooldown = 0
+		} else {
+			atk.Cooldown = atk.BaseCooldown
+		}
+	}
 	m.Events = append(m.Events, Event{
 		Type:             eventType,
 		PlayerIndex:      playerIndex,

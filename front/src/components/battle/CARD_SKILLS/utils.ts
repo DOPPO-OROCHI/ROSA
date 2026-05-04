@@ -308,6 +308,14 @@ function getEffectValueLabel(effect: BattleUnitEffect): string {
     return `${formatEffectValue(effect.value ?? 0)}/${formatEffectValue(effect.extra_value ?? 0)}`;
   }
 
+  if (effect.effect_type === "damage_over_time" && (effect.value ?? 0) > 0) {
+    return `-${effect.value ?? 0}`;
+  }
+
+  if (effect.effect_type === "attack_down" && (effect.value ?? 0) > 0) {
+    return `-${effect.value ?? 0}`;
+  }
+
   if (effect.effect_type === "attack_and_hp") {
     return `${formatEffectValue(effect.value ?? 0)}/${formatEffectValue(effect.extra_value ?? 0)}`;
   }

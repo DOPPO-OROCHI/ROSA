@@ -138,6 +138,94 @@ func TestCastBuffSkill_OnCooldown_ReturnsError(t *testing.T) {
 	}
 }
 
+func TestOverdrive_AllowsSecondAttackAfterBuffSkill(t *testing.T) {
+	m := &MatchState{
+		ActivePlayer: 0,
+		Phase:        PhaseMain,
+		Players: [2]*PlayerState{
+			{PlayerID: 0, Turns: 2, HeroHP: 30},
+			{PlayerID: 1, Turns: 2, HeroHP: 30},
+		},
+	}
+	attacker := &UnitState{
+		InstanceID:      "attacker",
+		TemplateID:      "overdrive_unit",
+		HP:              10,
+		MaxHP:           10,
+		Attack:          2,
+		BaseCooldown:    2,
+		Cooldown:        2,
+		AttacksThisTurn: 0,
+		SummonedInTurn:  1,
+		Skill: cards.UnitSkillState{
+			Code:         "suppression",
+			Target:       cards.SkillTargetSelf,
+			BuffEffect:   cards.BuffEffectOverdrive,
+			Duration:     1,
+			BaseCooldown: 4,
+			CooldownLeft: 0,
+		},
+	}
+	firstTarget := &UnitState{
+		InstanceID:   "target_1",
+		TemplateID:   "target_unit",
+		HP:           10,
+		MaxHP:        10,
+		Attack:       1,
+		BaseCooldown: 1,
+	}
+	secondTarget := &UnitState{
+		InstanceID:   "target_2",
+		TemplateID:   "target_unit",
+		HP:           10,
+		MaxHP:        10,
+		Attack:       1,
+		BaseCooldown: 1,
+	}
+	m.Players[0].Table[0] = attacker
+	m.Players[1].Table[0] = firstTarget
+	m.Players[1].Table[1] = secondTarget
+
+	if err := PlayCardSkill(m, Action{PlayerIndex: 0, CardInstanceID: attacker.InstanceID}); err != nil {
+		t.Fatalf("PlayCardSkill returned error: %v", err)
+	}
+	if !hasOverdrive(attacker) {
+		t.Fatalf("expected overdrive effect after skill")
+	}
+	if attacker.Cooldown != 0 {
+		t.Fatalf("expected overdrive skill to reset attack cooldown to 0, got %d", attacker.Cooldown)
+	}
+
+	resolver := BattleMapResolver{M: map[string]BattleTemplate{
+		"overdrive_unit": {
+			TemplateID:   "overdrive_unit",
+			Attack:       2,
+			BaseCooldown: 2,
+			AssetBaseKey: "overdrive_unit",
+		},
+	}}
+
+	if err := CardAttack(m, 0, attacker.InstanceID, firstTarget.InstanceID, false, resolver); err != nil {
+		t.Fatalf("first CardAttack returned error: %v", err)
+	}
+	if attacker.AttacksThisTurn != 1 {
+		t.Fatalf("expected attacks_this_turn=1 after first attack, got %d", attacker.AttacksThisTurn)
+	}
+	if attacker.Cooldown != 0 {
+		t.Fatalf("expected cooldown=0 after first overdrive attack, got %d", attacker.Cooldown)
+	}
+
+	if err := CardAttack(m, 0, attacker.InstanceID, secondTarget.InstanceID, false, resolver); err != nil {
+		t.Fatalf("second CardAttack returned error: %v", err)
+	}
+	if attacker.AttacksThisTurn != 2 {
+		t.Fatalf("expected attacks_this_turn=2 after second attack, got %d", attacker.AttacksThisTurn)
+	}
+	if attacker.Cooldown != attacker.BaseCooldown {
+		t.Fatalf("expected cooldown=%d after second attack, got %d", attacker.BaseCooldown, attacker.Cooldown)
+	}
+}
+
 func TestCastSummonSelfCopySkill_OK(t *testing.T) {
 	m := &MatchState{
 		Players: [2]*PlayerState{

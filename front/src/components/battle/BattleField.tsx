@@ -16,6 +16,7 @@ type Props = {
   match: MaskedBattleMatchState;
   enemy: MaskedBattlePlayerState;
   player: MaskedBattlePlayerState;
+  cardNameByTemplateId?: Record<string, string>;
   canEndTurn: boolean;
   canPlaySelectedBattleCard: boolean;
   selectedAttackerId?: string;
@@ -41,6 +42,7 @@ export function BattleField({
   match,
   enemy,
   player,
+  cardNameByTemplateId = {},
   canEndTurn,
   canPlaySelectedBattleCard,
   selectedAttackerId = "",
@@ -68,9 +70,15 @@ export function BattleField({
         : [];
       const unitEntries = (battlePlayer?.table ?? [])
         .filter((unit): unit is BattleUnitState => Boolean(unit))
-        .map((unit) => [unit.instance_id, toDisplayName(unit.template_id)] as const);
+        .map((unit) => [unit.instance_id, cardNameByTemplateId[unit.template_id] ?? toDisplayName(unit.template_id)] as const);
+      const cardEntries = [
+        ...(battlePlayer?.hand ?? []),
+        ...(battlePlayer?.deck ?? []),
+        ...(battlePlayer?.discard ?? []),
+        ...(battlePlayer?.graveyard ?? []),
+      ].map((card) => [card.instance_id, card.name || cardNameByTemplateId[card.template_id] || toDisplayName(card.template_id)] as const);
 
-      return [...heroEntry, ...unitEntries];
+      return [...heroEntry, ...cardEntries, ...unitEntries];
     }),
   );
 
@@ -81,6 +89,7 @@ export function BattleField({
           units={enemy.table}
           side="enemy"
           effectSourceLabels={effectSourceLabels}
+          cardNameByTemplateId={cardNameByTemplateId}
           targetUnitIds={attackTargetIds}
           readyUnitIds={[]}
           skillTargetIds={skillTargetIds}
@@ -102,6 +111,7 @@ export function BattleField({
           units={player.table}
           side="player"
           effectSourceLabels={effectSourceLabels}
+          cardNameByTemplateId={cardNameByTemplateId}
           selectedUnitId={selectedAttackerId}
           selectedSkillCasterId={selectedSkillCasterId}
           readyUnitIds={readyUnitIds}

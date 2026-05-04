@@ -4,7 +4,8 @@ import { InventoryScreen } from "./components/InventoryScreen";
 import { MainMenu } from "./components/MainMenu";
 import { MatchFoundPanel } from "./components/MatchFoundPanel";
 import { BattleScreen } from "./components/battle/BattleScreen";
-import { request } from "./lib/api";
+import { BATTLE_MUSIC_TRACKS, BattleMusicManager } from "./lib/battle_music";
+import { request, setDevSessionToken } from "./lib/api";
 import type {
   BattleCard,
   BuffCard,
@@ -28,15 +29,19 @@ const MUSIC_FADE_MS = 420;
 
 type Screen = "menu" | "inventory" | "battle";
 
+type DevAuthResponse = {
+  user_id: number;
+  username?: string;
+  token?: string;
+};
+
 export function App() {
   const clickAudioRef = useRef<HTMLAudioElement | null>(null);
   const matchFoundAudioRef = useRef<HTMLAudioElement | null>(null);
   const menuMusicRef = useRef<HTMLAudioElement | null>(null);
-  const battleMusicRef = useRef<HTMLAudioElement | null>(null);
+  const battleMusicManagerRef = useRef<BattleMusicManager | null>(null);
   const menuMusicFadeFrameRef = useRef<number | null>(null);
-  const battleMusicFadeFrameRef = useRef<number | null>(null);
   const musicSyncGenerationRef = useRef(0);
-  const battleMusicUnlockedRef = useRef(false);
   const screenRef = useRef<Screen>("menu");
   const musicEnabledRef = useRef(true);
   const queueStateRef = useRef<QueueState>("idle");
@@ -140,26 +145,20 @@ export function App() {
     fadeAudioTo(menuMusicRef.current, menuMusicFadeFrameRef, targetVolume, durationMs, onDone);
   }
 
-  function fadeBattleMusicTo(targetVolume: number, durationMs = MUSIC_FADE_MS, onDone?: () => void) {
-    fadeAudioTo(battleMusicRef.current, battleMusicFadeFrameRef, targetVolume, durationMs, onDone);
-  }
-
   function syncMusicPlayback(nextScreen: Screen, nextMusicEnabled: boolean, nextQueueState = queueStateRef.current) {
     const generation = musicSyncGenerationRef.current + 1;
     musicSyncGenerationRef.current = generation;
     const menuAudio = menuMusicRef.current;
-    const battleAudio = battleMusicRef.current;
-    if (!menuAudio || !battleAudio) {
+    const battleMusic = battleMusicManagerRef.current;
+    if (!menuAudio || !battleMusic) {
       return;
     }
 
     if (!nextMusicEnabled) {
       cancelAudioFade(menuMusicFadeFrameRef);
-      cancelAudioFade(battleMusicFadeFrameRef);
       menuAudio.pause();
-      battleAudio.pause();
       menuAudio.volume = getMenuMusicTargetVolume(nextQueueState);
-      battleAudio.volume = BATTLE_MUSIC_VOLUME;
+      battleMusic.stop(0);
       return;
     }
 
@@ -167,28 +166,19 @@ export function App() {
       if (menuAudio.paused) {
         void menuAudio.play().catch(() => undefined);
       }
-      fadeBattleMusicTo(0, MUSIC_FADE_MS, () => {
-        if (musicSyncGenerationRef.current === generation && screenRef.current !== "battle") {
-          battleAudio.pause();
-          battleAudio.currentTime = 0;
-        }
-      });
+      battleMusic.stop(MUSIC_FADE_MS);
       fadeMenuMusicTo(getMenuMusicTargetVolume(nextQueueState));
       return;
     }
 
     if (nextScreen === "battle") {
-      if (battleAudio.paused) {
-        battleAudio.volume = 0;
-        void battleAudio.play().catch(() => undefined);
-      }
       fadeMenuMusicTo(0, MUSIC_FADE_MS, () => {
         if (musicSyncGenerationRef.current === generation && screenRef.current === "battle") {
           menuAudio.pause();
           menuAudio.currentTime = 0;
         }
       });
-      fadeBattleMusicTo(BATTLE_MUSIC_VOLUME);
+      battleMusic.start();
     }
   }
 
@@ -304,8 +294,7 @@ export function App() {
       clickAudio.volume = 0.1;
       void clickAudio.play().catch(() => undefined);
 
-      const menuAudio = menuMusicRef.current;
-      const battleAudio = battleMusicRef.current;
+      const battleMusic = battleMusicManagerRef.current;
 
       if (!musicEnabledRef.current) {
         return;
@@ -313,22 +302,10 @@ export function App() {
 
       syncMusicPlayback(screenRef.current, musicEnabledRef.current, queueStateRef.current);
 
-      if (battleAudio && !battleMusicUnlockedRef.current) {
-        const previousVolume = battleAudio.volume;
-        battleAudio.volume = 0;
-        void battleAudio.play()
-          .then(() => {
-            if (screenRef.current !== "battle") {
-              battleAudio.pause();
-              battleAudio.currentTime = 0;
-            }
-            battleAudio.volume = previousVolume;
-            battleMusicUnlockedRef.current = true;
-            syncMusicPlayback(screenRef.current, musicEnabledRef.current, queueStateRef.current);
-          })
-          .catch(() => {
-            battleAudio.volume = previousVolume;
-          });
+      if (battleMusic) {
+        void battleMusic.unlock().then(() => {
+          syncMusicPlayback(screenRef.current, musicEnabledRef.current, queueStateRef.current);
+        });
       }
     }
 
@@ -373,19 +350,17 @@ export function App() {
   }, []);
 
   useEffect(() => {
-    const audio = new Audio("/assets/ui/sounds/music/battle.mp3");
-    audio.preload = "auto";
-    audio.loop = true;
-    audio.volume = 0.28;
-    battleMusicRef.current = audio;
+    const manager = new BattleMusicManager(BATTLE_MUSIC_TRACKS, {
+      volume: BATTLE_MUSIC_VOLUME,
+      crossfadeMs: 4200,
+    });
+    battleMusicManagerRef.current = manager;
     syncMusicPlayback(screenRef.current, musicEnabledRef.current, queueStateRef.current);
 
     return () => {
-      audio.pause();
-      audio.currentTime = 0;
-      battleMusicUnlockedRef.current = false;
-      if (battleMusicRef.current === audio) {
-        battleMusicRef.current = null;
+      manager.destroy();
+      if (battleMusicManagerRef.current === manager) {
+        battleMusicManagerRef.current = null;
       }
     };
   }, []);
@@ -486,10 +461,11 @@ export function App() {
     setBusy(true);
     setError("");
     try {
-      await request("/auth/dev", {
+      const auth = await request<DevAuthResponse>("/auth/dev", {
         method: "POST",
         body: JSON.stringify({ username: nextUsername }),
       });
+      setDevSessionToken(auth.token);
       await loadSession();
       await loadInventory();
       await loadQueueStatus();
@@ -512,10 +488,11 @@ export function App() {
     setBusy(true);
     setError("");
     try {
-      await request("/auth/dev", {
+      const auth = await request<DevAuthResponse>("/auth/dev", {
         method: "POST",
         body: JSON.stringify({ user_id: parsed }),
       });
+      setDevSessionToken(auth.token);
       await loadSession();
       await loadInventory();
       await loadQueueStatus();
@@ -685,6 +662,7 @@ export function App() {
           currentUserId={me.user_id}
           matchId={activeMatchId}
           heroes={heroes}
+          battleCards={battleCards}
           deckEntries={deckEntries}
           onLeaveToMenu={() => {
             setActiveMatchId(null);

@@ -9,7 +9,7 @@ export type UnitRect = {
   centerY: number;
 };
 
-export type ProjectileTone = "damage" | "heal" | "buff" | "debuff";
+export type ProjectileTone = "damage" | "heal" | "buff" | "debuff" | "attack";
 
 export type ProjectileMode = "none" | "single" | "sequence" | "splash";
 

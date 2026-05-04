@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { request } from "../../lib/api";
+import { request, withDevSessionToken } from "../../lib/api";
 import { AbilityBlock } from "./AbilityBlock";
 import { AttackBlock } from "./AttackBlock";
 import { getStunTurns, useCardSkill } from "./CARD_SKILLS";
@@ -28,19 +28,32 @@ import { BattlePlayAnimations, useOnPlayEffects } from "./on_play_effects";
 import { ProjectileLayer, useProjectileRuntime } from "./projectiles";
 import { useBattleEventSfx } from "./sfx";
 import { Victory } from "./Victory";
-import type { ApplyBattleActionRequest, BattleCardInMatch, MaskedBattleMatchState, MaskedBattlePlayerState } from "./types";
-import type { DeckEntry, Hero } from "../../types";
+import type { ApplyBattleActionRequest, BattleCardInMatch, BattleEvent, BattleUnitState, MaskedBattleMatchState, MaskedBattlePlayerState } from "./types";
+import type { BattleCard, DeckEntry, Hero } from "../../types";
 import "./battle.css";
 
 type Props = {
   currentUserId: number;
   matchId: number;
   heroes: Hero[];
+  battleCards: BattleCard[];
   deckEntries: DeckEntry[];
   onLeaveToMenu: () => void;
 };
 
-export function BattleScreen({ currentUserId, matchId, heroes, deckEntries, onLeaveToMenu }: Props) {
+const TURN_AURA_EXIT_MS = 620;
+
+type TurnAuraItem = {
+  id: string;
+  instanceId: string;
+  centerX: number;
+  centerY: number;
+  width: number;
+  height: number;
+  phase: "active" | "leaving";
+};
+
+export function BattleScreen({ currentUserId, matchId, heroes, battleCards, deckEntries, onLeaveToMenu }: Props) {
   const [match, setMatch] = useState<MaskedBattleMatchState | null>(null);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
@@ -53,18 +66,20 @@ export function BattleScreen({ currentUserId, matchId, heroes, deckEntries, onLe
   const [attackAnimation, setAttackAnimation] = useState<CardAttackAnimationState | null>(null);
   const [deathAnimations, setDeathAnimations] = useState<DeathAnimationState[]>([]);
   const [floatingNumbers, setFloatingNumbers] = useState<FloatingNumber[]>([]);
+  const battleCardNameByTemplateId = useMemo(
+    () => Object.fromEntries(battleCards.map((card) => [card.template_id, card.name] as const)),
+    [battleCards],
+  );
   const [heroAttackSelected, setHeroAttackSelected] = useState(false);
   const [toastMessage, setToastMessage] = useState("");
   const [toastNonce, setToastNonce] = useState(0);
-  const [turnAura, setTurnAura] = useState<{
-    centerX: number;
-    centerY: number;
-    width: number;
-    height: number;
-  } | null>(null);
+  const [turnAuras, setTurnAuras] = useState<TurnAuraItem[]>([]);
   const shellRef = useRef<HTMLDivElement | null>(null);
+  const turnAuraExitTimeoutsRef = useRef<number[]>([]);
   const lastProcessedVersionRef = useRef(0);
   const currentMatchRef = useRef<MaskedBattleMatchState | null>(null);
+  const attackAnimationQueueRef = useRef(Promise.resolve());
+  const processedAttackEventIdsRef = useRef(new Set<string>());
   const readyRequestSentForMatchRef = useRef<number | null>(null);
 
   const playerIndex = useMemo(() => {
@@ -109,6 +124,10 @@ export function BattleScreen({ currentUserId, matchId, heroes, deckEntries, onLe
     attackAnimation?.attacker.card_type === "hero" && attackAnimation.attacker.instance_id === playerHeroInstanceId
       ? { dx: attackAnimation.dx, dy: attackAnimation.dy }
       : null;
+  const enemyHeroAttackAnimation =
+    attackAnimation?.attacker.card_type === "hero" && attackAnimation.attacker.instance_id === enemyHeroInstanceId
+      ? { dx: attackAnimation.dx, dy: attackAnimation.dy }
+      : null;
 
   function getUnitRect(instanceId: string) {
     const shell = shellRef.current;
@@ -133,15 +152,75 @@ export function BattleScreen({ currentUserId, matchId, heroes, deckEntries, onLe
     };
   }
 
+  function getHeroRect(heroInstanceId: string) {
+    const shell = shellRef.current;
+    if (!shell || !heroInstanceId) {
+      return null;
+    }
+
+    const heroSide = heroInstanceId === playerHeroInstanceId ? "player" : "enemy";
+    const node = shell.querySelector<HTMLElement>(`[data-hero-side="${heroSide}"]`);
+    if (!node) {
+      return null;
+    }
+
+    const shellRect = shell.getBoundingClientRect();
+    const rect = node.getBoundingClientRect();
+    return {
+      left: rect.left - shellRect.left,
+      top: rect.top - shellRect.top,
+      width: rect.width,
+      height: rect.height,
+      centerX: rect.left - shellRect.left + rect.width / 2,
+      centerY: rect.top - shellRect.top + rect.height / 2,
+    };
+  }
+
+  function getCombatantRect(instanceId: string) {
+    return instanceId.startsWith("hero:") ? getHeroRect(instanceId) : getUnitRect(instanceId);
+  }
+
+  function scheduleTurnAuraRemoval(id: string) {
+    const timeoutId = window.setTimeout(() => {
+      setTurnAuras((current) => current.filter((item) => item.id !== id));
+    }, TURN_AURA_EXIT_MS);
+    turnAuraExitTimeoutsRef.current.push(timeoutId);
+  }
+
+  function retireActiveTurnAuras() {
+    setTurnAuras((current) =>
+      current.map((item) => {
+        if (item.phase === "leaving") {
+          return item;
+        }
+
+        const leavingItem: TurnAuraItem = {
+          ...item,
+          id: `${item.id}-leaving-${Date.now()}`,
+          phase: "leaving",
+        };
+        scheduleTurnAuraRemoval(leavingItem.id);
+        return leavingItem;
+      }),
+    );
+  }
+
+  useEffect(() => {
+    return () => {
+      turnAuraExitTimeoutsRef.current.forEach((timeoutId) => window.clearTimeout(timeoutId));
+      turnAuraExitTimeoutsRef.current = [];
+    };
+  }, []);
+
   useEffect(() => {
     if (!match || playerIndex < 0 || preload.visible) {
-      setTurnAura(null);
+      retireActiveTurnAuras();
       return;
     }
 
     const shell = shellRef.current;
     if (!shell) {
-      setTurnAura(null);
+      retireActiveTurnAuras();
       return;
     }
 
@@ -150,15 +229,45 @@ export function BattleScreen({ currentUserId, matchId, heroes, deckEntries, onLe
     function measureAura() {
       const rect = getUnitRect(activeHeroInstanceId);
       if (!rect) {
-        setTurnAura(null);
+        retireActiveTurnAuras();
         return;
       }
 
-      setTurnAura({
+      const nextActiveAura: TurnAuraItem = {
+        id: `active-${activeHeroInstanceId}`,
+        instanceId: activeHeroInstanceId,
         centerX: rect.centerX,
         centerY: rect.centerY,
         width: rect.width * 3.8,
         height: rect.height * 1.18,
+        phase: "active",
+      };
+
+      setTurnAuras((current) => {
+        let activeAuraUpdated = false;
+        const nextItems = current.map((item) => {
+          if (item.phase === "leaving") {
+            return item;
+          }
+
+          if (item.instanceId === activeHeroInstanceId) {
+            activeAuraUpdated = true;
+            return {
+              ...nextActiveAura,
+              id: item.id,
+            };
+          }
+
+          const leavingItem: TurnAuraItem = {
+            ...item,
+            id: `${item.id}-leaving-${Date.now()}`,
+            phase: "leaving",
+          };
+          scheduleTurnAuraRemoval(leavingItem.id);
+          return leavingItem;
+        });
+
+        return activeAuraUpdated ? nextItems : [...nextItems, nextActiveAura];
       });
     }
 
@@ -193,7 +302,7 @@ export function BattleScreen({ currentUserId, matchId, heroes, deckEntries, onLe
     const entries: FloatingNumber[] = [];
 
     nextMatch.events.forEach((event, eventIndex) => {
-      const isHealEvent = event.type.toLowerCase().includes("heal");
+      const numberKind = resolveFloatingNumberKind(nextMatch, event);
 
       event.targets?.forEach((target, targetIndex) => {
         if (!target.instance_id || !target.amount || target.amount <= 0) {
@@ -210,7 +319,7 @@ export function BattleScreen({ currentUserId, matchId, heroes, deckEntries, onLe
           left: rect.left - shellRect.left + rect.width / 2,
           top: rect.top - shellRect.top + rect.height * 0.18,
           amount: target.amount,
-          kind: isHealEvent ? "heal" : "damage",
+          kind: numberKind,
         });
       });
     });
@@ -225,152 +334,118 @@ export function BattleScreen({ currentUserId, matchId, heroes, deckEntries, onLe
     }, 2000);
   }
 
-  async function playCardAttackAnimation(attacker: MaskedBattlePlayerState["table"][number], target: MaskedBattlePlayerState["table"][number]) {
-    if (!attacker || !target) {
-      return;
+  function resolveFloatingNumberKind(nextMatch: MaskedBattleMatchState, event: BattleEvent): FloatingNumber["kind"] {
+    const eventType = event.type.toLowerCase();
+    const effectKind = event.effect_kind?.toLowerCase() ?? "";
+
+    if (eventType.includes("heal") || effectKind === "heal") {
+      return "heal";
     }
-
-    const from = getUnitRect(attacker.instance_id);
-    const to = getUnitRect(target.instance_id);
-    if (!from || !to) {
-      return;
+    if (eventType === "buff" || effectKind === "buff") {
+      return "heal";
     }
-
-    await new Promise<void>((resolve) => {
-      setAttackAnimation({
-        attacker,
-        from: {
-          left: from.left,
-          top: from.top,
-          width: from.width,
-          height: from.height,
-        },
-        dx: to.centerX - from.centerX,
-        dy: to.centerY - from.centerY,
-      });
-
-      window.setTimeout(resolve, 460);
-    });
-  }
-
-  async function playCardAttackHeroAnimation(attacker: MaskedBattlePlayerState["table"][number]) {
-    if (!attacker) {
-      return;
-    }
-
-    const from = getUnitRect(attacker.instance_id);
-    const shell = shellRef.current;
-    const heroNode = shell?.querySelector<HTMLElement>('[data-hero-side="enemy"]');
-    if (!from || !heroNode || !shell) {
-      return;
-    }
-
-    const shellRect = shell.getBoundingClientRect();
-    const rect = heroNode.getBoundingClientRect();
-    const to = {
-      centerX: rect.left - shellRect.left + rect.width / 2,
-      centerY: rect.top - shellRect.top + rect.height / 2,
-    };
-
-    await new Promise<void>((resolve) => {
-      setAttackAnimation({
-        attacker,
-        from: {
-          left: from.left,
-          top: from.top,
-          width: from.width,
-          height: from.height,
-        },
-        dx: to.centerX - from.centerX,
-        dy: to.centerY - from.centerY,
-      });
-
-      window.setTimeout(resolve, 460);
-    });
-  }
-
-  async function playHeroAttackAnimation(target: MaskedBattlePlayerState["table"][number] | null, attackHero: boolean) {
-    const shell = shellRef.current;
-    if (!shell || !player) {
-      return;
-    }
-
-    const heroNode = shell.querySelector<HTMLElement>('[data-hero-side="player"]');
-    if (!heroNode) {
-      return;
-    }
-
-    const shellRect = shell.getBoundingClientRect();
-    const heroRect = heroNode.getBoundingClientRect();
-    const from = {
-      left: heroRect.left - shellRect.left,
-      top: heroRect.top - shellRect.top,
-      width: heroRect.width,
-      height: heroRect.height,
-      centerX: heroRect.left - shellRect.left + heroRect.width / 2,
-      centerY: heroRect.top - shellRect.top + heroRect.height / 2,
-    };
-
-    let targetCenter: { centerX: number; centerY: number } | null = null;
-    if (attackHero) {
-      const enemyHeroNode = shell.querySelector<HTMLElement>('[data-hero-side="enemy"]');
-      if (enemyHeroNode) {
-        const rect = enemyHeroNode.getBoundingClientRect();
-        targetCenter = {
-          centerX: rect.left - shellRect.left + rect.width / 2,
-          centerY: rect.top - shellRect.top + rect.height / 2,
-        };
-      }
-    } else if (target) {
-      const rect = getUnitRect(target.instance_id);
-      if (rect) {
-        targetCenter = {
-          centerX: rect.centerX,
-          centerY: rect.centerY,
-        };
+    if (eventType === "card_skill" || eventType === "hero_spell") {
+      const firstTargetEffect = event.targets?.find((target) => target.instance_id)?.instance_id
+        ? findEventTargetEffectKind(nextMatch, event)
+        : "";
+      if (firstTargetEffect === "buff" || firstTargetEffect === "heal") {
+        return "heal";
       }
     }
 
-    if (!targetCenter) {
-      return;
+    return "damage";
+  }
+
+  function findEventTargetEffectKind(nextMatch: MaskedBattleMatchState, event: BattleEvent) {
+    const targetIds = new Set((event.targets ?? []).map((target) => target.instance_id).filter(Boolean));
+    if (targetIds.size === 0) {
+      return "";
     }
 
-    await new Promise<void>((resolve) => {
-      setAttackAnimation({
-        attacker: {
-          instance_id: playerHeroInstanceId,
-          template_id: player.hero_code,
-          gamer_card_id: 0,
-          card_level: player.hero_level,
-          hp: player.hero_hp,
-          max_hp: playerHero?.health_points ?? player.hero_hp,
-          attack: player.hero_attack_power,
-          splash_radius: player.hero_splash_radius,
-          is_tank: false,
-          card_type: "hero",
-          base_cooldown: player.hero_attack_base_cooldown,
-          cooldown: player.hero_attack_cooldown,
-          summoned_in_turn: 0,
-          image_key: "",
-          asset_base_key: "",
-          has_skill: false,
-          skill_image_key: "",
-          skill: null,
-          effects: [],
-          resurrected_used: false,
-        },
-        from: {
-          left: from.left,
-          top: from.top,
-          width: from.width,
-          height: from.height,
-        },
-        dx: targetCenter.centerX - from.centerX,
-        dy: targetCenter.centerY - from.centerY,
-      });
+    for (const battlePlayer of nextMatch.players ?? []) {
+      for (const unit of battlePlayer?.table ?? []) {
+        if (!unit || !targetIds.has(unit.instance_id)) {
+          continue;
+        }
+        const matchingEffect = [...(unit.effects ?? [])]
+          .reverse()
+          .find((effect) => !event.source_instance_id || effect.source_instance_id === event.source_instance_id);
+        if (matchingEffect?.polarity === "buff") {
+          return "buff";
+        }
+        if (matchingEffect?.effect_type === "heal_per_turn" || matchingEffect?.effect_type === "hp") {
+          return "heal";
+        }
+        if (matchingEffect?.polarity === "debuff") {
+          return "debuff";
+        }
+      }
+    }
 
-      window.setTimeout(resolve, 460);
-    });
+    return "";
+  }
+
+  function getEventSequenceId(event: BattleEvent, fallback: string) {
+    return event.id ?? event.event_id ?? fallback;
+  }
+
+  function getViewerIndex(matchState: MaskedBattleMatchState | null) {
+    if (!matchState) {
+      return -1;
+    }
+    return matchState.players.findIndex((battlePlayer) => battlePlayer?.user_id === currentUserId);
+  }
+
+  function findUnitInMatch(matchState: MaskedBattleMatchState | null, instanceId: string) {
+    if (!matchState || !instanceId) {
+      return null;
+    }
+
+    for (const battlePlayer of matchState.players) {
+      const unit = battlePlayer?.table.find((entry) => entry?.instance_id === instanceId);
+      if (unit) {
+        return unit;
+      }
+    }
+
+    return null;
+  }
+
+  function makeHeroAnimationUnit(matchState: MaskedBattleMatchState, sourcePlayerIndex: number): BattleUnitState | null {
+    const sourcePlayer = matchState.players[sourcePlayerIndex];
+    if (!sourcePlayer) {
+      return null;
+    }
+
+    const heroTemplate = heroes.find((hero) => hero.hero_code === sourcePlayer.hero_code) ?? null;
+    return {
+      instance_id: `hero:p${sourcePlayerIndex}`,
+      template_id: sourcePlayer.hero_code,
+      gamer_card_id: 0,
+      card_level: sourcePlayer.hero_level,
+      hp: sourcePlayer.hero_hp,
+      max_hp: heroTemplate?.health_points ?? sourcePlayer.hero_hp,
+      attack: sourcePlayer.hero_attack_power,
+      splash_radius: sourcePlayer.hero_splash_radius,
+      is_tank: false,
+      card_type: "hero",
+      base_cooldown: sourcePlayer.hero_attack_base_cooldown,
+      cooldown: sourcePlayer.hero_attack_cooldown,
+      attacks_this_turn: 0,
+      summoned_in_turn: 0,
+      image_key: "",
+      asset_base_key: "",
+      has_skill: false,
+      skill_image_key: "",
+      skill: null,
+      effects: [],
+      resurrected_used: false,
+    };
+  }
+
+  function enqueueAttackAnimations(nextMatch: MaskedBattleMatchState, prevMatchOverride?: MaskedBattleMatchState | null) {
+    void nextMatch;
+    void prevMatchOverride;
   }
 
   const cardAttack = useCardAttack({
@@ -383,19 +458,13 @@ export function BattleScreen({ currentUserId, matchId, heroes, deckEntries, onLe
       if (!match) {
         return;
       }
-      await Promise.all([
-        attackHero ? playCardAttackHeroAnimation(attacker) : playCardAttackAnimation(attacker, target),
-        (async () => {
-          await new Promise((resolve) => window.setTimeout(resolve, 190));
-          await applyAction({
-            type: "card_attack",
-            expected_version: match.version,
-            card_instance_id: attacker.instance_id,
-            target_instance_id: target?.instance_id,
-            attack_hero: attackHero,
-          });
-        })(),
-      ]);
+      await applyAction({
+        type: "card_attack",
+        expected_version: match.version,
+        card_instance_id: attacker.instance_id,
+        target_instance_id: target?.instance_id,
+        attack_hero: attackHero,
+      });
     },
   });
   const cardSkill = useCardSkill({
@@ -410,6 +479,8 @@ export function BattleScreen({ currentUserId, matchId, heroes, deckEntries, onLe
         return;
       }
 
+      const canAttackAfterSkill = canUnitAttackNow(caster, player?.turns ?? 0);
+
       await applyAction({
         type: "card_skill",
         expected_version: match.version,
@@ -417,6 +488,10 @@ export function BattleScreen({ currentUserId, matchId, heroes, deckEntries, onLe
         target_instance_id: target?.instance_id,
         attack_hero: attackHero,
       });
+
+      if (canAttackAfterSkill) {
+        cardAttack.selectAttacker(caster);
+      }
     },
   });
   const heroAbility = useHeroAbility({
@@ -449,7 +524,7 @@ export function BattleScreen({ currentUserId, matchId, heroes, deckEntries, onLe
     shellHeight,
     getUnitRect,
   });
-  const projectileRuntime = useProjectileRuntime({ match, playerIndex, getUnitRect });
+  const projectileRuntime = useProjectileRuntime({ match, playerIndex, getUnitRect: getCombatantRect });
   useBattleEventSfx(match);
 
   function showToast(message: string) {
@@ -653,10 +728,11 @@ export function BattleScreen({ currentUserId, matchId, heroes, deckEntries, onLe
   }, [matchId]);
 
   useEffect(() => {
-    const stream = new EventSource(`/matches/${matchId}/stream`, { withCredentials: true });
+    const stream = new EventSource(withDevSessionToken(`/matches/${matchId}/stream`), { withCredentials: true });
 
     stream.addEventListener("state", (event) => {
       const payload = JSON.parse((event as MessageEvent<string>).data) as MaskedBattleMatchState;
+      enqueueAttackAnimations(payload);
       enqueueDeathAnimations(payload);
       setMatch(payload);
       setError("");
@@ -667,19 +743,21 @@ export function BattleScreen({ currentUserId, matchId, heroes, deckEntries, onLe
     };
 
     return () => stream.close();
-  }, [matchId]);
+  }, [matchId, playerIndex]);
 
   async function applyAction(payload: ApplyBattleActionRequest, leaveAfter = false) {
     if (!match) {
       return;
     }
 
+    const prevMatch = match;
     setBusy(true);
     try {
       const nextMatch = await request<MaskedBattleMatchState>(`/matches/${matchId}/actions`, {
         method: "POST",
         body: JSON.stringify(payload),
       });
+      enqueueAttackAnimations(nextMatch, prevMatch);
       enqueueDeathAnimations(nextMatch);
       setMatch(nextMatch);
       setError("");
@@ -721,17 +799,20 @@ export function BattleScreen({ currentUserId, matchId, heroes, deckEntries, onLe
   return (
     <section className="battle-screen">
       <div ref={shellRef} className="battle-shell surface">
-        {turnAura ? (
+        {turnAuras.length > 0 ? (
           <div className="battle-turn-aura-layer" aria-hidden="true">
-            <div
-              className="battle-turn-aura"
-              style={{
-                left: `${turnAura.centerX}px`,
-                top: `${turnAura.centerY}px`,
-                width: `${turnAura.width}px`,
-                height: `${turnAura.height}px`,
-              }}
-            />
+            {turnAuras.map((turnAura) => (
+              <div
+                key={turnAura.id}
+                className={`battle-turn-aura battle-turn-aura--${turnAura.phase}`}
+                style={{
+                  left: `${turnAura.centerX}px`,
+                  top: `${turnAura.centerY}px`,
+                  width: `${turnAura.width}px`,
+                  height: `${turnAura.height}px`,
+                }}
+              />
+            ))}
           </div>
         ) : null}
         <div className="battle-top">
@@ -760,34 +841,29 @@ export function BattleScreen({ currentUserId, matchId, heroes, deckEntries, onLe
             player={enemy as MaskedBattlePlayerState}
             maxHp={enemyHero?.health_points ?? enemy.hero_hp}
             isActive={match.active_player !== playerIndex}
-            attackTarget={cardAttack.canAttackHero || canHeroAttackEnemyHero || cardSkill.canTargetHero || heroAbility.canTargetHero}
+            attackTarget={cardAttack.canAttackHero || canHeroAttackEnemyHero || cardSkill.canTargetHero || (heroAbility.selected && heroAbility.canTargetHero)}
             heroInstanceId={enemyHeroInstanceId}
             hitToken={onHitEffects.hitTokens[enemyHeroInstanceId] ?? 0}
+            attackAnimation={enemyHeroAttackAnimation}
             onClick={
-              cardAttack.canAttackHero || canHeroAttackEnemyHero || cardSkill.canTargetHero || heroAbility.canTargetHero
+              cardAttack.canAttackHero || canHeroAttackEnemyHero || cardSkill.canTargetHero || (heroAbility.selected && heroAbility.canTargetHero)
                 ? () => {
                     setPreviewClosing(true);
                     if (cardSkill.canTargetHero) {
                       void cardSkill.tryCastOnHero();
                       return;
                     }
-                    if (heroAbility.canTargetHero) {
+                    if (heroAbility.selected && heroAbility.canTargetHero) {
                       void heroAbility.tryCastOnHero();
                       return;
                     }
                     if (heroAttackSelected) {
                       void (async () => {
-                        await Promise.all([
-                          playHeroAttackAnimation(null, true),
-                          (async () => {
-                            await new Promise((resolve) => window.setTimeout(resolve, 190));
-                            await applyAction({
-                              type: "hero_attack",
-                              expected_version: match.version,
-                              attack_hero: true,
-                            });
-                          })(),
-                        ]);
+                        await applyAction({
+                          type: "hero_attack",
+                          expected_version: match.version,
+                          attack_hero: true,
+                        });
                         setHeroAttackSelected(false);
                       })();
                       return;
@@ -803,6 +879,7 @@ export function BattleScreen({ currentUserId, matchId, heroes, deckEntries, onLe
             match={match}
             enemy={enemy as MaskedBattlePlayerState}
             player={player as MaskedBattlePlayerState}
+            cardNameByTemplateId={battleCardNameByTemplateId}
              canEndTurn={canEndTurn}
              canPlaySelectedBattleCard={Boolean(canPlaySelectedBattleCard)}
              selectedAttackerId={cardAttack.selectedAttackerId}
@@ -898,17 +975,11 @@ export function BattleScreen({ currentUserId, matchId, heroes, deckEntries, onLe
               }
               if (heroAttackSelected) {
                 void (async () => {
-                  await Promise.all([
-                    playHeroAttackAnimation(unit, false),
-                    (async () => {
-                      await new Promise((resolve) => window.setTimeout(resolve, 190));
-                      await applyAction({
-                        type: "hero_attack",
-                        expected_version: match.version,
-                        target_instance_id: unit.instance_id,
-                      });
-                    })(),
-                  ]);
+                  await applyAction({
+                    type: "hero_attack",
+                    expected_version: match.version,
+                    target_instance_id: unit.instance_id,
+                  });
                   setHeroAttackSelected(false);
                 })();
                 return;

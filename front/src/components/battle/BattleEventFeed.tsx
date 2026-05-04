@@ -5,12 +5,12 @@ import type { BattleCardInMatch, BattleEvent, BattleEventTarget, BattleUnitState
 import "./battle_event_feed.css";
 
 const EVENT_LIFETIME_MS = 2500;
-const ACTION_ATTACK_ICON = "/assets/ui/pictures/icons/status/disarm.png";
-const ACTION_SKILL_FALLBACK_ICON = "/assets/ui/pictures/icons/status/skill_cd_down.png";
+const ACTION_DAMAGE_ICON = "/assets/ui/pictures/icons/status/damage.png";
+const ACTION_SKILL_FALLBACK_ICON = "/assets/ui/pictures/icons/status/skill.png";
 const ACTION_BUFF_ICON = "/assets/ui/pictures/icons/status/buff_atk_hp.png";
 const ACTION_HEAL_ICON = "/assets/ui/pictures/icons/status/buff_hp.png";
-const ACTION_DEATH_ICON = "/assets/ui/pictures/icons/status/dot.png";
-const ACTION_SUMMON_ICON = "/assets/ui/pictures/icons/status/shield.png";
+const ACTION_DEATH_ICON = "/assets/ui/pictures/icons/status/death.png";
+const ACTION_SUMMON_ICON = "/assets/ui/pictures/icons/status/summon.png";
 
 type FeedEntity = {
   id: string;
@@ -282,8 +282,11 @@ function getActionMeta(match: MaskedBattleMatchState, heroes: Hero[], event: Bat
   switch (event.type) {
     case "attack":
     case "hero_attack":
-      return { src: ACTION_ATTACK_ICON, label: "Атака" };
+      return { src: ACTION_DAMAGE_ICON, label: "Damage" };
     case "passive":
+      if (effectKind === "damage" || effectKind === "counterattack") {
+        return { src: ACTION_DAMAGE_ICON, label: "Damage" };
+      }
       if (effectIconSrc && effectKind !== "heal") {
         return { src: effectIconSrc, label: "Passive" };
       }
@@ -415,13 +418,15 @@ export function BattleEventFeed({ match, heroes }: Props) {
           <span className="battle-event-feed__action" title={item.actionLabel}>
             <img src={item.actionSrc} alt={item.actionLabel} />
           </span>
-          <span className="battle-event-feed__targets">
-            {item.targets.length > 0 ? (
-              item.targets.map((target) => <EventPortrait key={`${item.id}-${target.id}`} entity={target} side="target" />)
-            ) : (
+          {item.targets.length > 0 ? (
+            <span className="battle-event-feed__targets">
+              {item.targets.map((target) => <EventPortrait key={`${item.id}-${target.id}`} entity={target} side="target" />)}
+            </span>
+          ) : item.type === "summon" ? null : (
+            <span className="battle-event-feed__targets">
               <span className="battle-event-feed__portrait battle-event-feed__portrait--empty" />
-            )}
-          </span>
+            </span>
+          )}
         </div>
       ))}
     </div>

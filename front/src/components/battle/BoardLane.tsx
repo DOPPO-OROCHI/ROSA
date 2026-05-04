@@ -6,6 +6,7 @@ type Props = {
   units: Array<BattleUnitState | null>;
   side: "player" | "enemy";
   effectSourceLabels?: Record<string, string>;
+  cardNameByTemplateId?: Record<string, string>;
   canPlayIntoEmpty?: boolean;
   selectedUnitId?: string;
   selectedSkillCasterId?: string;
@@ -26,6 +27,7 @@ export function BoardLane({
   units,
   side,
   effectSourceLabels = {},
+  cardNameByTemplateId = {},
   canPlayIntoEmpty = false,
   selectedUnitId = "",
   selectedSkillCasterId = "",
@@ -49,6 +51,7 @@ export function BoardLane({
           unit={unit}
           side={side}
           effectSourceLabels={effectSourceLabels}
+          cardNameByTemplateId={cardNameByTemplateId}
           playable={unit == null && canPlayIntoEmpty}
           selected={Boolean(unit && unit.instance_id === selectedUnitId)}
           skillSelected={Boolean(unit && unit.instance_id === selectedSkillCasterId)}

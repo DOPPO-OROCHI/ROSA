@@ -73,6 +73,7 @@ export type BattleUnitState = {
   card_type: string;
   base_cooldown: number;
   cooldown: number;
+  attacks_this_turn: number;
   summoned_in_turn: number;
   image_key: string;
   asset_base_key: string;

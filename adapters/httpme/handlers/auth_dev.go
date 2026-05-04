@@ -75,6 +75,7 @@ func NewAuthDevHandler(d AuthDevDeps) http.HandlerFunc {
 			middleware.WriteJSON(w, http.StatusOK, map[string]any{
 				"user_id":  user.ID,
 				"username": user.Username,
+				"token":    token,
 			})
 			return
 		}
@@ -123,6 +124,7 @@ func NewAuthDevHandler(d AuthDevDeps) http.HandlerFunc {
 		middleware.WriteJSON(w, http.StatusOK, map[string]any{
 			"user_id":  user.ID,
 			"username": user.Username,
+			"token":    token,
 		})
 	}
 }

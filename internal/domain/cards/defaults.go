@@ -416,7 +416,7 @@ var DefaultBattleCards = []BattleCardTemplate{
 		SkillTargeting:    SkillTargetEnemySingle,
 		SkillPower:        0,
 		SkillBaseCooldown: 5,
-		SkillDuration:     1,
+		SkillDuration:     2,
 		SkillExtraValue:   0,
 		SkillBuffEffect:   "",
 		SkillDebuffEffect: DebuffEffectDisarm,

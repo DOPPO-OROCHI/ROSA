@@ -59,13 +59,20 @@ func AuthMiddleware(store *TokenStore) func(http.Handler) http.Handler {
 				next.ServeHTTP(w, r)
 				return
 			}
-			c, err := r.Cookie("session")
-			if err != nil || c.Value == "" {
-				log.Printf("cookie err=%v value=%v", err, c)
-				WriteErr(w, http.StatusUnauthorized, "unauthorized")
-				return
+			token := bearerToken(r.Header.Get("Authorization"))
+			if token == "" {
+				token = r.URL.Query().Get("token")
 			}
-			sess, ok := store.Validate(c.Value)
+			if token == "" {
+				c, err := r.Cookie("session")
+				if err != nil || c.Value == "" {
+					log.Printf("cookie err=%v value=%v", err, c)
+					WriteErr(w, http.StatusUnauthorized, "unauthorized")
+					return
+				}
+				token = c.Value
+			}
+			sess, ok := store.Validate(token)
 			if !ok {
 				WriteErr(w, http.StatusUnauthorized, "unauthorized")
 				return
@@ -78,6 +85,17 @@ func AuthMiddleware(store *TokenStore) func(http.Handler) http.Handler {
 			next.ServeHTTP(w, r.WithContext(ctx))
 		})
 	}
+}
+
+func bearerToken(header string) string {
+	if header == "" {
+		return ""
+	}
+	const prefix = "Bearer "
+	if !strings.HasPrefix(header, prefix) {
+		return ""
+	}
+	return strings.TrimSpace(strings.TrimPrefix(header, prefix))
 }
 
 func ValidateTelegramInitData(initDataRaw, botToken string, maxAge time.Duration) (int, error) {

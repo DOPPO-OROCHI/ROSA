@@ -1,8 +1,39 @@
+const DEV_SESSION_TOKEN_KEY = "rosa_dev_session_token";
+
+export function getDevSessionToken(): string {
+  if (typeof window === "undefined") {
+    return "";
+  }
+  return window.sessionStorage.getItem(DEV_SESSION_TOKEN_KEY) ?? "";
+}
+
+export function setDevSessionToken(token?: string) {
+  if (typeof window === "undefined") {
+    return;
+  }
+  if (!token) {
+    window.sessionStorage.removeItem(DEV_SESSION_TOKEN_KEY);
+    return;
+  }
+  window.sessionStorage.setItem(DEV_SESSION_TOKEN_KEY, token);
+}
+
+export function withDevSessionToken(url: string): string {
+  const token = getDevSessionToken();
+  if (!token) {
+    return url;
+  }
+  const separator = url.includes("?") ? "&" : "?";
+  return `${url}${separator}token=${encodeURIComponent(token)}`;
+}
+
 export async function request<T>(url: string, init?: RequestInit): Promise<T> {
+  const token = getDevSessionToken();
   const response = await fetch(url, {
     credentials: "include",
     headers: {
       "Content-Type": "application/json",
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
       ...(init?.headers ?? {}),
     },
     ...init,

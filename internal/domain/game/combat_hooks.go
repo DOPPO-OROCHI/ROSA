@@ -220,6 +220,13 @@ func hasOverdrive(u *UnitState) bool {
 	return false
 }
 
+func maxAttacksPerTurn(u *UnitState) int {
+	if hasOverdrive(u) {
+		return 2
+	}
+	return 1
+}
+
 /*
 Хелпер под мультикаст. Такая же логика как и в случае овердрайва
 */

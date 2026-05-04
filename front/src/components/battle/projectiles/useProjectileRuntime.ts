@@ -124,19 +124,58 @@ function buildSequenceFromEvent(
   playerIndex: number,
   getUnitRect: (instanceId: string) => UnitRect | null,
 ): ProjectileSequence | null {
-  if (event.type !== "card_skill") {
+  const isAttackEvent = event.type === "attack" || event.type === "card_attack" || event.type === "hero_attack";
+  if (event.type !== "card_skill" && !isAttackEvent) {
     return null;
   }
   if (event.visible_for_player_index != null && event.visible_for_player_index !== playerIndex) {
     return null;
   }
-  if (!event.source_instance_id) {
+
+  const sourceInstanceId = event.type === "hero_attack" || event.source_kind === "hero"
+    ? event.player_index == null
+      ? ""
+      : `hero:p${event.player_index}`
+    : event.source_instance_id;
+  if (!sourceInstanceId) {
     return null;
   }
 
-  const sourceRect = getUnitRect(event.source_instance_id);
-  const sourceUnit = findUnit(match, event.source_instance_id);
-  if (!sourceRect || !sourceUnit) {
+  const sourceRect = getUnitRect(sourceInstanceId);
+  if (!sourceRect) {
+    return null;
+  }
+
+  const targetIds = uniqueTargetIds(event.targets).filter((targetId) => targetId !== sourceInstanceId);
+  if (targetIds.length === 0) {
+    return null;
+  }
+
+  const sequenceId = getEventSequenceId(event, `${match.version}-${eventIndex}-${sourceInstanceId}`);
+
+  if (isAttackEvent) {
+    const steps = targetIds
+      .map((targetId, index) => {
+        const rect = getUnitRect(targetId);
+        if (!rect) {
+          return null;
+        }
+        return buildStep(`${sequenceId}-attack-${index}`, "attack", sourceRect, rect, targetId);
+      })
+      .filter((step): step is ProjectileStep => step !== null);
+
+    if (steps.length === 0) {
+      return null;
+    }
+
+    return {
+      id: sequenceId,
+      steps,
+    };
+  }
+
+  const sourceUnit = findUnit(match, sourceInstanceId);
+  if (!sourceUnit) {
     return null;
   }
 
@@ -145,13 +184,6 @@ function buildSequenceFromEvent(
   if (rule.mode === "none") {
     return null;
   }
-
-  const targetIds = uniqueTargetIds(event.targets);
-  if (targetIds.length === 0) {
-    return null;
-  }
-
-  const sequenceId = getEventSequenceId(event, `${match.version}-${eventIndex}-${event.source_instance_id}`);
 
   if (rule.mode === "single") {
     const primaryTargetId = targetIds[0];

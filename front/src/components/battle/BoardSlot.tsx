@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState, type CSSProperties } from "react";
 import { resolveCardAssetVariantSrc } from "../../lib/api";
 import { getBoardAttackDisplayKind, getBoardAttackDisplayValue } from "./card_attack";
 import { SkillButton, getBoardSkillLabel, getUnitShieldState, getUnitStatusEntries, isUnitStunned } from "./CARD_SKILLS";
@@ -9,6 +9,7 @@ type Props = {
   unit: BattleUnitState | null;
   side: "player" | "enemy";
   effectSourceLabels?: Record<string, string>;
+  cardNameByTemplateId?: Record<string, string>;
   playable?: boolean;
   selected?: boolean;
   skillSelected?: boolean;
@@ -24,10 +25,13 @@ type Props = {
   onSkillClick?: () => void;
 };
 
+type StatusEntry = ReturnType<typeof getUnitStatusEntries>[number];
+
 export function BoardSlot({
   unit,
   side,
   effectSourceLabels = {},
+  cardNameByTemplateId = {},
   playable = false,
   selected = false,
   skillSelected = false,
@@ -48,41 +52,7 @@ export function BoardSlot({
   const shieldState = getUnitShieldState(unit);
   const statusEntries = getUnitStatusEntries(unit, effectSourceLabels).filter((entry) => entry.effectType !== "shield" && entry.effectType !== "reflect_shield");
   const slotRef = useRef<HTMLDivElement | null>(null);
-
-  function resolveStatusIconSrc(effectType: string): string {
-    switch (effectType) {
-      case "attack":
-        return "/assets/ui/pictures/icons/status/buff_atk.png";
-      case "hp":
-        return "/assets/ui/pictures/icons/status/buff_hp.png";
-      case "attack_and_hp":
-        return "/assets/ui/pictures/icons/status/buff_atk_hp.png";
-      case "attack_cooldown":
-        return "/assets/ui/pictures/icons/status/atk_cd_up.png";
-      case "cooldown_up":
-        return "/assets/ui/pictures/icons/status/atk_cd_down.png";
-      case "skill_cooldown":
-        return "/assets/ui/pictures/icons/status/skill_cd_up.png";
-      case "skill_cooldown_up":
-        return "/assets/ui/pictures/icons/status/skill_cd_down.png";
-      case "stun":
-        return "/assets/ui/pictures/icons/status/stun.png";
-      case "disarm":
-        return "/assets/ui/pictures/icons/status/disarm.png";
-      case "silence":
-        return "/assets/ui/pictures/icons/status/silence.png";
-      case "damage_over_time":
-        return "/assets/ui/pictures/icons/status/dot.png";
-      case "vulnerable":
-        return "/assets/ui/pictures/icons/status/vulnerable.png";
-      case "heal_per_turn":
-        return "/assets/ui/pictures/icons/status/heal_over_time.png";
-      case "no_heal":
-        return "/assets/ui/pictures/icons/status/no_heal.png";
-      default:
-        return "";
-    }
-  }
+  const [statusPanelOpen, setStatusPanelOpen] = useState(false);
 
   const shieldIconSrc = shieldState.hasReflectShield
     ? "/assets/ui/pictures/icons/status/reflect_shield.png"
@@ -106,6 +76,12 @@ export function BoardSlot({
 
     return () => window.clearTimeout(timeoutId);
   }, [hitToken]);
+
+  useEffect(() => {
+    if (!unit || statusEntries.length === 0) {
+      setStatusPanelOpen(false);
+    }
+  }, [statusEntries.length, unit]);
 
   return (
     <div
@@ -135,6 +111,7 @@ export function BoardSlot({
               target.src = resolveCardAssetVariantSrc("battle", unit.template_id, "view");
             }}
           />
+          {unit.is_tank ? <span className="battle-board-slot__tank-label">ТАНК</span> : null}
           <span className={`battle-board-slot__attack battle-board-slot__attack--${primaryKind}`}>{primaryValue}</span>
           <span className="battle-board-slot__cooldown">{unit.cooldown}</span>
           <span className="battle-board-slot__hp">{unit.hp}</span>
@@ -146,22 +123,21 @@ export function BoardSlot({
             )
           ) : null}
           {statusEntries.length > 0 ? (
-            <div className="battle-board-slot__status-strip" aria-label={`Status effects on ${unit.template_id}`}>
-              {statusEntries.map((entry) => {
-                const iconSrc = resolveStatusIconSrc(entry.effectType);
-                if (!iconSrc) {
-                  return null;
-                }
-
-                return (
-                  <div key={entry.key} className={`battle-board-slot__status-icon battle-board-slot__status-icon--${entry.tone}`} title={`${entry.sourceLabel} - ${entry.label} - ${entry.valueLabel} - ${entry.turnsLabel}`}>
-                    <img src={iconSrc} alt={entry.label} className="battle-board-slot__status-icon-image" />
-                    <span className="battle-board-slot__status-icon-value">{entry.valueLabel}</span>
-                  </div>
-                );
-              })}
+            <div className="battle-board-slot__status-layer">
+              <button
+                type="button"
+                className={`battle-board-slot__status-bar ${statusPanelOpen ? "battle-board-slot__status-bar--open" : ""}`}
+                onClick={(event) => {
+                  event.stopPropagation();
+                  setStatusPanelOpen(true);
+                }}
+              >
+                <span className="battle-board-slot__status-text">ЭФФЕКТЫ</span>
+                <span className="battle-board-slot__status-count">{statusEntries.length}</span>
+              </button>
             </div>
           ) : null}
+          {statusPanelOpen ? <StatusPanel unit={unit} unitName={cardNameByTemplateId[unit.template_id] ?? unit.template_id} entries={statusEntries} onClose={() => setStatusPanelOpen(false)} /> : null}
           <button type="button" className="battle-board-slot__tap" onClick={onClick} disabled={!onClick || actionDisabled} aria-label={unit.template_id} />
         </>
       ) : playable ? (
@@ -170,6 +146,57 @@ export function BoardSlot({
           <button type="button" className="battle-board-slot__tap" onClick={onClick} disabled={!onClick} aria-label="play-card-slot" />
         </>
       ) : null}
+    </div>
+  );
+}
+
+function formatStatusTurns(turnsLabel: string) {
+  return turnsLabel === "INF" ? "∞" : turnsLabel;
+}
+
+function formatStatusValue(valueLabel: string) {
+  return valueLabel || "—";
+}
+
+function StatusPanel({ unit, unitName, entries, onClose }: { unit: BattleUnitState; unitName: string; entries: StatusEntry[]; onClose: () => void }) {
+  return (
+    <div
+      className="battle-status-panel"
+      role="dialog"
+      aria-modal="true"
+      aria-label={`Effects on ${unitName}`}
+      onClick={(event) => {
+        event.stopPropagation();
+        onClose();
+      }}
+    >
+      <div
+        className="battle-status-panel__card"
+        style={{ "--battle-status-panel-bg": `url("${resolveCardAssetVariantSrc("battle", unit.template_id, "view")}")` } as CSSProperties}
+        onClick={(event) => {
+          event.stopPropagation();
+        }}
+      >
+        <button type="button" className="battle-status-panel__close" onClick={onClose} aria-label="Close effects">
+          ×
+        </button>
+        <div className="battle-status-panel__header">
+        <div className="battle-status-panel__title">ЭФФЕКТЫ</div>
+        <div className="battle-status-panel__subtitle">{unitName}</div>
+        </div>
+        <div className="battle-status-panel__list">
+          {entries.map((entry) => (
+            <div key={entry.key} className={`battle-status-panel__row battle-status-panel__row--${entry.tone}`}>
+              <div className="battle-status-panel__effect">
+                <span className="battle-status-panel__effect-name">{entry.label}</span>
+                <span className="battle-status-panel__effect-source">{entry.sourceLabel}</span>
+              </div>
+              <span className={`battle-status-panel__value battle-status-panel__value--${entry.tone}`}>{formatStatusValue(entry.valueLabel)}</span>
+              <span className="battle-status-panel__turns">{formatStatusTurns(entry.turnsLabel)}</span>
+            </div>
+          ))}
+        </div>
+      </div>
     </div>
   );
 }

@@ -3,6 +3,7 @@ import type { BattleUnitEffect, BattleUnitState, MaskedBattlePlayerState } from 
 
 const EFFECT_STUN = "stun";
 const EFFECT_DISARM = "disarm";
+const EFFECT_OVERDRIVE = "overdrive";
 
 type Params = {
   player: MaskedBattlePlayerState | null;
@@ -36,6 +37,10 @@ export function canUnitAttackNow(unit: BattleUnitState | null | undefined, owner
     return false;
   }
   if (hasEffect(unit.effects, EFFECT_STUN) || hasEffect(unit.effects, EFFECT_DISARM)) {
+    return false;
+  }
+  const maxAttacks = hasEffect(unit.effects, EFFECT_OVERDRIVE) ? 2 : 1;
+  if ((unit.attacks_this_turn ?? 0) >= maxAttacks) {
     return false;
   }
   return true;

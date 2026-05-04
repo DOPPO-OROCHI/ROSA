@@ -89,6 +89,7 @@ type UnitState struct {
 	CardType        string               `json:"card_type"`
 	BaseCooldown    int                  `json:"base_cooldown"`
 	Cooldown        int                  `json:"cooldown"`
+	AttacksThisTurn int                  `json:"attacks_this_turn"`
 	SummonedInTurn  int                  `json:"summoned_in_turn"`
 	ImageKey        string               `json:"image_key"`
 	AssetBaseKey    string               `json:"asset_base_key"`
@@ -120,7 +121,7 @@ type UnitEffect struct {
 type Event struct {
 	Type                  string        `json:"type"` //<-тип действия
 	EffectKind            string        `json:"effect_kind,omitempty"`
-	PlayerIndex           int           `json:"player_index,omitempty"`            //<-сторона, которая совершила действие
+	PlayerIndex           int           `json:"player_index"`                      //<-сторона, которая совершила действие
 	SourceKind            string        `json:"source_kind,omitempty"`             //<-источник, который совершил действие
 	SourceInstanceID      string        `json:"source_instance_id,omitempty"`      //<-айди карты
 	SourceTemplateID      string        `json:"source_template_id,omitempty"`      //<-темплейт карты

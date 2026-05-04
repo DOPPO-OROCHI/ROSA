@@ -267,11 +267,12 @@ func ApplyEffect(u *UnitState, buff UnitEffect) error {
 		if u.HP > u.MaxHP {
 			u.HP = u.MaxHP
 		}
+	case cards.BuffEffectOverdrive:
+		u.Cooldown = 0
 	case cards.BuffEffectHealPerTurn,
 		cards.BuffEffectShield,
 		cards.BuffEffectReflectShield,
 		cards.BuffEffectDamageReduction,
-		cards.BuffEffectOverdrive,
 		cards.BuffEffectMulticast,
 		cards.BuffEffectVampiricStrike,
 		cards.BuffEffectChainAttack,
