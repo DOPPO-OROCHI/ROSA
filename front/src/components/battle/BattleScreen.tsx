@@ -728,6 +728,26 @@ export function BattleScreen({ currentUserId, matchId, heroes, battleCards, deck
   }, [matchId]);
 
   useEffect(() => {
+    if (!match || match.finished) {
+      return;
+    }
+
+    const id = window.setInterval(() => {
+      void request<MaskedBattleMatchState>(`/matches/${matchId}`)
+        .then((nextMatch) => {
+          if (nextMatch.version > (currentMatchRef.current?.version ?? 0)) {
+            enqueueDeathAnimations(nextMatch);
+          }
+          setMatch(nextMatch);
+          setError("");
+        })
+        .catch(() => undefined);
+    }, match.phase === "START" ? 1200 : 3000);
+
+    return () => window.clearInterval(id);
+  }, [match, matchId]);
+
+  useEffect(() => {
     const stream = new EventSource(withDevSessionToken(`/matches/${matchId}/stream`), { withCredentials: true });
 
     stream.addEventListener("state", (event) => {
@@ -738,9 +758,7 @@ export function BattleScreen({ currentUserId, matchId, heroes, battleCards, deck
       setError("");
     });
 
-    stream.onerror = () => {
-      stream.close();
-    };
+    stream.onerror = () => undefined;
 
     return () => stream.close();
   }, [matchId, playerIndex]);

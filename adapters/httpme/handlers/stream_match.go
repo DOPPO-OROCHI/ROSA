@@ -60,6 +60,7 @@ func NewStreamMatchHandler(deps StreamMatchDeps) http.HandlerFunc {
 		w.Header().Set("Content-Type", "text/event-stream")
 		w.Header().Set("Cache-Control", "no-cache")
 		w.Header().Set("Connection", "keep-alive")
+		w.Header().Set("X-Accel-Buffering", "no")
 		key := transport.StreamKey{MatchID: matchID, ViewerUserID: au.UserID} //<-собираем ключ для подписки на SSE
 		ch := deps.Hub.Subscribe(key)                                         //<-и подписываем игроков к этому ключу
 		defer deps.Hub.Unsubscribe(key, ch)                                   //<-деферя отписку, закрывая соединение
