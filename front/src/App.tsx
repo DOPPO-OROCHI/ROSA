@@ -35,6 +35,16 @@ type DevAuthResponse = {
   token?: string;
 };
 
+type TelegramWebAppWindow = Window & {
+  Telegram?: {
+    WebApp?: {
+      initData?: string;
+      ready?: () => void;
+      expand?: () => void;
+    };
+  };
+};
+
 export function App() {
   const clickAudioRef = useRef<HTMLAudioElement | null>(null);
   const matchFoundAudioRef = useRef<HTMLAudioElement | null>(null);
@@ -226,8 +236,27 @@ export function App() {
     setDraftDeckEntries(deck.entries);
   }
 
+  async function authenticateWithTelegram() {
+    setDevSessionToken();
+
+    const webApp = (window as TelegramWebAppWindow).Telegram?.WebApp;
+    webApp?.ready?.();
+    webApp?.expand?.();
+
+    const initData = webApp?.initData ?? "";
+    if (!initData) {
+      return;
+    }
+
+    await request("/auth/telegram", {
+      method: "POST",
+      body: JSON.stringify({ initData }),
+    });
+  }
+
   useEffect(() => {
-    loadSession()
+    authenticateWithTelegram()
+      .then(loadSession)
       .then(async () => {
         await loadInventory();
         await loadQueueStatus();
@@ -243,6 +272,7 @@ export function App() {
         setSelectedHeroCode("");
         setQueueStatus({ state: "idle" });
         setActiveMatchId(null);
+        setError("Открой игру через кнопку ИГРАТЬ в Telegram-боте");
       })
       .finally(() => setBusy(false));
   }, []);
@@ -678,6 +708,7 @@ export function App() {
         />
       ) : null}
 
+      {false ? (
       <section className="card surface dev-panel">
         <div className="section-head">
           <div>
@@ -728,6 +759,11 @@ export function App() {
 
         {error ? <p className="error-text">{error}</p> : null}
       </section>
+      ) : !me && error ? (
+        <section className="card surface dev-panel">
+          <p className="error-text">{error}</p>
+        </section>
+      ) : null}
 
       <GameModePanel
         open={gameModeOpen}

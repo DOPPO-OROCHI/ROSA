@@ -55,7 +55,7 @@ type AuthUser struct {
 func AuthMiddleware(store *TokenStore) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			if r.URL.Path == "/auth/telegram" || r.URL.Path == "/auth/dev" || r.URL.Path == "/healthz" { //<-исправить после тестов!
+			if r.URL.Path == "/auth/telegram" || r.URL.Path == "/healthz" {
 				next.ServeHTTP(w, r)
 				return
 			}

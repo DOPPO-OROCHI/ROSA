@@ -190,9 +190,10 @@ func NewMux(app App) *http.ServeMux {
 	mux.HandleFunc("/auth/telegram", func(w http.ResponseWriter, r *http.Request) {
 		app.AuthTelegram(w, r)
 	})
-	mux.HandleFunc("/auth/dev", func(w http.ResponseWriter, r *http.Request) {
-		app.AuthDev(w, r)
-	})
+	// Dev auth is disabled for Telegram WebApp production login.
+	// mux.HandleFunc("/auth/dev", func(w http.ResponseWriter, r *http.Request) {
+	// 	app.AuthDev(w, r)
+	// })
 	return mux
 }
 
