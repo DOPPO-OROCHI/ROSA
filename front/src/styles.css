@@ -146,11 +146,16 @@ button {
 
 .menu-topbar {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 84px;
+  grid-template-columns: minmax(0, 1fr) 112px;
   align-items: center;
   gap: 10px;
   width: 100%;
   animation: main-menu-section-enter 360ms ease-out 60ms both;
+}
+
+.menu-topbar__controls {
+  display: grid;
+  gap: 8px;
 }
 
 .hero-focus {
@@ -187,7 +192,7 @@ button {
 
 .top-slot {
   width: 100%;
-  min-height: 54px;
+  min-height: 48px;
   border-radius: 16px;
   font-size: 0.68rem;
   text-transform: uppercase;

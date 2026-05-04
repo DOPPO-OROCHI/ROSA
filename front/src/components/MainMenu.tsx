@@ -18,6 +18,8 @@ type Props = {
   onInventory: () => void;
   musicEnabled: boolean;
   onToggleMusic: () => void;
+  fullscreenActive: boolean;
+  onToggleFullscreen: () => void;
 };
 
 export function MainMenu(props: Props) {
@@ -40,14 +42,24 @@ export function MainMenu(props: Props) {
 
         <header className="menu-topbar">
           <h1 className="menu-title">PROJECT ROSE</h1>
-          <button type="button" className="top-slot top-slot--right" onClick={props.onToggleMusic}>
-            <AutoFitText
-              text={props.musicEnabled ? "MUSIC ON" : "MUSIC OFF"}
-              className="top-slot__label"
-              maxFontSize={14}
-              minFontSize={8}
-            />
-          </button>
+          <div className="menu-topbar__controls">
+            <button type="button" className="top-slot top-slot--right" onClick={props.onToggleMusic}>
+              <AutoFitText
+                text={props.musicEnabled ? "MUSIC ON" : "MUSIC OFF"}
+                className="top-slot__label"
+                maxFontSize={14}
+                minFontSize={8}
+              />
+            </button>
+            <button type="button" className="top-slot top-slot--right" onClick={props.onToggleFullscreen}>
+              <AutoFitText
+                text={props.fullscreenActive ? "СВЕРНУТЬ" : "НА ПОЛНЫЙ ЭКРАН"}
+                className="top-slot__label"
+                maxFontSize={12}
+                minFontSize={7}
+              />
+            </button>
+          </div>
         </header>
 
         <section className="hero-focus">

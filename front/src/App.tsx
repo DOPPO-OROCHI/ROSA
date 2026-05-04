@@ -41,6 +41,11 @@ type TelegramWebAppWindow = Window & {
       initData?: string;
       ready?: () => void;
       expand?: () => void;
+      isFullscreen?: boolean;
+      requestFullscreen?: () => void;
+      exitFullscreen?: () => void;
+      onEvent?: (eventType: string, eventHandler: () => void) => void;
+      offEvent?: (eventType: string, eventHandler: () => void) => void;
     };
   };
 };
@@ -78,6 +83,7 @@ export function App() {
   const [matchFoundCountdown, setMatchFoundCountdown] = useState(3);
   const [acceptedByMeLatch, setAcceptedByMeLatch] = useState(false);
   const [musicEnabled, setMusicEnabled] = useState(true);
+  const [fullscreenActive, setFullscreenActive] = useState(false);
 
   const selectedHero = heroes.find((hero) => hero.hero_code === selectedHeroCode) ?? null;
   const deckCardCount = draftDeckEntries.reduce((total, entry) => total + entry.count, 0);
@@ -288,6 +294,21 @@ export function App() {
   useEffect(() => {
     queueStateRef.current = queueStatus.state;
   }, [queueStatus.state]);
+
+  useEffect(() => {
+    const webApp = (window as TelegramWebAppWindow).Telegram?.WebApp;
+    const syncFullscreenState = () => {
+      setFullscreenActive(Boolean(document.fullscreenElement || webApp?.isFullscreen));
+    };
+
+    syncFullscreenState();
+    document.addEventListener("fullscreenchange", syncFullscreenState);
+    webApp?.onEvent?.("fullscreenChanged", syncFullscreenState);
+    return () => {
+      document.removeEventListener("fullscreenchange", syncFullscreenState);
+      webApp?.offEvent?.("fullscreenChanged", syncFullscreenState);
+    };
+  }, []);
 
   useEffect(() => {
     const audio = new Audio("/assets/ui/sounds/ui/click.mp3");
@@ -647,6 +668,36 @@ export function App() {
     }
   }
 
+  async function toggleFullscreen() {
+    setError("");
+    const webApp = (window as TelegramWebAppWindow).Telegram?.WebApp;
+    const isActive = Boolean(document.fullscreenElement || webApp?.isFullscreen || fullscreenActive);
+
+    try {
+      if (isActive) {
+        webApp?.exitFullscreen?.();
+        if (document.fullscreenElement) {
+          await document.exitFullscreen();
+        }
+        setFullscreenActive(false);
+        return;
+      }
+
+      webApp?.expand?.();
+      if (webApp?.requestFullscreen) {
+        webApp.requestFullscreen();
+        setFullscreenActive(true);
+        return;
+      }
+
+      await document.documentElement.requestFullscreen();
+    } catch (err) {
+      webApp?.expand?.();
+      setFullscreenActive(Boolean(document.fullscreenElement || webApp?.isFullscreen));
+      setError(err instanceof Error ? err.message : "Fullscreen is unavailable");
+    }
+  }
+
   return (
     <main className="app-shell">
       {screen === "menu" ? (
@@ -675,6 +726,10 @@ export function App() {
             const nextEnabled = !musicEnabled;
             setMusicEnabled(nextEnabled);
             syncMusicPlayback(screenRef.current, nextEnabled, queueStatus.state);
+          }}
+          fullscreenActive={fullscreenActive}
+          onToggleFullscreen={() => {
+            void toggleFullscreen();
           }}
         />
       ) : screen === "inventory" ? (
