@@ -1427,6 +1427,13 @@ button {
   overflow: hidden;
 }
 
+.hero-viewer__description--ability {
+  color: #e9f8ff;
+  text-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.98),
+    0 0 11px rgba(73, 179, 222, 0.48);
+}
+
 .hero-viewer__anchor--name {
   left: 17%;
   right: 17%;
@@ -1472,6 +1479,42 @@ button {
   width: 100%;
   white-space: nowrap;
   overflow: hidden;
+}
+
+.hero-viewer__ability-hotspot {
+  position: absolute;
+  left: 25%;
+  right: 25%;
+  top: 79.3%;
+  z-index: 4;
+  min-height: 4.2%;
+  border: 1px solid rgba(157, 221, 255, 0.38);
+  border-radius: 999px;
+  background: rgba(8, 14, 24, 0.42);
+  color: rgba(233, 248, 255, 0.82);
+  font-family: "Times New Roman", Georgia, serif;
+  letter-spacing: 0.06em;
+  line-height: 1;
+  text-transform: uppercase;
+  overflow: hidden;
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.9);
+  cursor: pointer;
+}
+
+.hero-viewer__ability-hotspot--active {
+  background: rgba(70, 163, 205, 0.78);
+  color: #071018;
+  border-color: rgba(202, 242, 255, 0.72);
+}
+
+.hero-viewer__ability-label {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-width: 0;
+  padding: 0 8px;
+  white-space: nowrap;
 }
 
 .auto-fit-text__content {

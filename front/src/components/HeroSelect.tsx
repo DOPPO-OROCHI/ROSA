@@ -26,12 +26,14 @@ export function HeroSelect({ open, heroes, selectedHero, onClose, onChooseHero }
   const [missingFullArtHeroCodes, setMissingFullArtHeroCodes] = useState<Record<string, boolean>>({});
   const [submitting, setSubmitting] = useState(false);
   const [closing, setClosing] = useState(false);
+  const [abilityOpen, setAbilityOpen] = useState(false);
   const [error, setError] = useState("");
 
   useEffect(() => {
     if (!open) {
       setSubmitting(false);
       setClosing(false);
+      setAbilityOpen(false);
       setError("");
     }
   }, [open]);
@@ -48,6 +50,7 @@ export function HeroSelect({ open, heroes, selectedHero, onClose, onChooseHero }
     setCurrentIndex(selectedIndex >= 0 ? selectedIndex : 0);
     setSlideDirection("right");
     setSlideNonce(0);
+    setAbilityOpen(false);
     setError("");
   }, [heroes, open, selectedHero]);
 
@@ -73,6 +76,7 @@ export function HeroSelect({ open, heroes, selectedHero, onClose, onChooseHero }
     setSlideDirection("left");
     setSlideNonce((current) => current + 1);
     setCurrentIndex((current) => wrapIndex(current - 1, heroes.length));
+    setAbilityOpen(false);
     setError("");
   }
 
@@ -84,6 +88,7 @@ export function HeroSelect({ open, heroes, selectedHero, onClose, onChooseHero }
     setSlideDirection("right");
     setSlideNonce((current) => current + 1);
     setCurrentIndex((current) => wrapIndex(current + 1, heroes.length));
+    setAbilityOpen(false);
     setError("");
   }
 
@@ -166,7 +171,9 @@ export function HeroSelect({ open, heroes, selectedHero, onClose, onChooseHero }
                         />
                       )}
 
-                      <div className="hero-viewer__description">{currentHero.description}</div>
+                      <div className={`hero-viewer__description ${abilityOpen ? "hero-viewer__description--ability" : ""}`}>
+                        {abilityOpen && currentHero.ability?.description ? currentHero.ability.description : currentHero.description}
+                      </div>
                       <span className="hero-viewer__anchor hero-viewer__anchor--name">
                         <AutoFitText
                           text={currentHero.name}
@@ -175,6 +182,27 @@ export function HeroSelect({ open, heroes, selectedHero, onClose, onChooseHero }
                           minFontSize={8}
                         />
                       </span>
+                      {currentHero.ability?.code ? (
+                        <button
+                          type="button"
+                          className={`hero-viewer__ability-hotspot ${abilityOpen ? "hero-viewer__ability-hotspot--active" : ""}`}
+                          onClick={(event) => {
+                            if (closing) {
+                              return;
+                            }
+                            event.stopPropagation();
+                            setAbilityOpen((value) => !value);
+                          }}
+                          aria-label={`Show ability ${currentHero.ability.name}`}
+                        >
+                          <AutoFitText
+                            text={currentHero.ability.name || "SKILL"}
+                            className="hero-viewer__ability-label"
+                            maxFontSize={9}
+                            minFontSize={5}
+                          />
+                        </button>
+                      ) : null}
                       <span className="hero-viewer__anchor hero-viewer__anchor--attack">
                         <span className="hero-viewer__stat">{currentHero.attack_power}</span>
                       </span>
