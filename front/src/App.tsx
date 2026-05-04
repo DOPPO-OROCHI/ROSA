@@ -5,7 +5,8 @@ import { MainMenu } from "./components/MainMenu";
 import { MatchFoundPanel } from "./components/MatchFoundPanel";
 import { BattleScreen } from "./components/battle/BattleScreen";
 import { BATTLE_MUSIC_TRACKS, BattleMusicManager } from "./lib/battle_music";
-import { request, setDevSessionToken } from "./lib/api";
+import { request, resolveCardAssetVariantSrc, resolveHeroAssetVariantSrc, setDevSessionToken } from "./lib/api";
+import { uniqueAssetUrls, warmAssetUrlsInBackground } from "./lib/asset_preload";
 import type {
   BattleCard,
   BuffCard,
@@ -26,6 +27,40 @@ const MENU_MUSIC_VOLUME = 0.35;
 const MENU_MUSIC_MATCH_FOUND_VOLUME = MENU_MUSIC_VOLUME * 0.5;
 const BATTLE_MUSIC_VOLUME = 0.28;
 const MUSIC_FADE_MS = 420;
+const COMMON_MENU_WARM_ASSET_URLS = [
+  "/assets/ui/pictures/backgrounds/menu/image.png",
+  "/assets/ui/pictures/backgrounds/inventory/image.png",
+  "/assets/ui/pictures/backgrounds/battle/image.png",
+  "/assets/ui/pictures/backgrounds/queue_search/queue_search_01.png",
+  "/assets/ui/pictures/boards/battle/image.png",
+  "/assets/ui/pictures/panels/game_mode/image.png",
+  "/assets/ui/pictures/panels/game_mode_background/image.png",
+  "/assets/ui/pictures/panels/shop/image.png",
+  "/assets/ui/sounds/ui/click.mp3",
+  "/assets/ui/sounds/ui/match_found.mp3",
+  "/assets/ui/sounds/combat/impact.mp3",
+  "/assets/ui/sounds/music/menu_music.mp3",
+  "/assets/ui/pictures/icons/status/atk_cd_down.png",
+  "/assets/ui/pictures/icons/status/atk_cd_up.png",
+  "/assets/ui/pictures/icons/status/buff_atk.png",
+  "/assets/ui/pictures/icons/status/buff_atk_hp.png",
+  "/assets/ui/pictures/icons/status/buff_hp.png",
+  "/assets/ui/pictures/icons/status/damage.png",
+  "/assets/ui/pictures/icons/status/death.png",
+  "/assets/ui/pictures/icons/status/disarm.png",
+  "/assets/ui/pictures/icons/status/dot.png",
+  "/assets/ui/pictures/icons/status/heal_over_time.png",
+  "/assets/ui/pictures/icons/status/no_heal.png",
+  "/assets/ui/pictures/icons/status/reflect_shield.png",
+  "/assets/ui/pictures/icons/status/shield.png",
+  "/assets/ui/pictures/icons/status/silence.png",
+  "/assets/ui/pictures/icons/status/skill.png",
+  "/assets/ui/pictures/icons/status/skill_cd_down.png",
+  "/assets/ui/pictures/icons/status/skill_cd_up.png",
+  "/assets/ui/pictures/icons/status/stun.png",
+  "/assets/ui/pictures/icons/status/summon.png",
+  "/assets/ui/pictures/icons/status/vulnerable.png",
+];
 
 type Screen = "menu" | "inventory" | "battle";
 
@@ -49,6 +84,46 @@ type TelegramWebAppWindow = Window & {
     };
   };
 };
+
+function addWarmCardAssets(urls: string[], kind: "battle" | "buff", templateId: string, includeBattleSfx: boolean) {
+  urls.push(resolveCardAssetVariantSrc(kind, templateId, "view"));
+  urls.push(resolveCardAssetVariantSrc(kind, templateId, "full_art"));
+
+  if (kind !== "battle") {
+    return;
+  }
+
+  urls.push(resolveCardAssetVariantSrc(kind, templateId, "on_table"));
+
+  if (!includeBattleSfx) {
+    return;
+  }
+
+  urls.push(`/assets/cards/battle/${templateId}/sfx/summon/sound.mp3`);
+  urls.push(`/assets/cards/battle/${templateId}/sfx/death/sound.mp3`);
+  urls.push(`/assets/cards/battle/${templateId}/sfx/spell/sound.mp3`);
+}
+
+function collectMenuWarmAssetUrls(heroes: Hero[], battleCards: BattleCard[], buffCards: BuffCard[], deckEntries: DeckEntry[]) {
+  const urls = [...COMMON_MENU_WARM_ASSET_URLS, ...BATTLE_MUSIC_TRACKS.slice(0, 2)];
+  const deckKeys = new Set(deckEntries.filter((entry) => entry.count > 0).map((entry) => `${entry.kind}:${entry.template_id}`));
+
+  heroes.forEach((hero) => {
+    urls.push(resolveHeroAssetVariantSrc(hero.hero_code, "view"));
+    urls.push(resolveHeroAssetVariantSrc(hero.hero_code, "full_art"));
+    urls.push(resolveHeroAssetVariantSrc(hero.hero_code, "battle_icon"));
+  });
+
+  battleCards.forEach((card) => {
+    addWarmCardAssets(urls, "battle", card.template_id, deckKeys.has(`battle:${card.template_id}`));
+  });
+
+  buffCards.forEach((card) => {
+    addWarmCardAssets(urls, "buff", card.template_id, deckKeys.has(`buff:${card.template_id}`));
+  });
+
+  return uniqueAssetUrls(urls);
+}
 
 export function App() {
   const clickAudioRef = useRef<HTMLAudioElement | null>(null);
@@ -419,6 +494,23 @@ export function App() {
   useEffect(() => {
     syncMusicPlayback(screen, musicEnabled, queueStatus.state);
   }, [musicEnabled, queueStatus.state, screen]);
+
+  useEffect(() => {
+    if (!me || heroes.length === 0 || battleCards.length === 0) {
+      return;
+    }
+
+    const stopWarmup = warmAssetUrlsInBackground(
+      collectMenuWarmAssetUrls(heroes, battleCards, buffCards, deckEntries),
+      {
+        concurrency: 3,
+        initialDelayMs: 900,
+        batchDelayMs: 80,
+      },
+    );
+
+    return stopWarmup;
+  }, [battleCards, buffCards, deckEntries, heroes, me]);
 
   useEffect(() => {
     const previousState = prevQueueStateRef.current;
