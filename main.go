@@ -40,6 +40,7 @@ func main() {
 	app := adapters.App{
 		CreateMatch:  handlers.NewCreateMatchHandler(handlers.CreateMatchHandlerDeps{DB: db.DB}),
 		GetMatch:     handlers.NewGetMatchHandler(handlers.GetMatchHandlerDeps{DB: db.DB}),
+		GetGraveyard: handlers.NewGetGraveyardHandler(handlers.GetMatchHandlerDeps{DB: db.DB}),
 		MatchesList:  handlers.NewMathesListHandler(handlers.MathesListHandlerDeps{DB: db.DB}),
 		ApplyAction:  handlers.NewApplyActionHandler(handlers.ApplyActionHandlerDeps{DB: db.DB, Resolvers: mustBeResolvers(&rc), Hub: hub}),
 		GetMe:        handlers.NewGetMeHandler(handlers.GetMeHandler{DB: db.DB}),

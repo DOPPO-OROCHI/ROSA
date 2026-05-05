@@ -105,7 +105,7 @@ func maskMatchStateForUser(st *game.MatchState, viewerUserID uint) *dto.MaskedMa
 			HeroAbilityManaCost:    p.HeroAbilityManaCost,
 			Mana:                   p.Mana,
 			Turns:                  p.Turns,
-			Table:                  p.Table,
+			Table:                  maskTable(p.Table),
 		}
 		return mp
 	}
@@ -122,9 +122,6 @@ func maskMatchStateForUser(st *game.MatchState, viewerUserID uint) *dto.MaskedMa
 		if i == viewerIndex {
 			mp.Hand = append(mp.Hand, p.Hand...)
 			mp.Discard = append(mp.Discard, p.Discard...)
-			for _, graveEntry := range p.GraveYard {
-				mp.GraveYard = append(mp.GraveYard, graveEntryToCard(graveEntry))
-			}
 			mp.DeckCount = len(p.Deck)
 			mp.DiscCount = len(p.Discard)
 			mp.GraveCount = len(p.GraveYard)
@@ -140,6 +137,39 @@ func maskMatchStateForUser(st *game.MatchState, viewerUserID uint) *dto.MaskedMa
 	}
 	//и возвращаем все то, что спрятали. Круто
 	return &out
+}
+
+func maskUnitState(u *game.UnitState) *dto.MaskedUnitState {
+	if u == nil {
+		return nil
+	}
+	return &dto.MaskedUnitState{
+		InstanceID:      u.InstanceID,
+		TemplateID:      u.TemplateID,
+		GamerCardID:     u.GamerCardID,
+		CardLevel:       u.CardLevel,
+		HP:              u.HP,
+		MaxHP:           u.MaxHP,
+		Attack:          u.Attack,
+		SplashRadius:    u.SplashRadius,
+		IsTank:          u.IsTank,
+		BaseCooldown:    u.BaseCooldown,
+		Cooldown:        u.Cooldown,
+		AttacksThisTurn: u.AttacksThisTurn,
+		SummonedInTurn:  u.SummonedInTurn,
+		HasSkill:        u.HasSkill,
+		Skill:           u.Skill,
+		Effects:         u.Effects,
+		ResurrectedUsed: u.ResurrectedUsed,
+	}
+}
+
+func maskTable(table [game.TableSize]*game.UnitState) [game.TableSize]*dto.MaskedUnitState {
+	var out [game.TableSize]*dto.MaskedUnitState
+	for i, unit := range table {
+		out[i] = maskUnitState(unit)
+	}
+	return out
 }
 
 /*Таким образом маскирование матча происходит не от противника, а от игрока. Грубо говоря, мы прячем

@@ -9,6 +9,8 @@ type GraveStack = {
 
 type Props = {
   cards: BattleCardInMatch[];
+  loading?: boolean;
+  error?: string;
   onClose: () => void;
   onOpenCard?: (card: BattleCardInMatch, originRect: DOMRect) => void;
 };
@@ -28,7 +30,7 @@ function groupDiscard(cards: BattleCardInMatch[]): GraveStack[] {
   return grouped.reverse();
 }
 
-export function BattleGraveyardModal({ cards, onClose, onOpenCard }: Props) {
+export function BattleGraveyardModal({ cards, loading = false, error = "", onClose, onOpenCard }: Props) {
   const stacks = groupDiscard(cards);
 
   return (
@@ -41,7 +43,11 @@ export function BattleGraveyardModal({ cards, onClose, onOpenCard }: Props) {
           </button>
         </div>
 
-        {stacks.length === 0 ? (
+        {loading && stacks.length === 0 ? (
+          <p className="battle-graveyard-modal__empty">Loading...</p>
+        ) : error ? (
+          <p className="battle-graveyard-modal__empty">{error}</p>
+        ) : stacks.length === 0 ? (
           <p className="battle-graveyard-modal__empty">No fallen cards yet.</p>
         ) : (
           <div className="battle-graveyard-modal__grid">

@@ -1,6 +1,7 @@
 package dto
 
 import (
+	"TheWar/internal/domain/cards"
 	"TheWar/internal/domain/game"
 )
 
@@ -31,7 +32,7 @@ type MaskedPlayerState struct {
 	Mana  int `json:"mana"`  //<-понятно
 	Turns int `json:"turns"` //<-кол-во ходов, которые игрок провел в матче
 	//состояние стола игрока. Тут уже есть конкретные карты, которые стоят на столе, их характеристики и прочее
-	Table [game.TableSize]*game.UnitState `json:"table"` //<-здесь проблема, поскольку я отдаю доменную часть, что хуево
+	Table [game.TableSize]*MaskedUnitState `json:"table"` //<-здесь проблема, поскольку я отдаю доменную часть, что хуево
 	//А здесь уже инфа о руке, колоде, сбросе. НО! Она отдается только тому игроку, которому она принадлежит.
 	//Типа, это отдается тому чуваку, который смотрит на это состояние. Можно сказать, он смотрит на себя
 	Hand       []game.CardsInMatch `json:"hand,omitempty"`    //<-что в руке у игрока
@@ -63,4 +64,24 @@ type MaskedMatchState struct {
 	ServerNow      int64                 `json:"server_now"`
 	LoadingReady   [2]bool               `json:"loading_ready"`
 	StartedAt      int64                 `json:"started_at,omitempty"`
+}
+
+type MaskedUnitState struct {
+	InstanceID      string               `json:"instance_id"`
+	TemplateID      string               `json:"template_id"`
+	GamerCardID     uint                 `json:"gamer_card_id"`
+	CardLevel       int                  `json:"card_level"`
+	HP              int                  `json:"hp"`
+	MaxHP           int                  `json:"max_hp"`
+	Attack          int                  `json:"attack"`
+	SplashRadius    int                  `json:"splash_radius"`
+	IsTank          bool                 `json:"is_tank"`
+	BaseCooldown    int                  `json:"base_cooldown"`
+	Cooldown        int                  `json:"cooldown"`
+	AttacksThisTurn int                  `json:"attacks_this_turn"`
+	SummonedInTurn  int                  `json:"summoned_in_turn"`
+	HasSkill        bool                 `json:"has_skill"`
+	Skill           cards.UnitSkillState `json:"skill"`
+	Effects         []game.UnitEffect    `json:"effects"`
+	ResurrectedUsed bool                 `json:"resurrected_used"`
 }

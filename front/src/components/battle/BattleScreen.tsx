@@ -32,6 +32,11 @@ import type { ApplyBattleActionRequest, BattleCardInMatch, BattleEvent, BattleUn
 import type { BattleCard, DeckEntry, Hero } from "../../types";
 import "./battle.css";
 
+type GraveyardResponse = {
+  cards: BattleCardInMatch[];
+  count: number;
+};
+
 type Props = {
   currentUserId: number;
   matchId: number;
@@ -63,6 +68,9 @@ export function BattleScreen({ currentUserId, matchId, heroes, battleCards, deck
   const [previewOrigin, setPreviewOrigin] = useState<BattleCardViewerOrigin | null>(null);
   const [previewClosing, setPreviewClosing] = useState(false);
   const [graveyardOpen, setGraveyardOpen] = useState(false);
+  const [graveyardCards, setGraveyardCards] = useState<BattleCardInMatch[]>([]);
+  const [graveyardLoading, setGraveyardLoading] = useState(false);
+  const [graveyardError, setGraveyardError] = useState("");
   const [attackAnimation, setAttackAnimation] = useState<CardAttackAnimationState | null>(null);
   const [deathAnimations, setDeathAnimations] = useState<DeathAnimationState[]>([]);
   const [floatingNumbers, setFloatingNumbers] = useState<FloatingNumber[]>([]);
@@ -78,6 +86,9 @@ export function BattleScreen({ currentUserId, matchId, heroes, battleCards, deck
   const turnAuraExitTimeoutsRef = useRef<number[]>([]);
   const lastProcessedVersionRef = useRef(0);
   const currentMatchRef = useRef<MaskedBattleMatchState | null>(null);
+  const streamConnectedRef = useRef(false);
+  const streamHadStateRef = useRef(false);
+  const lastStreamStateAtRef = useRef(0);
   const attackAnimationQueueRef = useRef(Promise.resolve());
   const processedAttackEventIdsRef = useRef(new Set<string>());
   const readyRequestSentForMatchRef = useRef<number | null>(null);
@@ -91,6 +102,7 @@ export function BattleScreen({ currentUserId, matchId, heroes, battleCards, deck
 
   const player = playerIndex >= 0 ? match?.players[playerIndex] ?? null : null;
   const enemy = playerIndex >= 0 ? match?.players[playerIndex === 0 ? 1 : 0] ?? null : null;
+  const playerGraveyardCount = player?.graveyard_count ?? player?.graveyard?.length ?? 0;
   const preload = useBattlePreload(match, deckEntries);
   const playerReady = playerIndex >= 0 ? Boolean(match?.loading_ready?.[playerIndex]) : false;
   const enemyReady = playerIndex >= 0 ? Boolean(match?.loading_ready?.[playerIndex === 0 ? 1 : 0]) : false;
@@ -566,7 +578,50 @@ export function BattleScreen({ currentUserId, matchId, heroes, battleCards, deck
 
   useEffect(() => {
     readyRequestSentForMatchRef.current = null;
+    setGraveyardOpen(false);
+    setGraveyardCards([]);
+    setGraveyardError("");
+    setGraveyardLoading(false);
   }, [matchId]);
+
+  useEffect(() => {
+    if (!graveyardOpen) {
+      return;
+    }
+    if (playerGraveyardCount <= 0) {
+      setGraveyardCards([]);
+      setGraveyardError("");
+      setGraveyardLoading(false);
+      return;
+    }
+
+    let cancelled = false;
+    setGraveyardLoading(true);
+    setGraveyardError("");
+
+    request<GraveyardResponse>(`/matches/${matchId}/graveyard`)
+      .then((response) => {
+        if (cancelled) {
+          return;
+        }
+        setGraveyardCards(response.cards ?? []);
+      })
+      .catch((err) => {
+        if (cancelled) {
+          return;
+        }
+        setGraveyardError(err instanceof Error ? err.message : "Failed to load graveyard");
+      })
+      .finally(() => {
+        if (!cancelled) {
+          setGraveyardLoading(false);
+        }
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [graveyardOpen, matchId, playerGraveyardCount]);
 
   function handlePreview(card: BattleCardInMatch | null, originRect?: DOMRect) {
     if (!card) {
@@ -733,32 +788,64 @@ export function BattleScreen({ currentUserId, matchId, heroes, battleCards, deck
     }
 
     const id = window.setInterval(() => {
+      const current = currentMatchRef.current;
+      const now = Date.now();
+      const streamHasState = streamHadStateRef.current;
+      const streamIsFresh = streamConnectedRef.current && streamHasState;
+      const startupStreamStalled =
+        current?.phase === "START" && (!streamHasState || now - lastStreamStateAtRef.current > 5000);
+
+      if (current?.finished || (streamIsFresh && !startupStreamStalled)) {
+        return;
+      }
+
       void request<MaskedBattleMatchState>(`/matches/${matchId}`)
         .then((nextMatch) => {
-          if (nextMatch.version > (currentMatchRef.current?.version ?? 0)) {
+          const currentVersion = currentMatchRef.current?.version ?? 0;
+          if (nextMatch.version <= currentVersion) {
+            return;
+          }
+          if (nextMatch.version > currentVersion) {
             enqueueDeathAnimations(nextMatch);
           }
           setMatch(nextMatch);
           setError("");
         })
         .catch(() => undefined);
-    }, match.phase === "START" ? 1200 : 3000);
+    }, 5000);
 
     return () => window.clearInterval(id);
-  }, [match, matchId]);
+  }, [match?.finished, matchId]);
 
   useEffect(() => {
+    streamConnectedRef.current = false;
+    streamHadStateRef.current = false;
+    lastStreamStateAtRef.current = 0;
+
     const stream = new EventSource(withDevSessionToken(`/matches/${matchId}/stream`), { withCredentials: true });
+
+    stream.onopen = () => {
+      streamConnectedRef.current = true;
+    };
 
     stream.addEventListener("state", (event) => {
       const payload = JSON.parse((event as MessageEvent<string>).data) as MaskedBattleMatchState;
+      const currentVersion = currentMatchRef.current?.version ?? 0;
+      streamConnectedRef.current = true;
+      streamHadStateRef.current = true;
+      lastStreamStateAtRef.current = Date.now();
+      if (payload.version <= currentVersion) {
+        return;
+      }
       enqueueAttackAnimations(payload);
       enqueueDeathAnimations(payload);
       setMatch(payload);
       setError("");
     });
 
-    stream.onerror = () => undefined;
+    stream.onerror = () => {
+      streamConnectedRef.current = false;
+    };
 
     return () => stream.close();
   }, [matchId, playerIndex]);
@@ -1047,7 +1134,7 @@ export function BattleScreen({ currentUserId, matchId, heroes, battleCards, deck
             <div className="battle-bottom__cluster battle-bottom__cluster--left">
               <div className="battle-bottom__mini">
                 <GraveyardBlock
-                  count={player.graveyard_count ?? player.graveyard?.length ?? 0}
+                  count={playerGraveyardCount}
                   onOpen={() => {
                     setPreviewClosing(true);
                     setPreviewCard(null);
@@ -1137,7 +1224,9 @@ export function BattleScreen({ currentUserId, matchId, heroes, battleCards, deck
         ) : null}
         {graveyardOpen ? (
           <BattleGraveyardModal
-            cards={player.graveyard ?? []}
+            cards={graveyardCards}
+            loading={graveyardLoading}
+            error={graveyardError}
             onClose={() => setGraveyardOpen(false)}
             onOpenCard={(card, originRect) => {
               setGraveyardOpen(false);

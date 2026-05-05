@@ -26,6 +26,11 @@ type GetMatchHandlerDeps struct {
 	DB *gorm.DB
 }
 
+type GraveyardResponse struct {
+	Cards []game.CardsInMatch `json:"cards"`
+	Count int                 `json:"count"`
+}
+
 // аналогично
 type CreateMatchHandlerDeps struct {
 	DB *gorm.DB
@@ -127,6 +132,49 @@ func NewGetMatchHandler(d GetMatchHandlerDeps) http.HandlerFunc {
 может в него вернуться без никаких проблем*/
 
 /*Хендлер получения списка 50 последних мачтей игрока. Нужен главнм образом просто для просмотра истории.*/
+func NewGetGraveyardHandler(d GetMatchHandlerDeps) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		au, ok := middleware.FromContext(r.Context())
+		if !ok {
+			middleware.WriteErr(w, http.StatusUnauthorized, "unauthorized")
+			return
+		}
+		matchID, tail, err := middleware.ParceMatchPath(r.URL.Path)
+		if err != nil || tail != "graveyard" {
+			middleware.WriteErr(w, http.StatusNotFound, "not found")
+			return
+		}
+		var row repository.Match
+		if err := d.DB.First(&row, matchID).Error; err != nil {
+			middleware.WriteErr(w, http.StatusNotFound, "match not found")
+			return
+		}
+		if row.PlayerID1 != au.UserID && row.PlayerID2 != au.UserID {
+			middleware.WriteErr(w, http.StatusForbidden, "not a participant")
+			return
+		}
+		var st game.MatchState
+		if err := json.Unmarshal(row.State, &st); err != nil {
+			middleware.WriteErr(w, http.StatusInternalServerError, "bad match state json")
+			return
+		}
+		viewerIndex := middleware.PlayerIndex(&st, au.UserID)
+		if viewerIndex < 0 || st.Players[viewerIndex] == nil {
+			middleware.WriteErr(w, http.StatusForbidden, "not a participant")
+			return
+		}
+		graveyard := st.Players[viewerIndex].GraveYard
+		cards := make([]game.CardsInMatch, 0, len(graveyard))
+		for _, graveEntry := range graveyard {
+			cards = append(cards, graveEntryToCard(graveEntry))
+		}
+		middleware.WriteJSON(w, http.StatusOK, GraveyardResponse{
+			Cards: cards,
+			Count: len(cards),
+		})
+	}
+}
+
 func NewMathesListHandler(d MathesListHandlerDeps) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		au, ok := middleware.FromContext(r.Context())

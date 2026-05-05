@@ -17,9 +17,10 @@ import (
 в него зашел будет вызывать конкретные поля структуры App, которые составлены соответствющим задаче образом в мэйне.
 */
 type App struct {
-	CreateMatch http.HandlerFunc
-	GetMatch    http.HandlerFunc
-	ApplyAction http.HandlerFunc
+	CreateMatch  http.HandlerFunc
+	GetMatch     http.HandlerFunc
+	ApplyAction  http.HandlerFunc
+	GetGraveyard http.HandlerFunc
 
 	GetMe        http.HandlerFunc
 	UpdateAvatar http.HandlerFunc
@@ -91,6 +92,9 @@ func NewMux(app App) *http.ServeMux {
 			return
 		case r.Method == http.MethodGet && tail == "stream":
 			app.StreamMatch(w, r)
+			return
+		case r.Method == http.MethodGet && tail == "graveyard":
+			app.GetGraveyard(w, r)
 			return
 		case r.Method == http.MethodPost && tail == "ready":
 			app.ReadyMatch(w, r)
